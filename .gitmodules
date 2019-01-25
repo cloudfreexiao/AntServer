@@ -1,0 +1,21 @@
+[submodule "skynet"]
+	path = skynet
+	url = https://github.com/cloudfreexiao/skynet.git
+[submodule "client/termfx"]
+	path = client/termfx
+	url = https://github.com/LuaDist2/termfx.git
+[submodule "lualib-src/luafilesystem"]
+	path = lualib-src/luafilesystem
+	url = https://github.com/keplerproject/luafilesystem.git
+[submodule "lualib-src/lua-cjson"]
+	path = lualib-src/lua-cjson
+	url = https://github.com/cloudfreexiao/lua-cjson.git
+[submodule "lualib-src/crab"]
+	path = lualib-src/crab
+	url = https://github.com/xjdrew/crab.git
+[submodule "3rd/curl"]
+	path = 3rd/curl
+	url = https://github.com/curl/curl.git
+[submodule "client/luasocket"]
+	path = client/luasocket
+	url = https://github.com/diegonehab/luasocket.git

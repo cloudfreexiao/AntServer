@@ -1,0 +1,49 @@
+thread    = 8
+bootstrap = "snlua bootstrap"
+cpath     = "skynet/cservice/?.so;luaclib/?.so;"
+lualoader  = "skynet/lualib/loader.lua"
+preload    = "preload/preload.lua"
+
+
+local function concat(args)
+  local r = ''
+  for i = 1, # args do
+    r = r .. ';' .. args[i]
+  end
+  return r
+end
+
+
+luaservice = concat {
+  "skynet/service/?.lua",
+
+  "service/?.lua",
+  "service/?/?.lua",
+
+  "service/login/?.lua",
+  "service/center/?.lua",
+  "service/game/?.lua",
+  "service/common/?.lua",
+  "service/agent/?.lua",
+}
+
+lua_path   = concat {
+  "skynet/lualib/?.lua",
+
+  "preload/?.lua",
+  "common/?.lua",
+  "lualib/?.lua",
+
+  "service/login/?.lua",
+  "service/center/?.lua",
+  "service/game/?.lua",
+  "service/common/?.lua",
+  "service/agent/?.lua",
+}
+
+lua_cpath  = concat {
+  "skynet/luaclib/?.so",
+  "luaclib/?.so",
+}
+
+cluster    = "common/clustername.lua"

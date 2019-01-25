@@ -1,0 +1,19 @@
+.package {
+	type 0 : integer
+	session 1 : integer
+	ud 2 : string
+}
+
+ping 1 {}
+
+login 2 {
+	request {
+		secret 0 : string
+		useid 1 : string
+	}
+
+	response {
+		res 0 : integer
+	}
+}
+
