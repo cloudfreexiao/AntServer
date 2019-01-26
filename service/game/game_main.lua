@@ -8,8 +8,7 @@ local cfg = settings.lobbys[lobbyId]
 
 
 local function start_gated()
-  for k, v in pairs(settings.nodes) do
-
+  for _, v in pairs(settings.nodes) do
     for i=1, #v.gate_switch do
       local switch = tostring(v.gate_switch[i])
       local name = "gated"
@@ -32,6 +31,7 @@ local function start_gated()
         skynet.name(gate_name, proxy)
       end
     end
+  end
 end
 
 skynet.start(function()

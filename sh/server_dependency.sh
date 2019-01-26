@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ulimit -n 102400
+ulimit -n 10240
 ulimit -c unlimited
 
 CENTER_ON=true

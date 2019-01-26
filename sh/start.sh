@@ -14,5 +14,5 @@ sleep 1s
 $LOGIN_ON       && bash "$CUR_DIR/login.sh"     start release config.login
 
 sleep 1s
-$GAME1_ON        && bash "$CUR_DIR/game1.sh"      start release config.game1
+$GAME1_ON        && bash "$CUR_DIR/game1.sh"    start release config.game1
 
