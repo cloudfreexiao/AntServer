@@ -18,16 +18,26 @@ CJSON_INC ?= lua-cjson/
 LFS_INC ?= luafilesystem/src
 CAOI_INC ?= skynet_aoi/
 
+
 LUA_CLIB_PATH ?= ../luaclib
 
-HASH_SO      			= $(LUA_CLIB_PATH)/hash.so
-LFS_SO 		 			= $(LUA_CLIB_PATH)/lfs.so
-WEBCLIENT_SO 			= $(LUA_CLIB_PATH)/webclient.so
-UTF8_SO 	 			= $(LUA_CLIB_PATH)/utf8.so
-CRAB_SO 	 			= $(LUA_CLIB_PATH)/crab.so
-WEBSOCKETNETPACK_SO		= $(LUA_CLIB_PATH)/websocketnetpack.so
-CJSON_SO				= $(LUA_CLIB_PATH)/cjson.so
-CAOI_SO					= $(LUA_CLIB_PATH)/caoi.so
+HASH_SO_NAME = hash.so
+LFS_SO_NAME = lfs.so
+WEBCLIENT_SO_NAME = webclient.so
+UTF8_SO_NAME = utf8.so
+CRAB_SO_NAME = crab.so
+WEBSOCKETNETPACK_SO_NAME = websocketnetpack.so
+CJSON_SO_NAME = cjson.so
+CAOI_SO_NAME = caoi.so
+
+HASH_SO      			= $(LUA_CLIB_PATH)/$(HASH_SO_NAME)
+LFS_SO 		 			= $(LUA_CLIB_PATH)/$(LFS_SO_NAME)
+WEBCLIENT_SO 			= $(LUA_CLIB_PATH)/$(WEBCLIENT_SO_NAME)
+UTF8_SO 	 			= $(LUA_CLIB_PATH)/$(UTF8_SO_NAME)
+CRAB_SO 	 			= $(LUA_CLIB_PATH)/$(CRAB_SO_NAME)
+WEBSOCKETNETPACK_SO		= $(LUA_CLIB_PATH)/$(WEBSOCKETNETPACK_SO_NAME)
+CJSON_SO				= $(LUA_CLIB_PATH)/$(CJSON_SO_NAME)
+CAOI_SO					= $(LUA_CLIB_PATH)/$(CAOI_SO_NAME)
 
 
 all: $(HASH_SO) $(LFS_SO) $(WEBCLIENT_SO) $(UTF8_SO) $(CRAB_SO) \
@@ -54,7 +64,7 @@ $(WEBSOCKETNETPACK_SO):lua-websocketnetpack.c
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -I$(SKYNET_SRC)
 
 $(CJSON_SO) : | $(LUA_CLIB_PATH)
-	cd $(CJSON_INC) && $(MAKE) LUA_INCLUDE_DIR=../$(SKYNET_ROOT)/3rd/lua CC=$(CC) CJSON_LDFLAGS="$(SHARED)" && cp cjson.so ../$(LUA_CLIB_PATH)
+	cd $(CJSON_INC) && $(MAKE) LUA_INCLUDE_DIR=../$(SKYNET_ROOT)/3rd/lua CC=$(CC) CJSON_LDFLAGS="$(SHARED)" && cp -f $(CJSON_SO_NAME) ../$(LUA_CLIB_PATH)
 
 
 #####################################################

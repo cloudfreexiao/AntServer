@@ -10,7 +10,7 @@ include $(SKYNET_ROOT)platform.mk
 
 .PHONY: all 
 
-all : third_part skynet skynetdeps clientdeps 
+all : skynet skynetdeps clientdeps 
 
 clientdebug: CLIENT_DEBUG := true
 
@@ -31,4 +31,3 @@ skynetdeps:
 
 clientdeps:
 	cd $(CLIENT_DEPS) && $(MAKE) $(PLAT)
-

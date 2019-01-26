@@ -16,6 +16,3 @@
 [submodule "3rd/curl"]
 	path = 3rd/curl
 	url = https://github.com/curl/curl.git
-[submodule "client/luasocket"]
-	path = client/luasocket
-	url = https://github.com/diegonehab/luasocket.git
