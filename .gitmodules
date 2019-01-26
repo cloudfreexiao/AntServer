@@ -16,3 +16,6 @@
 [submodule "3rd/curl"]
 	path = 3rd/curl
 	url = https://github.com/curl/curl.git
+[submodule "client/defold-luasocket"]
+	path = client/defold-luasocket
+	url = https://github.com/cloudfreexiao/defold-luasocket.git
