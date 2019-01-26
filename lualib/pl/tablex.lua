@@ -8,12 +8,9 @@ local utils = require ('pl.utils')
 local types = require ('pl.types')
 local getmetatable,setmetatable,require = getmetatable,setmetatable,require
 local tsort,append,remove = table.sort,table.insert,table.remove
-local min,max = math.min,math.max
-local pairs,type,unpack,next,select,tostring = pairs,type,utils.unpack,next,select,tostring
+local min = math.min
+local pairs,type,unpack,select,tostring = pairs,type,utils.unpack,select,tostring
 local function_arg = utils.function_arg
-local Set = utils.stdmt.Set
-local List = utils.stdmt.List
-local Map = utils.stdmt.Map
 local assert_arg = utils.assert_arg
 
 local tablex = {}
@@ -21,13 +18,17 @@ local tablex = {}
 -- generally, functions that make copies of tables try to preserve the metatable.
 -- However, when the source has no obvious type, then we attach appropriate metatables
 -- like List, Map, etc to the result.
-local function setmeta (res,tbl,def)
-    local mt = getmetatable(tbl) or def
-    return setmetatable(res, mt)
+local function setmeta (res,tbl,pl_class)
+    local mt = getmetatable(tbl) or pl_class and require('pl.' .. pl_class)
+    return mt and setmetatable(res, mt) or res
 end
 
-local function makelist (res)
-    return setmetatable(res,List)
+local function makelist(l)
+    return setmetatable(l, require('pl.List'))
+end
+
+local function makemap(m)
+    return setmetatable(m, require('pl.Map'))
 end
 
 local function complain (idx,msg)
@@ -94,37 +95,36 @@ function tablex.copy (t)
     return res
 end
 
---- make a deep copy of a table, recursively copying all the keys and fields.
--- This will also set the copied table's metatable to that of the original.
--- @within Copying
--- @tab t A table
--- @return new table
-function tablex.deepcopy(t)
+local function cycle_aware_copy(t, cache)
     if type(t) ~= 'table' then return t end
+    if cache[t] then return cache[t] end
     assert_arg_iterable(1,t)
-    local mt = getmetatable(t)
     local res = {}
+    cache[t] = res
+    local mt = getmetatable(t)
     for k,v in pairs(t) do
-        if type(v) == 'table' then
-            v = tablex.deepcopy(v)
-        end
+        k = cycle_aware_copy(k, cache)
+        v = cycle_aware_copy(v, cache)
         res[k] = v
     end
     setmetatable(res,mt)
     return res
 end
 
-local abs, deepcompare = math.abs
+--- make a deep copy of a table, recursively copying all the keys and fields.
+-- This supports cycles in tables; cycles will be reproduced in the copy.
+-- This will also set the copied table's metatable to that of the original.
+-- @within Copying
+-- @tab t A table
+-- @return new table
+function tablex.deepcopy(t)
+    return cycle_aware_copy(t,{})
+end
 
---- compare two values.
--- if they are tables, then compare their keys and fields recursively.
--- @within Comparing
--- @param t1 A value
--- @param t2 A value
--- @bool[opt] ignore_mt if true, ignore __eq metamethod (default false)
--- @number[opt] eps if defined, then used for any number comparisons
--- @return true or false
-function tablex.deepcompare(t1,t2,ignore_mt,eps)
+local abs = math.abs
+
+local function cycle_aware_compare(t1,t2,ignore_mt,eps,cache)
+    if cache[t1] and cache[t1][t2] then return true end
     local ty1 = type(t1)
     local ty2 = type(t2)
     if ty1 ~= ty2 then return false end
@@ -142,15 +142,26 @@ function tablex.deepcompare(t1,t2,ignore_mt,eps)
     for k2 in pairs(t2) do
         if t1[k2]==nil then return false end
     end
+    cache[t1] = cache[t1] or {}
+    cache[t1][t2] = true
     for k1,v1 in pairs(t1) do
         local v2 = t2[k1]
-        if not deepcompare(v1,v2,ignore_mt,eps) then return false end
+        if not cycle_aware_compare(v1,v2,ignore_mt,eps,cache) then return false end
     end
-
     return true
 end
 
-deepcompare = tablex.deepcompare
+--- compare two values.
+-- if they are tables, then compare their keys and fields recursively.
+-- @within Comparing
+-- @param t1 A value
+-- @param t2 A value
+-- @bool[opt] ignore_mt if true, ignore __eq metamethod (default false)
+-- @number[opt] eps if defined, then used for any number comparisons
+-- @return true or false
+function tablex.deepcompare(t1,t2,ignore_mt,eps)
+    return cycle_aware_compare(t1,t2,ignore_mt,eps,{})
+end
 
 --- compare two arrays using a predicate.
 -- @within Comparing
@@ -267,7 +278,7 @@ function tablex.index_by(tbl,idx)
     for i = 1,#idx do
         res[i] = tbl[idx[i]]
     end
-    return setmeta(res,tbl,List)
+    return setmeta(res,tbl,'List')
 end
 
 --- apply a function to all values of a table.
@@ -304,7 +315,7 @@ function tablex.imap(fun,t,...)
     for i = 1,#t do
         res[i] = fun(t[i],...) or false
     end
-    return setmeta(res,t,List)
+    return setmeta(res,t,'List')
 end
 
 --- apply a named method to values from a table.
@@ -321,7 +332,7 @@ function tablex.map_named_method (name,t,...)
         local fun = val[name]
         res[i] = fun(val,...)
     end
-    return setmeta(res,t,List)
+    return setmeta(res,t,'List')
 end
 
 --- apply a function to all values of a table, in-place.
@@ -373,7 +384,7 @@ function tablex.map2 (fun,t1,t2,...)
     for k,v in pairs(t1) do
         res[k] = fun(v,t2[k],...)
     end
-    return setmeta(res,t1,List)
+    return setmeta(res,t1,'List')
 end
 
 --- apply a function to values from two arrays.
@@ -398,13 +409,17 @@ end
 --- 'reduce' a list using a binary function.
 -- @func fun a function of two arguments
 -- @array t a list-like table
+-- @array memo optional initial memo value. Defaults to first value in table.
 -- @return the result of the function
 -- @usage reduce('+',{1,2,3,4}) == 10
-function tablex.reduce (fun,t)
+function tablex.reduce (fun,t,memo)
     assert_arg_indexable(2,t)
     fun = function_arg(1,fun)
     local n = #t
-    local res = t[1]
+    if n == 0 then
+        return memo
+    end
+    local res = memo and fun(memo, t[1]) or t[1]
     for i = 2,n do
         res = fun(res,t[i])
     end
@@ -450,7 +465,7 @@ end
 -- @func fun a function of n arguments
 -- @tab ... n tables
 -- @usage mapn(function(x,y,z) return x+y+z end, {1,2,3},{10,20,30},{100,200,300}) is {111,222,333}
--- @usage mapn(math.max, {1,20,300},{10,2,3},{100,200,100}) is	{100,200,300}
+-- @usage mapn(math.max, {1,20,300},{10,2,3},{100,200,100}) is    {100,200,300}
 -- @param fun A function that takes as many arguments as there are tables
 function tablex.mapn(fun,...)
     fun = function_arg(1,fun)
@@ -473,8 +488,8 @@ end
 
 --- call the function with the key and value pairs from a table.
 -- The function can return a value and a key (note the order!). If both
--- are not nil, then this pair is inserted into the result. If only value is not nil, then
--- it is appended to the result.
+-- are not nil, then this pair is inserted into the result: if the key already exists, we convert the value for that
+-- key into a table and append into it. If only value is not nil, then it is appended to the result.
 -- @within MappingAndFiltering
 -- @func fun A function which will be passed each key and value as arguments, plus any extra arguments to pairmap.
 -- @tab t A table
@@ -488,7 +503,15 @@ function tablex.pairmap(fun,t,...)
     for k,v in pairs(t) do
         local rv,rk = fun(k,v,...)
         if rk then
-            res[rk] = rv
+            if res[rk] then
+                if type(res[rk]) == 'table' then
+                    table.insert(res[rk],rv)
+                else
+                    res[rk] = {res[rk], rv}
+                end
+            else
+                res[rk] = rv
+            end
         else
             res[#res+1] = rv
         end
@@ -524,7 +547,7 @@ local function index_map_op (i,v) return i,v end
 -- @return a map-like table
 function tablex.index_map (t)
     assert_arg_indexable(1,t)
-    return setmetatable(tablex.pairmap(index_map_op,t),Map)
+    return makemap(tablex.pairmap(index_map_op,t))
 end
 
 local function set_op(i,v) return true,v end
@@ -535,7 +558,7 @@ local function set_op(i,v) return true,v end
 -- @return a set (a map-like table)
 function tablex.makeset (t)
     assert_arg_indexable(1,t)
-    return setmetatable(tablex.pairmap(set_op,t),Set)
+    return setmetatable(tablex.pairmap(set_op,t),require('pl.Set'))
 end
 
 --- combine two tables, either as union or intersection. Corresponds to
@@ -560,7 +583,26 @@ function tablex.merge (t1,t2,dup)
         res[k] = v
       end
     end
-    return setmeta(res,t1,Map)
+    return setmeta(res,t1,'Map')
+end
+
+--- the union of two map-like tables.
+-- If there are duplicate keys, the second table wins.
+-- @tab t1 a table
+-- @tab t2 a table
+-- @treturn tab
+-- @see tablex.merge
+function tablex.union(t1, t2)
+    return tablex.merge(t1, t2, true)
+end
+
+--- the intersection of two map-like tables.
+-- @tab t1 a table
+-- @tab t2 a table
+-- @treturn tab
+-- @see tablex.merge
+function tablex.intersection(t1, t2)
+    return tablex.merge(t1, t2, false)
 end
 
 --- a new table which is the difference of two tables.
@@ -583,7 +625,7 @@ function tablex.difference (s1,s2,symm)
             if s1[k] == nil then res[k] = v end
         end
     end
-    return setmeta(res,s1,Map)
+    return setmeta(res,s1,'Map')
 end
 
 --- A table where the key/values are the values and value counts of the table.
@@ -612,7 +654,7 @@ function tablex.count_map (t,cmp)
             end
         end
     end
-    return setmetatable(res,Map)
+    return makemap(res)
 end
 
 --- filter an array's values using a predicate function
@@ -631,7 +673,7 @@ function tablex.filter (t,pred,arg)
             k = k + 1
         end
     end
-    return setmeta(res,t,List)
+    return setmeta(res,t,'List')
 end
 
 --- return a table where each element is a table of the ith values of an arbitrary
@@ -720,7 +762,7 @@ function tablex.sub(t,first,last)
     first,last = tablex._normalize_slice(t,first,last)
     local res={}
     for i=first,last do append(res,t[i]) end
-    return setmeta(res,t,List)
+    return setmeta(res,t,'List')
 end
 
 --- set an array range to a value. If it's a function we use the result

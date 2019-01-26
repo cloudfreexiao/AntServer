@@ -1,5 +1,6 @@
+--- Listing files in directories and creating/removing directory paths.
 --
--- Dependencies: `pl.utils`, `pl.path`, `pl.tablex`
+-- Dependencies: `pl.utils`, `pl.path`
 --
 -- Soft Dependencies: `alien`, `ffi` (either are used on Windows for copying/moving files)
 -- @module pl.dir
@@ -7,62 +8,61 @@
 local utils = require 'pl.utils'
 local path = require 'pl.path'
 local is_windows = path.is_windows
-local tablex = require 'pl.tablex'
 local ldir = path.dir
-local chdir = path.chdir
 local mkdir = path.mkdir
 local rmdir = path.rmdir
 local sub = string.sub
-local os,pcall,ipairs,pairs,require,setmetatable,_G = os,pcall,ipairs,pairs,require,setmetatable,_G
+local os,pcall,ipairs,pairs,require,setmetatable = os,pcall,ipairs,pairs,require,setmetatable
 local remove = os.remove
 local append = table.insert
 local wrap = coroutine.wrap
 local yield = coroutine.yield
 local assert_arg,assert_string,raise = utils.assert_arg,utils.assert_string,utils.raise
-local List = utils.stdmt.List
 
 local dir = {}
+
+local function makelist(l)
+    return setmetatable(l, require('pl.List'))
+end
 
 local function assert_dir (n,val)
     assert_arg(n,val,'string',path.isdir,'not a directory',4)
 end
 
-local function assert_file (n,val)
-    assert_arg(n,val,'string',path.isfile,'not a file',4)
-end
-
 local function filemask(mask)
-    mask = utils.escape(mask)
-    return mask:gsub('%%%*','.+'):gsub('%%%?','.')..'$'
+    mask = utils.escape(path.normcase(mask))
+    return '^'..mask:gsub('%%%*','.*'):gsub('%%%?','.')..'$'
 end
 
---- does the filename match the shell pattern?.
--- (cf. fnmatch.fnmatch in Python, 11.8)
--- @string file A file name
--- @string pattern A shell pattern
+--- Test whether a file name matches a shell pattern.
+-- Both parameters are case-normalized if operating system is
+-- case-insensitive.
+-- @string filename A file name.
+-- @string pattern A shell pattern. The only special characters are
+-- `'*'` and `'?'`: `'*'` matches any sequence of characters and
+-- `'?'` matches any single character.
 -- @treturn bool
--- @raise file and pattern must be strings
-function dir.fnmatch(file,pattern)
-    assert_string(1,file)
+-- @raise dir and mask must be strings
+function dir.fnmatch(filename,pattern)
+    assert_string(1,filename)
     assert_string(2,pattern)
-    return path.normcase(file):find(filemask(pattern)) ~= nil
+    return path.normcase(filename):find(filemask(pattern)) ~= nil
 end
 
---- return a list of all files which match the pattern.
--- (cf. fnmatch.filter in Python, 11.8)
--- @string files A table containing file names
+--- Return a list of all file names within an array which match a pattern.
+-- @tab filenames An array containing file names.
 -- @string pattern A shell pattern.
--- @treturn List(string) list of files
--- @raise file and pattern must be strings
-function dir.filter(files,pattern)
-    assert_arg(1,files,'table')
+-- @treturn List(string) List of matching file names.
+-- @raise dir and mask must be strings
+function dir.filter(filenames,pattern)
+    assert_arg(1,filenames,'table')
     assert_string(2,pattern)
     local res = {}
     local mask = filemask(pattern)
-    for i,f in ipairs(files) do
-        if f:find(mask) then append(res,f) end
+    for i,f in ipairs(filenames) do
+        if path.normcase(f):find(mask) then append(res,f) end
     end
-    return setmetatable(res,List)
+    return makelist(res)
 end
 
 local function _listfiles(dir,filemode,match)
@@ -72,12 +72,12 @@ local function _listfiles(dir,filemode,match)
     for f in ldir(dir) do
         if f ~= '.' and f ~= '..' then
             local p = path.join(dir,f)
-            if check(p) and (not match or match(p)) then
+            if check(p) and (not match or match(f)) then
                 append(res,p)
             end
         end
     end
-    return setmetatable(res,List)
+    return makelist(res)
 end
 
 --- return a list of all files in a directory which match the a shell pattern.
@@ -92,7 +92,7 @@ function dir.getfiles(dir,mask)
     if mask then
         mask = filemask(mask)
         match = function(f)
-            return f:find(mask)
+            return path.normcase(f):find(mask)
         end
     end
     return _listfiles(dir,true,match)
@@ -107,22 +107,12 @@ function dir.getdirectories(dir)
     return _listfiles(dir,false)
 end
 
-local function quote_argument (f)
-    f = path.normcase(f)
-    if f:find '%s' then
-        return '"'..f..'"'
-    else
-        return f
-    end
-end
-
-
 local alien,ffi,ffi_checked,CopyFile,MoveFile,GetLastError,win32_errors,cmd_tmpfile
 
 local function execute_command(cmd,parms)
    if not cmd_tmpfile then cmd_tmpfile = path.tmpname () end
    local err = path.is_windows and ' > ' or ' 2> '
-    cmd = cmd..' '..parms..err..cmd_tmpfile
+    cmd = cmd..' '..parms..err..utils.quote_arg(cmd_tmpfile)
     local ret = utils.execute(cmd)
     if not ret then
         local err = (utils.readfile(cmd_tmpfile):gsub('\n(.*)',''))
@@ -193,7 +183,7 @@ local function find_ffi_copyfile ()
 end
 
 local function two_arguments (f1,f2)
-    return quote_argument(f1)..' '..quote_argument(f2)
+    return utils.quote_arg(f1)..' '..utils.quote_arg(f2)
 end
 
 local function file_op (is_copy,src,dest,flag)
@@ -208,18 +198,17 @@ local function file_op (is_copy,src,dest,flag)
         if not CopyFile then
             src = path.normcase(src)
             dest = path.normcase(dest)
-            local cmd = is_copy and 'copy' or 'rename'
             local res, err = execute_command('copy',two_arguments(src,dest))
             if not res then return false,err end
             if not is_copy then
-                return execute_command('del',quote_argument(src))
+                return execute_command('del',utils.quote_arg(src))
             end
             return true
         else
             if path.isdir(dest) then
                 dest = path.join(dest,path.basename(src))
             end
-			local ret
+            local ret
             if is_copy then ret = CopyFile(src,dest,flag)
             else ret = MoveFile(src,dest) end
             if ret == 0 then
@@ -275,7 +264,7 @@ local function _dirfiles(dir,attrib)
             end
         end
     end
-    return setmetatable(dirs,List),setmetatable(files,List)
+    return makelist(dirs), makelist(files)
 end
 
 
@@ -389,7 +378,7 @@ function dir.clonetree (path1,path2,file_fun,verbose)
     if verbose then verbose('normalized:',path1,path2) end
     -- particularly NB that the new path isn't fully contained in the old path
     if path1 == path2 then return raise "paths are the same" end
-    local i1,i2 = path2:find(path1,1,true)
+    local _,i2 = path2:find(path1,1,true)
     if i2 == #path1 and path2:sub(i2+1,i2+1) == path.sep then
         return raise 'destination is a subdirectory of the source'
     end
@@ -454,28 +443,28 @@ function dir.dirtree( d )
 end
 
 
----	Recursively returns all the file starting at _path_. It can optionally take a shell pattern and
---	only returns files that match _pattern_. If a pattern is given it will do a case insensitive search.
---	@string start_path  A directory. If not given, all files in current directory are returned.
---	@string pattern A shell pattern. If not given, all files are returned.
---	@treturn List(string) containing all the files found recursively starting at _path_ and filtered by _pattern_.
+--- Recursively returns all the file starting at _path_. It can optionally take a shell pattern and
+-- only returns files that match _shell_pattern_. If a pattern is given it will do a case insensitive search.
+-- @string start_path  A directory. If not given, all files in current directory are returned.
+-- @string shell_pattern A shell pattern. If not given, all files are returned.
+-- @treturn List(string) containing all the files found recursively starting at _path_ and filtered by _shell_pattern_.
 -- @raise start_path must be a directory
-function dir.getallfiles( start_path, pattern )
+function dir.getallfiles( start_path, shell_pattern )
     assert_dir(1,start_path)
-    pattern = pattern or ""
+    shell_pattern = shell_pattern or "*"
 
     local files = {}
     local normcase = path.normcase
     for filename, mode in dir.dirtree( start_path ) do
         if not mode then
-            local mask = filemask( pattern )
+            local mask = filemask( shell_pattern )
             if normcase(filename):find( mask ) then
                 files[#files + 1] = filename
             end
         end
     end
 
-    return setmetatable(files,List)
+    return makelist(files)
 end
 
 return dir

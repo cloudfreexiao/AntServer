@@ -12,21 +12,16 @@
 local tablex = require 'pl.tablex'
 local utils = require 'pl.utils'
 local stdmt = utils.stdmt
-local tmakeset,deepcompare,merge,keys,difference,tupdate = tablex.makeset,tablex.deepcompare,tablex.merge,tablex.keys,tablex.difference,tablex.update
+local deepcompare = tablex.deepcompare
 
 local pretty_write = require 'pl.pretty' . write
 local Map = stdmt.Map
 local Set = stdmt.Set
-local List = stdmt.List
 
 local class = require 'pl.class'
 
 -- the Map class ---------------------
 class(nil,nil,Map)
-
-local function makemap (m)
-    return setmetatable(m,Map)
-end
 
 function Map:_init (t)
     local mt = getmetatable(t)
@@ -39,7 +34,7 @@ end
 
 
 local function makelist(t)
-    return setmetatable(t,List)
+    return setmetatable(t, require('pl.List'))
 end
 
 --- list of keys.
@@ -56,14 +51,21 @@ end
 --- return a List of all key-value pairs, sorted by the keys.
 function Map:items()
     local ls = makelist(tablex.pairmap (function (k,v) return makelist {k,v} end, self))
-	ls:sort(function(t1,t2) return t1[1] < t2[1] end)
-	return ls
+    ls:sort(function(t1,t2) return t1[1] < t2[1] end)
+    return ls
 end
 
--- Will return the existing value, or if it doesn't exist it will set
--- a default value and return it.
-function Map:setdefault(key, defaultval)
-   return self[key] or self:set(key,defaultval) or defaultval
+--- set a value in the map if it doesn't exist yet.
+-- @param key the key
+-- @param default value to set
+-- @return the value stored in the map (existing value, or the new value)
+function Map:setdefault(key, default)
+    local val = self[key]
+    if val ~= nil then
+        return val
+    end
+    self:set(key,default)
+   return default
 end
 
 --- size of map.
@@ -73,6 +75,7 @@ end
 Map.len = tablex.size
 
 --- put a value into the map.
+-- This will remove the key if the value is `nil`
 -- @param key the key
 -- @param val the value
 function Map:set (key,val)

@@ -6,13 +6,13 @@
 --      Does some calculations
 --        -o,--offset (default 0.0)  Offset to add to scaled number
 --        -s,--scale  (number)  Scaling factor
---         <number>; (number )  Number to be scaled
+--        <number> (number) Number to be scaled
 --      ]]
 --
 --      print(args.offset + args.scale * args.number)
 --
--- Lines begining with '-' are flags; there may be a short and a long name;
--- lines begining wih '<var>' are arguments.  Anything in parens after
+-- Lines beginning with `'-'` are flags; there may be a short and a long name;
+-- lines beginning with `'<var>'` are arguments.  Anything in parens after
 -- the flag/argument is either a default, a type name or a range constraint.
 --
 -- See @{08-additional.md.Command_line_Programs_with_Lapp|the Guide}
@@ -33,11 +33,10 @@ local function lines(s) return s:gmatch('([^\n]*)\n') end
 local function lstrip(str)  return str:gsub('^%s+','')  end
 local function strip(str)  return lstrip(str):gsub('%s+$','') end
 local function at(s,k)  return s:sub(k,k) end
-local function isdigit(s) return s:find('^%d+$') == 1 end
 
 local lapp = {}
 
-local open_files,parms,aliases,parmlist,usage,windows,script
+local open_files,parms,aliases,parmlist,usage,script
 
 lapp.callback = false -- keep Strict happy
 
@@ -145,7 +144,7 @@ end
 
 -- deducing type of variable from default value;
 local function process_default (sval,vtype)
-    local val
+    local val, success
     if not vtype or vtype == 'number' then
         val = tonumber(sval)
     end
@@ -159,6 +158,18 @@ local function process_default (sval,vtype)
             return true, 'boolean'
         end
         if sval:match '^["\']' then sval = sval:sub(2,-2) end
+
+        local ps = types[vtype] or {}
+        ps.type = vtype
+
+        local show_usage_error = lapp.show_usage_error
+        lapp.show_usage_error = "throw"
+        success, val = pcall(convert_parameter, ps, sval)
+        lapp.show_usage_error = show_usage_error
+        if success then
+          return val, vtype or 'string'
+        end
+
         return sval,vtype or 'string'
     end
 end
@@ -170,7 +181,6 @@ end
 -- @return a table with parameter-value pairs
 function lapp.process_options_string(str,args)
     local results = {}
-    local opts = {at_start=true}
     local varargs
     local arg = args or _G.arg
     open_files = {}
@@ -198,9 +208,16 @@ function lapp.process_options_string(str,args)
 
     usage = str
 
+    for _,a in ipairs(arg) do
+      if a == "-h" or a == "--help" then
+        return lapp.quit()
+      end
+    end
+
+
     for line in lines(str) do
         local res = {}
-        local optspec,optparm,i1,i2,defval,vtype,constraint,rest
+        local optparm,defval,vtype,constraint,rest
         line = lstrip(line)
         local function check(str)
             return match(str,line,res)
@@ -210,6 +227,7 @@ function lapp.process_options_string(str,args)
         if check '-$v{short}, --$o{long} $' or check '-$v{short} $' or check '--$o{long} $' then
             if res.long then
                 optparm = res.long:gsub('[^%w%-]','_')  -- I'm not sure the $o pattern will let anything else through?
+                if #res.rest == 1 then optparm = optparm .. res.rest end
                 if res.short then aliases[res.short] = optparm  end
             else
                 optparm = res.short
@@ -293,7 +311,7 @@ function lapp.process_options_string(str,args)
                     ps.converter = converter
                 end
                 ps.constraint = types[vtype].constraint
-            elseif not builtin_types[vtype] then
+            elseif not builtin_types[vtype] and vtype then
                 lapp.error(vtype.." is unknown type")
             end
             parms[optparm] = ps
@@ -304,9 +322,10 @@ function lapp.process_options_string(str,args)
     local iextra = 1
     local i = 1
     local parm,ps,val
+    local end_of_flags = false
 
     local function check_parm (parm)
-        local eqi = parm:find '='
+        local eqi = parm:find '[=:]'
         if eqi then
             tinsert(arg,i+1,parm:sub(eqi+1))
             parm = parm:sub(1,eqi-1)
@@ -321,8 +340,19 @@ function lapp.process_options_string(str,args)
     while i <= #arg do
         local theArg = arg[i]
         local res = {}
+        -- after '--' we don't parse args and they end up in
+        -- the array part of the result (args[1] etc)
+        if theArg == '--' then
+            end_of_flags = true
+            iparm = #parmlist + 1
+            i = i + 1
+            theArg = arg[i]
+            if not theArg then
+                break
+            end
+        end
         -- look for a flag, -<short flags> or --<long flag>
-        if match('--$S{long}',theArg,res) or match('-$S{short}',theArg,res) then
+        if not end_of_flags and (match('--$S{long}',theArg,res) or match('-$S{short}',theArg,res)) then
             if res.long then -- long option
                 parm = check_parm(res.long)
             elseif #res.short == 1 or is_flag(res.short) then

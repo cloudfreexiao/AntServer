@@ -25,22 +25,22 @@ local bind1,usplit,assert_arg = utils.bind1,utils.split,utils.assert_arg
 local is_callable = require 'pl.types'.is_callable
 local unpack = utils.unpack
 
+local text = {}
+
+
+local function makelist(l)
+    return setmetatable(l, require('pl.List'))
+end
+
 local function lstrip(str)  return (str:gsub('^%s+',''))  end
 local function strip(str)  return (lstrip(str):gsub('%s+$','')) end
-local function make_list(l)  return setmetatable(l,utils.stdmt.List) end
-local function split(s,delim)  return make_list(usplit(s,delim)) end
+local function split(s,delim)  return makelist(usplit(s,delim)) end
 
 local function imap(f,t,...)
     local res = {}
     for i = 1,#t do res[i] = f(t[i],...) end
     return res
 end
-
---[[
-module ('pl.text',utils._module)
-]]
-
-local text = {}
 
 local function _indent (s,sp)
     local sl = split(s,'\n')
@@ -65,7 +65,7 @@ end
 function text.dedent (s)
     assert_arg(1,s,'string')
     local sl = split(s,'\n')
-    local i1,i2 = sl[1]:find('^%s*')
+    local _,i2 = (#sl>0 and sl[1] or ''):find('^%s*')
     sl = imap(string.sub,sl,i2+1)
     return concat(sl,'\n')..'\n'
 end
@@ -75,7 +75,8 @@ end
 -- to that extent.
 -- @param s the string
 -- @param width the margin width, default 70
--- @return a list of lines
+-- @return a list of lines (List object)
+-- @see pl.List
 function text.wrap (s,width)
     assert_arg(1,s,'string')
     width = width or 70
@@ -91,7 +92,7 @@ function text.wrap (s,width)
         i = i + #line
         append(lines,strip(line))
     end
-    return make_list(lines)
+    return makelist(lines)
 end
 
 --- format a paragraph so that it fits into a line width.
@@ -173,21 +174,21 @@ function Template:indent_substitute(tbl)
     -- then we split that into lines and adjust the indent before inserting.
     local function subst(line)
         return line:gsub('(%s*)%$([%w_]+)',function(sp,f)
-			local subtmpl
+            local subtmpl
             local s = tbl[f]
             if not s then error("not present in table "..f) end
-			if getmetatable(s) == Template then
-				subtmpl = s
-				s = s.tmpl
-			else
-				s = tostring(s)
-			end
+            if getmetatable(s) == Template then
+                subtmpl = s
+                s = s.tmpl
+            else
+                s = tostring(s)
+            end
             if s:find '\n' then
                 s = _indent(s,sp)
             end
-			if subtmpl then return _substitute(s,tbl)
-			else return s
-			end
+            if subtmpl then return _substitute(s,tbl)
+            else return s
+            end
         end)
     end
     local lines = imap(subst,self.strings)

@@ -17,11 +17,11 @@
 --
 -- Dependencies: `pl.utils`, `pl.tablex`
 -- @module pl.func
-local type,select,setmetatable,getmetatable,rawset = type,select,setmetatable,getmetatable,rawset
+local type,setmetatable,getmetatable,rawset = type,setmetatable,getmetatable,rawset
 local concat,append = table.concat,table.insert
 local tostring = tostring
 local utils = require 'pl.utils'
-local pairs,ipairs,loadstring,rawget,unpack  = pairs,ipairs,loadstring,rawget,utils.unpack
+local pairs,rawget,unpack,pack = pairs,rawget,utils.unpack,utils.pack
 local tablex = require 'pl.tablex'
 local map = tablex.map
 local _DEBUG = rawget(_G,'_DEBUG')
@@ -88,7 +88,7 @@ function _PEMT.__tostring (e)
 end
 
 function _PEMT.__unm(arg)
-    return P{op='-',arg}
+    return P{op='unm',arg}
 end
 
 function func.Not (arg)
@@ -159,16 +159,22 @@ function func.Args (...)
     return P{op='()',_arg,...}
 end
 
--- binary and unary operators, with their precedences (see 2.5.6)
-local operators = {
+-- binary operators with their precedences (see Lua manual)
+-- precedences might be incremented by one before use depending on
+-- left- or right-associativity, space them out
+local binary_operators = {
     ['or'] = 0,
-    ['and'] = 1,
-    ['=='] = 2, ['~='] = 2, ['<'] = 2, ['>'] = 2,  ['<='] = 2,   ['>='] = 2,
-    ['..'] = 3,
-    ['+'] = 4, ['-'] = 4,
-    ['*'] = 5, ['/'] = 5, ['%'] = 5,
-    ['not'] = 6, ['#'] = 6, ['-'] = 6,
-    ['^'] = 7
+    ['and'] = 2,
+    ['=='] = 4, ['~='] = 4, ['<'] = 4, ['>'] = 4,  ['<='] = 4,   ['>='] = 4,
+    ['..'] = 6,
+    ['+'] = 8, ['-'] = 8,
+    ['*'] = 10, ['/'] = 10, ['%'] = 10,
+    ['^'] = 14
+}
+
+-- unary operators with their precedences
+local unary_operators = {
+    ['not'] = 12, ['#'] = 12, ['unm'] = 12
 }
 
 -- comparisons (as prefix functions)
@@ -196,19 +202,31 @@ end
 function repr (e,lastpred)
     local tail = func.tail
     if isPE(e) then
-        local pred = operators[e.op]
-        local ls = map(repr,e,pred)
-        if pred then --unary or binary operator
-            if #ls ~= 1 then
-                local s = concat(ls,' '..e.op..' ')
-                if lastpred and lastpred > pred then
-                    s = '('..s..')'
+        local pred = binary_operators[e.op] or unary_operators[e.op]
+        if pred then
+            -- binary or unary operator
+            local s
+            if binary_operators[e.op] then
+                local left_pred = pred
+                local right_pred = pred
+                if e.op == '..' or e.op == '^' then
+                    left_pred = left_pred + 1
+                else
+                    right_pred = right_pred + 1
                 end
-                return s
+                local left_arg = repr(e[1], left_pred)
+                local right_arg = repr(e[2], right_pred)
+                s = left_arg..' '..e.op..' '..right_arg
             else
-                return e.op..' '..ls[1]
+                local op = e.op == 'unm' and '-' or e.op
+                s = op..' '..repr(e[1], pred)
             end
+            if lastpred and lastpred > pred then
+                s = '('..s..')'
+            end
+            return s
         else -- either postfix, or a placeholder
+            local ls = map(repr,e)
             if e.op == '[]' then
                 return ls[1]..'['..ls[2]..']'
             elseif e.op == '()' then
@@ -335,7 +353,7 @@ end
 -- @usage (bind(f,_1,a))(b) == f(a,b)
 -- @usage (bind(f,_2,_1))(a,b) == f(b,a)
 function func.bind(fn,...)
-    local args = table.pack(...)
+    local args = pack(...)
     local holders,parms,bvalues,values = {},{},{'fn'},{}
     local nv,maxplace,varargs = 1,0,false
     for i = 1,args.n do
@@ -365,7 +383,7 @@ return function (%s)
 end
 ]]):format(bvalues,parms,holders)
     if _DEBUG then print(fstr) end
-    local res,err = utils.load(fstr)
+    local res = utils.load(fstr)
     res = res()
     return res(fn,unpack(values))
 end

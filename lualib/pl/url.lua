@@ -11,8 +11,9 @@ end
 --- Quote the url, replacing special characters using the '%xx' escape.
 -- @string s the string
 -- @bool quote_plus Also escape slashes and replace spaces by plus signs.
+-- @return The quoted string, or if `s` wasn't a string, just plain unaltered `s`.
 function url.quote(s, quote_plus)
-    if not s or not type(s) == "string" then
+    if type(s) ~= "string" then
         return s
     end
 
@@ -34,8 +35,9 @@ end
 
 --- Unquote the url, replacing '%xx' escapes and plus signs.
 -- @string s the string
+-- @return The unquoted string, or if `s` wasn't a string, just plain unaltered `s`.
 function url.unquote(s)
-    if not s or not type(s) == "string" then
+    if type(s) ~= "string" then
         return s
     end
 

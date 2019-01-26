@@ -24,18 +24,12 @@ local patterns,function_arg,usplit,array_tostring = utils.patterns,utils.functio
 local append,concat = table.insert,table.concat
 local gsub = string.gsub
 local io = io
-local _G,print,type,tonumber,ipairs,setmetatable,pcall,error = _G,print,type,tonumber,ipairs,setmetatable,pcall,error
+local _G,print,type,tonumber,ipairs,setmetatable = _G,print,type,tonumber,ipairs,setmetatable
 
 
 local data = {}
 
 local parse_select
-
-local function count(s,chr)
-    chr = utils.escape(chr)
-    local _,cnt = s:gsub(chr,' ')
-    return cnt
-end
 
 local function rstrip(s)
     return (s:gsub('%s+$',''))
@@ -45,10 +39,10 @@ local function strip (s)
     return (rstrip(s):gsub('^%s*',''))
 end
 
--- this gives `l` the standard List metatable, so that if you
--- do choose to pull in pl.List, you can use its methods on such lists.
-local function make_list(l)
-    return setmetatable(l,utils.stdmt.List)
+-- This gives `l` the standard List metatable,
+-- pulling in the List module.
+local function makelist(l)
+    return setmetatable(l, require('pl.List'))
 end
 
 local function map(fun,t)
@@ -79,7 +73,7 @@ local function split(line,delim,csv,n)
         -- in CSV mode trailiing commas are significant!
         if line:match ',$' then append(res,'') end
     end
-    return make_list(res)
+    return makelist(res)
 end
 
 local function find(t,v)
@@ -97,17 +91,17 @@ local DataMT = {
         for res in data.query(self,name) do
             append(arr,res)
         end
-        return make_list(arr)
+        return makelist(arr)
     end,
 
     copy_select = function(self,condn)
         condn = parse_select(condn,self)
         local iter = data.query(self,condn)
         local res = {}
-        local row = make_list{iter()}
+        local row = makelist{iter()}
         while #row > 0 do
             append(res,row)
-            row = make_list{iter()}
+            row = makelist{iter()}
         end
         res.delim = self.delim
         return data.new(res,split(condn.fields,','))
@@ -160,12 +154,12 @@ end
 
 -- [guessing delimiter] We check for comma, tab and spaces in that order.
 -- [issue] any other delimiters to be checked?
-local delims = {',','\t',' ',';'}
+local delims = {',', '\t', ' ', ';'}
 
 local function guess_delim (line)
     if line=='' then return ' ' end
     for _,delim in ipairs(delims) do
-        if count(line,delim) > 0 then
+        if line:find(delim) then
             return delim == ' ' and '%s+' or delim
         end
     end
@@ -195,10 +189,6 @@ local function open_file (f,mode)
     return f,nil,opened
 end
 
-local function all_n ()
-
-end
-
 --- read a delimited file in a Lua table.
 -- By default, attempts to treat first line as separated list of fieldnames.
 -- @param file a filename or a file-like object
@@ -216,7 +206,7 @@ end
 -- @return error message. May be a file error, 'not a file-like object'
 -- or a conversion error
 function data.read(file,cnfg)
-    local err,opened,count,line
+    local count,line
     local D = {}
     if not cnfg then cnfg = {} end
     local f,err,opened = open_file(file,'r')
@@ -402,7 +392,7 @@ function data.new (d,fieldnames)
         d.delim = guess_delim(d.fieldnames)
         d.fieldnames = split(d.fieldnames,d.delim)
     end
-    d.fieldnames = make_list(d.fieldnames)
+    d.fieldnames = makelist(d.fieldnames)
     d.original_fieldnames = {}
     massage_fieldnames(d.fieldnames,d.original_fieldnames)
     setmetatable(d,DataMT)
@@ -479,7 +469,6 @@ end
 
 local function process_select (data,parms)
     --- preparing fields ----
-    local res,ret
     field_error = nil
     local fields = parms.fields
     local numfields = fields:find '%$'  or #data.fieldnames == 0
@@ -501,7 +490,7 @@ local function process_select (data,parms)
         fields = rstrip(fields):gsub('[^,%w]','_')
     end
     local massage_fields = utils.bind1(massage_fields,data)
-    ret = gsub(fields,idpat,massage_fields)
+    local ret = gsub(fields,idpat,massage_fields)
     if field_error then return nil,field_error end
     parms.fields = fields
     parms.proc_fields = ret
@@ -561,7 +550,7 @@ function data.query(data,condn,context,return_row)
     else
         return nil, "condition must be a string or a table"
     end
-    local query, k
+    local query
     if condn.sort_by then -- use sorted_query
         query = sorted_query
     else
@@ -571,7 +560,7 @@ function data.query(data,condn,context,return_row)
     if return_row then
         fields = '{'..fields..'}'
     end
-    query,k = query:gsub('FIELDLIST',fields)
+    query = query:gsub('FIELDLIST',fields)
     if is_string(condn.where) then
         query = query:gsub('CONDITION',condn.where)
         condn.where = nil
@@ -642,7 +631,6 @@ end
 -- @param outfile filename or file-like object
 -- @bool dont_fail true if you want to return an error, not just fail
 function data.filter (Q,infile,outfile,dont_fail)
-    local err
     local d = data.read(infile or 'stdin')
     local out = open_file(outfile or 'stdout')
     local iter,err = d:select(Q)

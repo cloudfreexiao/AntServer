@@ -16,10 +16,12 @@ local error = error
 local gsub = string.gsub
 local rep = string.rep
 local sub = string.sub
+local reverse = string.reverse
 local concat = table.concat
+local append = table.insert
 local escape = utils.escape
 local ceil, max = math.ceil, math.max
-local assert_arg,usplit,list_MT = utils.assert_arg,utils.split,utils.stdmt.List
+local assert_arg,usplit = utils.assert_arg,utils.split
 local lstrip
 
 local function assert_string (n,s)
@@ -32,6 +34,10 @@ end
 
 local function assert_nonempty_string(n,s)
     assert_arg(n,s,'string',non_empty,'must be a non-empty string')
+end
+
+local function makelist(l)
+    return setmetatable(l, require('pl.List'))
 end
 
 local stringx = {}
@@ -131,15 +137,41 @@ function stringx.join(s,seq)
     return concat(seq,s)
 end
 
---- break string into a list of lines
--- @string s the string
--- @param keepends (currently not used)
-function stringx.splitlines (s,keepends)
-    assert_string(1,s)
-    local res = usplit(s,'[\r\n]')
-    -- we are currently hacking around a problem with utils.split (see stringx.split)
-    if #res == 0 then res = {''} end
-    return setmetatable(res,list_MT)
+--- Split a string into a list of lines.
+-- `"\r"`, `"\n"`, and `"\r\n"` are considered line ends.
+-- They are not included in the lines unless `keepends` is passed.
+-- Terminal line end does not produce an extra line.
+-- Splitting an empty string results in an empty list.
+-- @string s the string.
+-- @bool[opt] keep_ends include line ends.
+function stringx.splitlines(s, keep_ends)
+    assert_string(1, s)
+    local res = {}
+    local pos = 1
+    while true do
+        local line_end_pos = find(s, '[\r\n]', pos)
+        if not line_end_pos then
+            break
+        end
+
+        local line_end = sub(s, line_end_pos, line_end_pos)
+        if line_end == '\r' and sub(s, line_end_pos + 1, line_end_pos + 1) == '\n' then
+            line_end = '\r\n'
+        end
+
+        local line = sub(s, pos, line_end_pos - 1)
+        if keep_ends then
+            line = line .. line_end
+        end
+        append(res, line)
+
+        pos = line_end_pos + #line_end
+    end
+
+    if pos <= #s then
+        append(res, sub(s, pos))
+    end
+    return makelist(res)
 end
 
 --- split a string into a list of strings using a delimiter.
@@ -161,7 +193,7 @@ function stringx.split(s,re,n)
     if re and re ~= '' and find(s,re,-#re,true) then
         res[#res+1] = ""
     end
-	return setmetatable(res,list_MT)
+    return makelist(res)
 end
 
 --- replace all tabs in s with tabsize spaces. If not specified, tabsize defaults to 8.
@@ -243,7 +275,7 @@ end
 -- @string sub substring
 function stringx.count(s,sub)
     assert_string(1,s)
-    local i,k = _find_all(s,sub,1)
+    local _,k = _find_all(s,sub,1)
     return k
 end
 
@@ -309,19 +341,29 @@ local function _strip(s,left,right,chrs)
     else
         chrs = '['..escape(chrs)..']'
     end
+    local f = 1
+    local t
     if left then
         local i1,i2 = find(s,'^'..chrs..'*')
         if i2 >= i1 then
-            s = sub(s,i2+1)
+            f = i2+1
         end
     end
     if right then
-        local i1,i2 = find(s,chrs..'*$')
-        if i2 >= i1 then
-            s = sub(s,1,i1-1)
+        if #s < 200 then
+            local i1,i2 = find(s,chrs..'*$',f)
+            if i2 >= i1 then
+                t = i1-1
+            end
+        else
+            local rs = reverse(s)
+            local i1,i2 = find(rs, '^'..chrs..'*')
+            if i2 >= i1 then
+                t = -i2
+            end
         end
     end
-    return s
+    return sub(s,f,t)
 end
 
 --- trim any whitespace on the left of s.
@@ -468,17 +510,16 @@ end
 -- @return 'nil' if not found. If found, the maximum number of equal signs found within all matches.
 local function has_lquote(s)
     local lstring_pat = '([%[%]])(=*)%1'
-    local equals
-    local start, finish, bracket, new_equals = nil, 1, nil, nil
-
+    local equals, new_equals, _
+    local finish = 1
     repeat
-        start, finish, bracket, new_equals = s:find(lstring_pat, finish)
+        _, finish, _, new_equals = s:find(lstring_pat, finish)
         if new_equals then
             equals = max(equals or 0, #new_equals)
         end
     until not new_equals
 
-    return equals 
+    return equals
 end
 
 --- Quote the given string and preserve any control or escape characters, such that reloading the string in Lua returns the same result.
@@ -499,8 +540,8 @@ function stringx.quote_string(s)
         equal_signs = ("="):rep((equal_signs or -1) + 1)
         -- Long strings strip out leading newline. We want to retain that, when quoting.
         if s:find("^\n") then s = "\n" .. s end
-        local lbracket, rbracket =  
-            "[" .. equal_signs .. "[",  
+        local lbracket, rbracket =
+            "[" .. equal_signs .. "[",
             "]" .. equal_signs .. "]"
         s = lbracket .. s .. rbracket
     else

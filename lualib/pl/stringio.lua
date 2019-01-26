@@ -13,7 +13,7 @@
 -- @module pl.stringio
 
 local unpack = rawget(_G,'unpack') or rawget(table,'unpack')
-local getmetatable,tostring,tonumber = getmetatable,tostring,tonumber
+local tonumber = tonumber
 local concat,append = table.concat,table.insert
 
 local stringio = {}
@@ -72,7 +72,7 @@ function SR:_read(fmt)
         res = str:sub(i)
         self.i = sz
     elseif fmt == '*n' then
-        local _,i2,i2,idx
+        local _,i2,idx
         _,idx = str:find ('%s*%d+',i)
         _,i2 = str:find ('^%.%d+',idx+1)
         if i2 then idx = i2 end

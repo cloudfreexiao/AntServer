@@ -34,7 +34,6 @@ local split         =   utils.split;
 local t_insert      =  table.insert;
 local t_concat      =  table.concat;
 local t_remove      =  table.remove;
-local s_format      = string.format;
 local s_match       =  string.match;
 local tostring      =      tostring;
 local setmetatable  =  setmetatable;
@@ -46,9 +45,7 @@ local next          =          next;
 local print         =         print;
 local unpack        =  utils.unpack;
 local s_gsub        =   string.gsub;
-local s_char        =   string.char;
 local s_find        =   string.find;
-local os            =            os;
 local pcall,require,io     =   pcall,require,io
 
 local _M = {}
@@ -189,7 +186,6 @@ end
 --  doc = parent {child 'one', child 'two'}
 function _M.tags(list)
     local ctors = {}
-    local elem = _M.elem
     if is_text(list) then list = split(list,'%s*,%s*') end
     for _,tag in ipairs(list) do
         local ctor = function(items) return _M.elem(tag,items) end
@@ -522,18 +518,18 @@ function _M.walk (doc, depth_first, operation)
 end
 
 local html_empty_elements = { --lists all HTML empty (void) elements
-	br      = true,
-	img     = true,
-	meta    = true,
-	frame   = true,
-	area    = true,
-	hr      = true,
-	base    = true,
-	col     = true,
-	link    = true,
-	input   = true,
-	option  = true,
-	param   = true,
+    br      = true,
+    img     = true,
+    meta    = true,
+    frame   = true,
+    area    = true,
+    hr      = true,
+    base    = true,
+    col     = true,
+    link    = true,
+    input   = true,
+    option  = true,
+    param   = true,
     isindex = true,
     embed = true,
 }
@@ -575,9 +571,10 @@ function _M.basic_parse(s,all_text,html)
 
     t_insert(stack, top)
     local ni,c,label,xarg, empty, _, istart
-    local i, j = 1, 1
+    local i = 1
+    local j
     -- we're not interested in <?xml version="1.0"?>
-    _,istart = s_find(s,'^%s*<%?[^%?]+%?>%s*')    
+    _,istart = s_find(s,'^%s*<%?[^%?]+%?>%s*')
     if not istart then -- or <!DOCTYPE ...>
         _,istart = s_find(s,'^%s*<!DOCTYPE.->%s*')
     end
@@ -599,8 +596,6 @@ function _M.basic_parse(s,all_text,html)
             if html then
                 label = label:lower()
                 if html_empty_elements[label] then empty = "/" end
-                if label == 'script' then
-                end
             end
             if all_text or not s_find(text, "^%s*$") then
                 t_insert(top, unescape(text))
@@ -622,7 +617,7 @@ function _M.basic_parse(s,all_text,html)
                 t_insert(top, toclose)
             end
         end
-    i = j+1
+        i = j+1
     end
     local text = s_sub(s, i)
     if all_text or  not s_find(text, "^%s*$") then

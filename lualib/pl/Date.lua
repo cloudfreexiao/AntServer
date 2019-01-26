@@ -1,7 +1,7 @@
 --- Date and Date Format classes.
 -- See  @{05-dates.md|the Guide}.
 --
--- Dependencies: `pl.class`, `pl.stringx`
+-- Dependencies: `pl.class`, `pl.stringx`, `pl.utils`
 -- @classmod pl.Date
 -- @pragma nostrip
 
@@ -9,7 +9,7 @@ local class = require 'pl.class'
 local os_time, os_date = os.time, os.date
 local stringx = require 'pl.stringx'
 local utils = require 'pl.utils'
-local assert_arg,assert_string,raise = utils.assert_arg,utils.assert_string,utils.raise
+local assert_arg,assert_string = utils.assert_arg,utils.assert_string
 
 local Date = class()
 Date.Format = class()
@@ -94,9 +94,9 @@ function Date.tzone (ts)
         ts = os_time()
     elseif type(ts) == "table" then
         if getmetatable(ts) == Date then
-        	ts = ts.time
+            ts = ts.time
         else
-        	ts = Date(ts).time
+            ts = Date(ts).time
         end
     end
     local utc = os_date('!*t',ts)
@@ -263,7 +263,11 @@ end
 
 --- long numerical ISO data format version of this date.
 function Date:__tostring()
-    local t = os_date('%Y-%m-%dT%H:%M:%S',self.time)
+    local fmt = '%Y-%m-%dT%H:%M:%S'
+    if self.utc then
+        fmt = "!"..fmt
+    end
+    local t = os_date(fmt,self.time)
     if self.utc then
         return  t .. 'Z'
     else
@@ -467,8 +471,17 @@ end
 -- @param d a date object, or a time value as returned by @{os.time}
 -- @return string
 function Date.Format:tostring(d)
-    local tm = type(d) == 'number' and d or d.time
-    return os_date(self.outf,tm)
+    local tm
+    local fmt = self.outf
+    if type(d) == 'number' then
+        tm = d
+    else
+        tm = d.time
+        if d.utc then
+            fmt = '!'..fmt
+        end
+    end
+    return os_date(fmt,tm)
 end
 
 --- force US order in dates like 9/11/2001
@@ -478,6 +491,17 @@ end
 
 --local months = {jan=1,feb=2,mar=3,apr=4,may=5,jun=6,jul=7,aug=8,sep=9,oct=10,nov=11,dec=12}
 local months
+local parse_date_unsafe
+local function create_months()
+    local ld, day1 = parse_date_unsafe '2000-12-31', {day=1}
+    months = {}
+    for i = 1,12 do
+        ld = ld:last_day()
+        ld:add(day1)
+        local mon = ld:month_name():lower()
+        months [mon] = i
+    end
+end
 
 --[[
 Allowed patterns:
@@ -486,8 +510,9 @@ Allowed patterns:
 
 ]]
 
-
-local is_word = stringx.isalpha
+local function looks_like_a_month(w)
+    return w:match '^%a+,*$' ~= nil
+end
 local is_number = stringx.isdigit
 local function tonum(s,l1,l2,kind)
     kind = kind or ''
@@ -510,7 +535,9 @@ local function  parse_iso_end(p,ns,sec)
     end
     -- ISO 8601 dates may end in Z (for UTC) or [+-][isotime]
     -- (we're working with the date as lower case, hence 'z')
-    if p:match 'z$' then return sec, {h=0,m=0} end -- we're UTC!
+    if p:match 'z$' then -- we're UTC!
+        return  sec, {h=0,m=0}
+    end
     p = p:gsub(':','') -- turn 00:30 to 0030
     local _,_,sign,offs = p:find('^([%+%-])(%d+)')
     if not sign then return sec, nil end -- not UTC
@@ -521,7 +548,7 @@ local function  parse_iso_end(p,ns,sec)
     return sec, tz
 end
 
-local function parse_date_unsafe (s,US)
+function parse_date_unsafe (s,US)
     s = s:gsub('T',' ') -- ISO 8601
     local parts = stringx.split(s:lower())
     local i,p = 1,parts[1]
@@ -550,17 +577,10 @@ local function parse_date_unsafe (s,US)
             year = true
         end
     end
-    if p and is_word(p) then
+    if p and looks_like_a_month(p) then -- date followed by month
         p = p:sub(1,3)
         if not months then
-            local ld, day1 = parse_date_unsafe '2000-12-31', {day=1}
-            months = {}
-            for i = 1,12 do
-                ld = ld:last_day()
-                ld:add(day1)
-                local mon = ld:month_name():lower()
-                months [mon] = i
-            end
+            create_months()
         end
         local mon = months[p]
         if mon then
@@ -617,11 +637,14 @@ local function parse_date_unsafe (s,US)
     sec = sec and tonum(sec,0,60) or 0  --60 used to indicate leap second
     local res = Date {year = year, month = month, day = day, hour = hour, min = min, sec = sec}
     if tz then -- ISO 8601 UTC time
-        res:add {hour = -tz.h}
-        if tz.m ~= 0 then res:add {min = -tz.m} end
+        local corrected = false
+        if tz.h ~= 0 then res:add {hour = -tz.h}; corrected = true end
+        if tz.m ~= 0 then res:add {min = -tz.m}; corrected = true end
         res.utc = true
         -- we're in UTC, so let's go local...
-        res = res:toLocal()
+        if corrected then
+            res = res:toLocal()
+        end-- we're UTC!
     end
     return res
 end

@@ -12,11 +12,9 @@ local getenv = os.getenv
 local tmpnam = os.tmpname
 local attributes, currentdir, link_attrib
 local package = package
-local io = io
-local append = table.insert
-local ipairs = ipairs
+local append, concat, remove = table.insert, table.concat, table.remove
 local utils = require 'pl.utils'
-local assert_arg,assert_string,raise = utils.assert_arg,utils.assert_string,utils.raise
+local assert_string,raise = utils.assert_string,utils.raise
 
 local attrib
 local path = {}
@@ -54,7 +52,7 @@ path.chdir = lfs.chdir
 --- is this a directory?
 -- @string P A file path
 function path.isdir(P)
-	assert_string(1,P)
+    assert_string(1,P)
     if P:match("\\$") then
         P = P:sub(1,-2)
     end
@@ -64,14 +62,14 @@ end
 --- is this a file?.
 -- @string P A file path
 function path.isfile(P)
-	assert_string(1,P)
+    assert_string(1,P)
     return attrib(P,'mode') == 'file'
 end
 
 -- is this a symbolic link?
 -- @string P A file path
 function path.islink(P)
-	assert_string(1,P)
+    assert_string(1,P)
     if link_attrib then
         return link_attrib(P,'mode')=='link'
     else
@@ -82,7 +80,7 @@ end
 --- return size of a file.
 -- @string P A file path
 function path.getsize(P)
-	assert_string(1,P)
+    assert_string(1,P)
     return attrib(P,'size')
 end
 
@@ -90,14 +88,14 @@ end
 -- @string P A file path
 -- @return the file path if it exists, nil otherwise
 function path.exists(P)
-	assert_string(1,P)
+    assert_string(1,P)
     return attrib(P,'mode') ~= nil and P
 end
 
 --- Return the time of last access as the number of seconds since the epoch.
 -- @string P A file path
 function path.getatime(P)
-	assert_string(1,P)
+    assert_string(1,P)
     return attrib(P,'access')
 end
 
@@ -110,7 +108,7 @@ end
 ---Return the system's ctime.
 -- @string P A file path
 function path.getctime(P)
-	assert_string(1,P)
+    assert_string(1,P)
     return path.attrib(P,'change')
 end
 
@@ -119,7 +117,7 @@ local function at(s,i)
     return sub(s,i,i)
 end
 
-path.is_windows = utils.dir_separator == '\\'
+path.is_windows = utils.is_windows
 
 local other_sep
 -- !constant sep is the directory separator for this platform.
@@ -130,7 +128,7 @@ else
     path.sep = '/'
     path.dirsep = ':'
 end
-local sep,dirsep = path.sep,path.dirsep
+local sep = path.sep
 
 --- are we running Windows?
 -- @class field
@@ -167,7 +165,7 @@ end
 -- @string[opt] pwd optional start path to use (default is current dir)
 function path.abspath(P,pwd)
     assert_string(1,P)
-	if pwd then assert_string(2,pwd) end
+    if pwd then assert_string(2,pwd) end
     local use_pwd = pwd ~= nil
     if not use_pwd and not currentdir then return P end
     P = P:gsub('[\\/]$','')
@@ -207,7 +205,7 @@ end
 -- @string P A file path
 function path.dirname(P)
     assert_string(1,P)
-    local p1,p2 = path.splitpath(P)
+    local p1 = path.splitpath(P)
     return p1
 end
 
@@ -215,7 +213,7 @@ end
 -- @string P A file path
 function path.basename(P)
     assert_string(1,P)
-    local p1,p2 = path.splitpath(P)
+    local _,p2 = path.splitpath(P)
     return p2
 end
 
@@ -223,7 +221,7 @@ end
 -- @string P A file path
 function path.extension(P)
     assert_string(1,P)
-    local p1,p2 = path.splitext(P)
+    local _,p2 = path.splitext(P)
     return p2
 end
 
@@ -277,45 +275,55 @@ function path.normcase(P)
     end
 end
 
-local np_gen1,np_gen2 = '([^SEP]+)SEP(%.%.SEP?)','SEP+%.?SEP'
-local np_pat1, np_pat2
-
 --- normalize a path name.
 --  A//B, A/./B and A/foo/../B all become A/B.
 -- @string P a file path
 function path.normpath(P)
     assert_string(1,P)
+    -- Split path into anchor and relative path.
+    local anchor = ''
     if path.is_windows then
         if P:match '^\\\\' then -- UNC
-            return '\\\\'..path.normpath(P:sub(3))
+            anchor = '\\\\'
+            P = P:sub(3)
+        elseif at(P, 1) == '/' or at(P, 1) == '\\' then
+            anchor = '\\'
+            P = P:sub(2)
+        elseif at(P, 2) == ':' then
+            anchor = P:sub(1, 2)
+            P = P:sub(3)
+            if at(P, 1) == '/' or at(P, 1) == '\\' then
+                anchor = anchor..'\\'
+                P = P:sub(2)
+            end
         end
         P = P:gsub('/','\\')
+    else
+        -- According to POSIX, in path start '//' and '/' are distinct,
+        -- but '///+' is equivalent to '/'.
+        if P:match '^//' and at(P, 3) ~= '/' then
+            anchor = '//'
+            P = P:sub(3)
+        elseif at(P, 1) == '/' then
+            anchor = '/'
+            P = P:match '^/*(.*)$'
+        end
     end
-    if not np_pat1 then
-        np_pat1 = np_gen1:gsub('SEP',sep)
-        np_pat2 = np_gen2:gsub('SEP',sep)
+    local parts = {}
+    for part in P:gmatch('[^'..sep..']+') do
+        if part == '..' then
+            if #parts ~= 0 and parts[#parts] ~= '..' then
+                remove(parts)
+            else
+                append(parts, part)
+            end
+        elseif part ~= '.' then
+            append(parts, part)
+        end
     end
-    local k
-    repeat -- /./ -> /
-        P,k = P:gsub(np_pat2,sep)
-    until k == 0
-    repeat -- A/../ -> (empty)
-        local oldP = P
-        P,k = P:gsub(np_pat1,function(D, up)
-            if D == '..' then return nil end
-            if D == '.' then return up end
-            return ''
-        end)
-    until k == 0 or oldP == P
+    P = anchor..concat(parts, sep)
     if P == '' then P = '.' end
     return P
-end
-
-local function ATS (P)
-    if at(P,#P) ~= path.sep then
-        P = P..path.sep
-    end
-    return path.normcase(P)
 end
 
 --- relative path from current directory or optional start point
@@ -323,13 +331,16 @@ end
 -- @string[opt] start optional start point (default current directory)
 function path.relpath (P,start)
     assert_string(1,P)
-	if start then assert_string(2,start) end
+    if start then assert_string(2,start) end
     local split,normcase,min,append = utils.split, path.normcase, math.min, table.insert
     P = normcase(path.abspath(P,start))
     start = start or currentdir()
     start = normcase(start)
     local startl, Pl = split(start,sep), split(P,sep)
     local n = min(#startl,#Pl)
+    if path.is_windows and n > 0 and at(Pl[1],2) == ':' and Pl[1] ~= startl[1] then
+        return P
+    end
     local k = n+1 -- default value if this loop doesn't bail out!
     for i = 1,n do
         if startl[i] ~= Pl[i] then
@@ -368,7 +379,12 @@ end
 -- unlike os.tmpnam(), it always gives you a writeable path (uses TEMP environment variable on Windows)
 function path.tmpname ()
     local res = tmpnam()
-    if path.is_windows then res = getenv('TEMP')..res end
+    -- On Windows if Lua is compiled using MSVC14 os.tmpname
+    -- already returns an absolute path within TEMP env variable directory,
+    -- no need to prepend it.
+    if path.is_windows and not res:find(':') then
+        res = getenv('TEMP')..res
+    end
     return res
 end
 
