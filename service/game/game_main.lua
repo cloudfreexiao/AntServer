@@ -4,7 +4,7 @@ local cluster = require "skynet.cluster"
 
 local settings = require "settings"
 local node_name = skynet.getenv("node_name")
-local cfg = settings.lobbys[lobbyId]
+local cfg = settings.lobbys[node_name]
 
 
 local function start_gated()
