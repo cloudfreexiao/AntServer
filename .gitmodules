@@ -1,9 +1,6 @@
 [submodule "skynet"]
 	path = skynet
 	url = https://github.com/cloudfreexiao/skynet.git
-[submodule "client/termfx"]
-	path = client/termfx
-	url = https://github.com/LuaDist2/termfx.git
 [submodule "lualib-src/luafilesystem"]
 	path = lualib-src/luafilesystem
 	url = https://github.com/keplerproject/luafilesystem.git
@@ -16,6 +13,3 @@
 [submodule "3rd/curl"]
 	path = 3rd/curl
 	url = https://github.com/curl/curl.git
-[submodule "client/defold-luasocket"]
-	path = client/defold-luasocket
-	url = https://github.com/cloudfreexiao/defold-luasocket.git
