@@ -7,9 +7,6 @@
 [submodule "lualib-src/crab"]
 	path = lualib-src/crab
 	url = https://github.com/xjdrew/crab.git
-[submodule "3rd/curl"]
-	path = 3rd/curl
-	url = https://github.com/curl/curl.git
 [submodule "luaclient"]
 	path = luaclient
 	url = https://github.com/cloudfreexiao/luaclient.git
