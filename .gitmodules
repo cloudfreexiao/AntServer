@@ -10,3 +10,6 @@
 [submodule "lualib-src/lua-cjson"]
 	path = lualib-src/lua-cjson
 	url = https://github.com/cloudfreexiao/lua-cjson.git
+[submodule "skynet"]
+	path = skynet
+	url = https://github.com/cloudwu/skynet.git
