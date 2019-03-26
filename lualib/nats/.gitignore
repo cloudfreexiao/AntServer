@@ -1,0 +1,14 @@
+# 如果有需要，也可以加到仓库中
+.vscode
+.idea
+*.out
+*.pid
+*.o
+*.so
+*.lib
+*.tar.gz
+*.log
+*.svn
+.DS_Store*
+._*
+.DS_Store

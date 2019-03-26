@@ -6,5 +6,5 @@ logger    = "./log/game1.log"
 daemon    = './sh/game1.pid'
 start     = "game_main"
 
-node_name   = node1
+node_name   = "node1"
 

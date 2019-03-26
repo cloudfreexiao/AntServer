@@ -1,6 +1,3 @@
-[submodule "skynet"]
-	path = skynet
-	url = https://github.com/cloudfreexiao/skynet.git
 [submodule "lualib-src/luafilesystem"]
 	path = lualib-src/luafilesystem
 	url = https://github.com/keplerproject/luafilesystem.git

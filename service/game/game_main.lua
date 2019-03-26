@@ -4,7 +4,7 @@ local cluster = require "skynet.cluster"
 
 local settings = require "settings"
 local node_name = skynet.getenv("node_name")
-local cfg = settings.lobbys[node_name]
+local cfg = settings.nodes[node_name]
 
 
 local function start_gated()
@@ -47,11 +47,13 @@ skynet.start(function()
 		"proto.s2c",
   })
 
-  start_gated()
+  -- start_gated()
 
   skynet.uniqueservice("game_shutdown")
   INFO("-----GameServer-----", node_name, " start OK")
 
+  require "rabbitmq.examples.rabbitmq_pub"()
+
   cluster.open(cfg.node_name)
-  skynet.exit()
+  -- skynet.exit()
 end)

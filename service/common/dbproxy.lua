@@ -1,7 +1,7 @@
 
 local skynet = require "skynet"
 require "skynet.manager"
-local setting_template = require "settings"
+local settings = require "settings"
 
 local skynet_node_name = ...
 
@@ -9,8 +9,8 @@ local CMD = {}
 
 
 local function start()
-    local settings = setting_template.db_cnf[skynet_node_name]
-    skynet.uniqueservice(settings.dbproxy .. "pool", skynet_node_name)
+    local conf = settings.db_cnf[skynet_node_name]
+    skynet.uniqueservice(conf.dbproxy .. "pool", skynet_node_name)
 end
 
 skynet.start(function()

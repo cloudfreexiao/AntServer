@@ -58,7 +58,7 @@ settings.db_cnf = {
         }
     },
 
-    lobby1 = {
+    node1 = {
         redis_maxinst = 4,
         redis_cnf = {
             host = "127.0.0.1",
