@@ -4,12 +4,12 @@
 [submodule "lualib-src/crab"]
 	path = lualib-src/crab
 	url = https://github.com/xjdrew/crab.git
-[submodule "luaclient"]
-	path = luaclient
-	url = https://github.com/cloudfreexiao/luaclient.git
 [submodule "lualib-src/lua-cjson"]
 	path = lualib-src/lua-cjson
 	url = https://github.com/cloudfreexiao/lua-cjson.git
 [submodule "skynet"]
 	path = skynet
 	url = https://github.com/cloudwu/skynet.git
+[submodule "lua_httpws"]
+	path = lua_httpws
+	url = https://github.com/cloudfreexiao/lua_httpws.git
