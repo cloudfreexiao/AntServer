@@ -1,14 +1,11 @@
 
 
 local skynet = require "skynet"
--- local queue = require "skynet.queue"
--- local cs = queue()
-
--- local libagentpool = require "libagentpool"
 
 local switch = ...
 
-local gateserver = require "gate.gateserver" .. switch
+
+local gateserver = require ("gate.gateserver_" .. tostring(switch) )
 local gate_name = ""
 
 local connection = {} -- fd -> { fd , ip, uid（登录后有）game（登录后有）key（登录后有）}
@@ -21,7 +18,6 @@ skynet.register_protocol {
 local handler = {}
 
 function handler.open(_, conf)
-	INFO("start listen port: %d", conf.port)
 	gate_name = conf.name
 end
 

@@ -19,13 +19,12 @@ local function start_gated()
         skynet.name(gate_name, p)
 
         skynet.call(p, "lua", "open", {
-          port = "gate_port_" .. switch,
+          address = v.host,
+          port = v[tostring("gate_port_" .. switch)],
           maxclient = v.maxclient,
           nodelay = v.nodelay,
           name = gate_name,
         })
-
-        INFO("=====start ", name, "port:", g.port, "...======")
       else
         local proxy = cluster.proxy(v.node_name, gate_name)
         skynet.name(gate_name, proxy)
@@ -47,13 +46,13 @@ skynet.start(function()
 		"proto.s2c",
   })
 
-  -- start_gated()
+  start_gated()
 
   skynet.uniqueservice("game_shutdown")
   INFO("-----GameServer-----", node_name, " start OK")
 
-  require "rabbitmq.examples.rabbitmq_pub"()
+  -- require "rabbitmq.examples.rabbitmq_pub"()
 
   cluster.open(cfg.node_name)
-  -- skynet.exit()
+  skynet.exit()
 end)

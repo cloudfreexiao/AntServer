@@ -1,9 +1,9 @@
 local skynet = require "skynet"
 local netpack = require "websocketnetpack"
-local socketdriver = require "socketdriver"
+local socketdriver = require "skynet.socketdriver"
 local httpd = require "http.httpd"
-local string = require "string"
-local crypt = require "crypt"
+local crypt = require "skynet.crypt"
+
 local gateserver = {}
 
 local max_packsize = 10*1024
@@ -28,8 +28,8 @@ local function parse_httpheader(http_str)
 		i = string.find(http_str, "\r\n", start)
 		if i ~= nil then
             str = string.sub(http_str, start, i-1)
-            local key, value = string.match(str, "([%a-]+)%s*: (.*)")
-	        if key ~= nil then
+			local key, value = string.match(str, "([%a-]+)%s*: (.*)")
+			if key ~= nil then
                 header[key:lower()] = value
 			end
 		end
@@ -145,8 +145,10 @@ function gateserver.start(handler)
 		local port = assert(conf.port)
 		maxclient = conf.maxclient or 1024
 		nodelay = conf.nodelay
-		skynet.error(string.format("Listen on %s:%d", address, port))
+
 		socket = socketdriver.listen(address, port)
+		INFO("Listen WebSocket Gate on:", address, port)
+
 		socketdriver.start(socket)
 		if handler.open then
 			return handler.open(source, conf)

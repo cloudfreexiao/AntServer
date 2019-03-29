@@ -31,14 +31,15 @@ function gateserver.start(handler)
 	assert(handler.message)
 	assert(handler.connect)
 
-	function CMD.open( source, conf )
+	function CMD.open( source, conf)
 		assert(not socket)
 		local address = conf.address or "0.0.0.0"
 		local port = assert(conf.port)
 		maxclient = conf.maxclient or 1024
 		nodelay = conf.nodelay
-		skynet.error(string.format("Listen on %s:%d", address, port))
 		socket = socketdriver.listen(address, port)
+		INFO("Listen TCP Gate on:", address, port)
+
 		socketdriver.start(socket)
 		if handler.open then
 			return handler.open(source, conf)

@@ -10,9 +10,9 @@ skynet.start(function ()
 
     -- skynet.uniqueservice("logind")
     skynet.uniqueservice("loginw")
-
-    require "rabbitmq.examples.rabbitmq_sub"()
+    
+    -- require "rabbitmq.examples.rabbitmq_sub"()
 
     cluster.open "loginnode"
-    -- skynet.exit()
+    skynet.exit()
 end)
