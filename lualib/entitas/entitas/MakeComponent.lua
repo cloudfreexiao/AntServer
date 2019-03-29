@@ -1,3 +1,6 @@
+local table_insert  = table.insert
+local table_remove  = table.remove
+
 local function com_tostring(obj)
     local lua = ""
     local t = type(obj)
@@ -18,29 +21,22 @@ local function com_tostring(obj)
             lua = lua .. com_tostring(k) .. "=" .. com_tostring(v)
             first = false
         end
-        -- local metatable = getmetatable(obj)
-        -- if metatable ~= nil and type(metatable.__index) == "table" then
-        --     for k, v in pairs(metatable.__index) do
-        --         lua = lua ..com_tostring(k) .. "=" .. com_tostring(v) .. ","
-        --     end
-        -- end
         lua = lua .. "}"
     elseif t == "nil" then
         return nil
     else
-        --error("can not com_tostring a " .. t .. " type.")
+        error("can not tostring" .. t .. " type.")
     end
     return lua
 end
 
 local function _replace(t, ... )
-    local args = {...}
     for k, v in pairs(t._keys) do
-        local n = args[k]
+        local n = select(k,...)
         if not n then
             return
         end
-        t[v] = args[k]
+        rawset(t,v,n)
     end
 end
 
@@ -61,12 +57,23 @@ local function make_component(name, ...)
     tmp._name = name
     tmp._is = function(t) return t._name == name end
     tmp._replace = _replace
+    tmp._cache = {}
     tmp.new = function(...)
-        local tb = {}
-        setmetatable(tb, tmp)
+        local tb = table_remove(tmp._cache)
+        if not tb then
+            tb = {}
+            --print("create component",name)
+            setmetatable(tb, tmp)
+        end
         _replace(tb,...)
         return tb
     end
+
+    tmp.release = function(comp_value)
+        assert(comp_value._name == name)
+        table_insert(tmp._cache,comp_value)
+    end
+
     setmetatable(tmp,mt)
     return tmp
 end

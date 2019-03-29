@@ -1,8 +1,6 @@
-local set           = require("entitas.set")
-local util           = require("entitas.util")
+local set           = require("entitas.base.set")
 local set_insert    = set.insert
 local set_remove    = set.remove
-local class         = util.class
 
 local AbstractEntityIndex = require("entitas.entitas.AbstractEntityIndex")
 
@@ -15,18 +13,19 @@ end
 function M:get_entities(key)
     --print("key", key)
     if not self._indexes[key] then
-        self._indexes[key] = set.new()
+        self._indexes[key] = set.new(true)
     end
     return self._indexes[key]
 end
 
 function M:_add_entity(key, entity)
-    --print("key", key, "entity", entity)
+    --print("ecs_idx:add", key, "entity", entity)
     local t = self:get_entities(key)
     set_insert(t, entity)
 end
 
 function M:_remove_entity(key, entity)
+    --print("ecs_idx:remove", key, "entity", entity)
     local t = self:get_entities(key)
     set_remove(t, entity)
 end

@@ -1,7 +1,5 @@
-local util = require("entitas.util")
-local array = require("entitas.array")
+local array = require("entitas.base.array")
 local Collector = require("entitas.entitas.Collector")
-local class = util.class
 
 local M = class("ReactiveSystem")
 
@@ -21,19 +19,19 @@ end
 
 function M:ctor(context)
     self._collector = get_collector(self, context)
-    self._buffer = array.new()
+    self._entities = array.new(true)
 end
 
 function M:get_trigger()
-    error("not imp")
+    error(self.__cname.." 'get_trigger' not implemented")
 end
 
 function M:filter()
-    error("not imp")
+    error(self.__cname.." 'filter' not implemented")
 end
 
 function M:execute()
-    error("not imp")
+    error(self.__cname.." 'execute' not implemented")
 end
 
 function M:activate()
@@ -49,18 +47,19 @@ function M:clear()
 end
 
 function M:_execute()
+    local entities = self._entities
     if self._collector.entities:size()>0 then
         self._collector.entities:foreach(function(entity)
             if self:filter(entity) then
-                self._buffer:push(entity)
+                entities:push(entity)
             end
         end)
 
         self._collector:clear_entities()
-  
-        if self._buffer:size() > 0 then
-            self:execute(self._buffer)
-            self._buffer:clear()
+
+        if entities:size() > 0 then
+            self:execute(entities)
+            entities:clear()
         end
     end
 end

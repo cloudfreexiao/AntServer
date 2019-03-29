@@ -51,6 +51,8 @@ skynet.start(function()
   skynet.uniqueservice("game_shutdown")
   INFO("-----GameServer-----", node_name, " start OK")
 
+  -- local entitas = require("entitas.entitas")
+  -- DEBUG("entitas", inspect(entitas))
   -- require "rabbitmq.examples.rabbitmq_pub"()
 
   cluster.open(cfg.node_name)

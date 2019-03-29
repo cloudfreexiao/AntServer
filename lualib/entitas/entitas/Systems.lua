@@ -1,7 +1,6 @@
-local util              = require("entitas.util")
-local class             = util.class
-local table_insert      = table.insert
 local ReactiveSystem = require("entitas.entitas.ReactiveSystem")
+
+local table_insert = table.insert
 
 local M = class("Systems")
 
