@@ -40,7 +40,7 @@ CJSON_SO				= $(LUA_CLIB_PATH)/$(CJSON_SO_NAME)
 CAOI_SO					= $(LUA_CLIB_PATH)/$(CAOI_SO_NAME)
 
 
-all: $(HASH_SO) $(LFS_SO) $(WEBCLIENT_SO) $(UTF8_SO) $(CRAB_SO) \
+all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
 	$(WEBSOCKETNETPACK_SO) $(CJSON_SO) $(CAOI_SO) \
 
 #####################################################

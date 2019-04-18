@@ -1,5 +1,5 @@
 THIRD_LIB_ROOT ?= 3rd/
-CLIENT_DEPS ?= client/
+CLIENT_DEPS ?= lua_httpws/
 
 SKYNET_ROOT ?= skynet/
 SKYNET_LUA_BIN ?= $(SKYNET_ROOT)/3rd/lua/lua
