@@ -54,7 +54,7 @@ skynet.start(function()
   -- local entitas = require("entitas.entitas")
   -- DEBUG("entitas", inspect(entitas))
   -- require "rabbitmq.examples.rabbitmq_pub"()
-
+  skynet.newservice("agent")
   cluster.open(cfg.node_name)
   skynet.exit()
 end)

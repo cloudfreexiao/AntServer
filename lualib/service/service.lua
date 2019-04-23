@@ -2,6 +2,7 @@ local skynet = require "skynet"
 
 local service = {}
 
+
 function service.init(mod)
 	local funcs = mod.command
 	if mod.info then
@@ -16,9 +17,11 @@ function service.init(mod)
 				service[name] = skynet.uniqueservice(name)
 			end
 		end
+
 		if mod.init then
 			mod.init()
 		end
+
 		skynet.dispatch("lua", function (_,_, cmd, ...)
 			local f = funcs[cmd]
 			if f then

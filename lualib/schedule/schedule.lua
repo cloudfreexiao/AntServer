@@ -5,7 +5,16 @@ local schedule = {}
 local service_addr
 
 -- { month=, day=, wday=, hour= , min= }
+-- month （1–12），day （1–31）， hour （0–23），min （0–59），sec （0–61）， wday （星期几，星期天为 1 ）
 function schedule.submit(ti)
+    if ti.wday then
+        -- 转化下 lua 的 日期格式
+        if ti.wday == 7 then
+            ti.wday = 1
+        else
+            ti.wday = ti.wday + 1
+        end
+    end
     return skynet.call(service_addr, "lua", ti)
 end
 
