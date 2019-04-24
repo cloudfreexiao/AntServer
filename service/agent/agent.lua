@@ -4,7 +4,6 @@ local service = require "service.service"
 
 local world = require "agent.world"
 
-local agent = {}
 local data = {}
 -- local cli = client.handler()
 
@@ -59,11 +58,14 @@ local data = {}
 -- end
 
 
-local agent_controller = require "agent.agent_controller":new({})
+local agent_controller = require "agent.agent_controller":new()
+local agent_cmd = require "agentcmd.agent_cmd":new()
+
+
 
 
 service.init {
-	command = agent,
+	command = agent_cmd,
 	info = data,
 	world = world,
 	init =  function ()
