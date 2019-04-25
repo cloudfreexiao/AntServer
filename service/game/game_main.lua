@@ -55,7 +55,7 @@ skynet.start(function()
   -- DEBUG("entitas", inspect(entitas))
   -- require "rabbitmq.examples.rabbitmq_pub"()
   local addr = skynet.newservice("agent")
-  skynet.call(addr, "lua", "hello", 1, 100)
+  skynet.call(addr, "lua", "hello", 1, 20)
 
   cluster.open(cfg.node_name)
   skynet.exit()

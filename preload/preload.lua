@@ -1,6 +1,8 @@
 require "errorcode"
 require "luaext"
 require "logger_api"
+require "skynet_api"
+
 
 class = require "middleclass"
 
