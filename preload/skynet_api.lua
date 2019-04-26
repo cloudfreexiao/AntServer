@@ -1,14 +1,15 @@
 local skynet = require "skynet"
-local coroutine = require "skynet.coroutine"
-
 require "skynet.manager"
 
-function skynet_timeout_call(ti, ...)
+local coroutine = require "skynet.coroutine"
+
+
+function skynet_timeout_call(ti, addr, cmd, ...)
 	local co = coroutine.running()
 	local ret
 
 	skynet.fork(function(...)
-		ret = table.pack(pcall(skynet.call, ...))
+		ret = table.pack(pcall(skynet.call, addr, "lua", cmd, ...))
 		if co then
 			skynet.wakeup(co)
 		end

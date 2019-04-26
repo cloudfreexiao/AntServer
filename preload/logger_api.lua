@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-require "skynet.manager"
+-- require "skynet.manager"
 
 
 -- 日志级别

@@ -4,7 +4,6 @@ local skynet = require "skynet"
 
 local switch = ...
 
-
 local gateserver = require ("gate.gateserver_" .. tostring(switch) )
 local gate_name = ""
 
@@ -40,9 +39,6 @@ function handler.message(fd, msg, sz)
 	if uid then
 		--fd为session，特殊用法
 		skynet.redirect(c.agent, source, "client", fd, msg, sz)
-	else
-		--fd为session，特殊用法
-		-- skynet.redirect(login, source, "client", fd, msg, sz)
 	end
 end
 
