@@ -10,9 +10,6 @@
 [submodule "skynet"]
 	path = skynet
 	url = https://github.com/cloudwu/skynet.git
-[submodule "lua_httpws"]
-	path = lua_httpws
-	url = https://github.com/cloudfreexiao/lua_httpws.git
 [submodule "proto/sprotodump"]
 	path = proto/sprotodump
 	url = https://github.com/lvzixun/sprotodump.git

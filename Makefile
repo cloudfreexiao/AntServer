@@ -36,3 +36,5 @@ clientdeps:
 
 cleanall:
 	cd $(SKYNET_ROOT) && $(MAKE) cleanall
+	cd $(CLIENT_DEPS) && $(MAKE) clean 
+	cd $(SKYNET_DEPS) && $(MAKE) clean 
