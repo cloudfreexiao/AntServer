@@ -6,11 +6,13 @@ SKYNET_LUA_BIN ?= $(SKYNET_ROOT)/3rd/lua/lua
 
 SKYNET_DEPS ?= lualib-src/
 
-include $(SKYNET_ROOT)platform.mk
+PLAT ?= linux
+
 
 .PHONY: all 
 
-all : skynet skynetdeps clientdeps 
+all : skynetruntime skynetdeps clientdeps 
+
 
 clientdebug: CLIENT_DEBUG := true
 
@@ -20,7 +22,7 @@ client:
 	@if [ ! -f "client/client.lua" ]; then cp client/client_template.lua client/client.lua; fi
 	$(SKYNET_LUA_BIN) client/client.lua $(CLIENT_DEBUG) $(UIN)
 
-skynet:
+skynetruntime:
 	cd $(SKYNET_ROOT) && $(MAKE) $(PLAT)
 
 third_part:
@@ -31,3 +33,6 @@ skynetdeps:
 
 clientdeps:
 	cd $(CLIENT_DEPS) && $(MAKE) $(PLAT)
+
+cleanall:
+	cd $(SKYNET_ROOT) && $(MAKE) cleanall
