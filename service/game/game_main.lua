@@ -6,6 +6,9 @@ local settings = require "settings"
 local node_name = skynet.getenv("node_name")
 local cfg = settings.nodes[node_name]
 
+local codec = require "codec"
+local inspect_lib = require "inspect"
+DEBUG("codec", inspect_lib(codec))
 
 local function start_gated()
   for _, v in pairs(settings.nodes) do
