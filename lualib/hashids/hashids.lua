@@ -9,7 +9,7 @@ local push   = table.insert
 local unpack = table.unpack or unpack
 local str_switch_pos
 
-local ok, lib = pcall(require, "hashids.clib");
+local ok, lib = pcall(require, "hashids.core");
 if ok then
     str_switch_pos = lib.str_switch_pos;
 else
