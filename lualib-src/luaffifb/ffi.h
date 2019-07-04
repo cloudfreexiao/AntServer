@@ -1,4 +1,4 @@
-/* vim: ts=4 sw=4 sts=4 et tw=78
+﻿/* vim: ts=4 sw=4 sts=4 et tw=78
  * Portions copyright (c) 2015-present, Facebook, Inc. All rights reserved.
  * Portions copyright (c) 2011 James R. McKaskill.
  *
@@ -42,8 +42,8 @@ extern "C" {
 #include <sys/mman.h>
 #endif
 
-#include <complex.h>
-#define HAVE_COMPLEX
+//#include <complex.h>
+//#define HAVE_COMPLEX
 #define HAVE_LONG_DOUBLE
 
 #ifndef NDEBUG

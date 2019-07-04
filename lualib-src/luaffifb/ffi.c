@@ -1,4 +1,4 @@
-/* vim: ts=4 sw=4 sts=4 et tw=78
+﻿/* vim: ts=4 sw=4 sts=4 et tw=78
  * Portions copyright (c) 2015-present, Facebook, Inc. All rights reserved.
  * Portions copyright (c) 2011 James R. McKaskill.
  *
@@ -715,7 +715,8 @@ static cfunction check_cfunction(lua_State* L, int idx, int to_usr, const struct
     idx = lua_absindex(L, idx);
     to_usr = lua_absindex(L, to_usr);
 
-    switch (lua_type(L, idx)) {
+	auto t = lua_type(L, idx);
+    switch (t) {
     case LUA_TFUNCTION:
         if (get_cfunction_address(L, idx, &f)) {
             return f;

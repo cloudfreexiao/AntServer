@@ -21,3 +21,5 @@
 *.swp
 *.dylib
 /tmp
+.vs
+out/

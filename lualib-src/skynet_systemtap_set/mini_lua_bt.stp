@@ -1,0 +1,91 @@
+probe begin {
+    warn(sprintf("Tracing %d (@1) for standard Lua 5.3...\n", target()))
+}
+
+global quit = 0;
+global stack_trace;
+
+probe process(@1).function("luaL_*"),
+    process(@1).function("lua_*")
+{
+    if (@defined($L) && !quit) {
+        L = $L
+        p = L->ci
+        stack = ""
+
+        idx = 1
+        if (((((p->func))->tt_) == ((6 | (1 << 4))))) {
+            next
+        }
+        else {
+            gc = p->func->value_->gc
+            closure = &@cast(gc, "GCUnion", @1)->cl
+            func = &@cast(closure, "Closure", @1)->c //CClosure
+            if (idx <= func->nupvalues) {
+                upvalue_type = func->upvalue[idx - 1]->tt_
+                if (upvalue_type != 2) {
+                    next
+                } /* only this one can enter counter */
+                skynet_context = &@cast(func->upvalue[idx - 1]->value_->p, "skynet_context", @1)
+                /* service id in decimal*/
+                if (skynet_context->handle != strtol(@2, 10)) {
+                    next
+                }
+            } else {
+                next
+            }
+        }
+
+        while (p != 0 && !quit) {
+            tt = p->func->tt_ & 0x3f
+            //printf("tt: %x\n", tt)
+            if ( tt == 0x06 ) {
+                gc = p->func->value_->gc
+                closure = &@cast(gc, "GCUnion", @1)->cl
+                lua_closure = &closure->l
+                share_proto = lua_closure->p->sp
+                source = @cast(share_proto, "SharedProto", @1)->source
+                lineinfo = share_proto->lineinfo
+                line_index = p->u->l->savedpc - share_proto->code 
+                filename = kernel_string(source + 27)
+                lineno = kernel_int(lineinfo+line_index) - 1
+                frame = sprintf("%s:%d", filename, lineno)
+            }
+            else if ( tt == 0x16 ) {
+                f = p->func->value_->f
+                frame = "light_c_function:" . usymname(f)
+            }
+            else if ( tt == 0x26 ) {
+                gc = p->func->value_->gc
+                f = &@cast(gc, "GCUnion", @1)->cl->c->f
+                frame = "c_function:" . usymname(f)
+            }
+            else 
+                frame = "nil"
+
+            p = p->previous
+            if (frame != "nil") {
+                if (stack == "") {
+                    stack = frame
+                }
+                else {
+                    stack = frame . ";" . stack
+                }
+            }
+        }
+        if (stack != "") {
+            stack_trace[stack]++
+        }
+    }
+}
+
+probe timer.s(10) {
+    warn("Quiting now\\n")
+    quit = 1;
+    exit()
+}
+
+probe end{
+    foreach (stack+ in stack_trace)
+        printf("%s %8d\n", stack, stack_trace[stack])
+}

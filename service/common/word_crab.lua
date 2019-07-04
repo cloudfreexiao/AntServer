@@ -12,7 +12,6 @@ function CMD.is_valid(input)
     return word_crab_mod.is_valid(input)
 end 
 
-
 skynet.start(function()
     word_crab_mod.init(word_crab_file)
 

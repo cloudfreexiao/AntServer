@@ -6,9 +6,6 @@ local settings = require "settings"
 local node_name = skynet.getenv("node_name")
 local cfg = settings.nodes[node_name]
 
-local codec = require "codec"
-local inspect_lib = require "inspect"
-DEBUG("codec", inspect_lib(codec))
 
 local function start_gated()
   for _, v in pairs(settings.nodes) do
@@ -36,6 +33,28 @@ local function start_gated()
   end
 end
 
+-- local crc = require "crc"
+-- DEBUG("crc", DUMP(crc))
+
+-- local d = crc.crc32('13sgfdgdghg')
+-- DEBUG("d", DUMP(d))
+--     d = crc.crc64('gihlkhknljnljljkhjghjg')
+--     DEBUG("d2", DUMP(d))
+
+-- local r3 = require 'lr3.r3'
+-- local tree = r3.new()
+-- DEBUG("tree", DUMP(tree))
+-- local encode_json = require("cjson.safe").encode
+-- function foo(params) -- foo handler
+--   DEBUG("foo: ", encode_json(params))
+-- end
+-- -- routing
+-- tree:get("/foo/{id}/{name}", foo)
+-- -- don't forget!!!
+-- tree:compile()
+-- local ok = tree:dispatch("/foo/a/b", 'GET')
+--   DEBUG('dispatch err: ', ok)
+
 skynet.start(function()
   INFO("-----GameServer-----", node_name, " will begin")
 
@@ -45,8 +64,8 @@ skynet.start(function()
 
   local proto = skynet.uniqueservice "protoloader"
 	skynet.call(proto, "lua", "load", {
-		"proto.c2s",
-		"proto.s2c",
+		"c2s",
+		"s2c",
   })
 
   start_gated()
@@ -54,11 +73,18 @@ skynet.start(function()
   skynet.uniqueservice("game_shutdown")
   INFO("-----GameServer-----", node_name, " start OK")
 
-  -- require "rabbitmq.examples.rabbitmq_pub"()
-  local addr = skynet.newservice("agent", "tcp")
-  skynet_timeout_call(5, addr, "hello", 1, 20)
-  skynet_call(addr, "hello", 30, 50)
+  -- local addr = skynet.newservice("agent", "tcp")
+  -- skynet_timeout_call(5, addr, "hello", 1, 20)
+  -- skynet_call(addr, "hello", 30, 50)
+
+  -- skynet.timeout(200, function()
+  --   -- local rethinkdb = require "rethinkdb.examples.example"
+  --   -- rethinkdb.connect()
+
+  --   local kafka = require "kafka.examples.kafka"
+  --   kafka()
+  -- end)
 
   cluster.open(cfg.node_name)
-  skynet.exit()
+  -- skynet.exit()
 end)

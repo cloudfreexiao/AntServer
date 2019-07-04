@@ -1,0 +1,80 @@
+--- pasword based key derivation function.
+-- @module rethinkdb.internal.pbkdf
+-- @author Adam Grandquist
+-- @license Apache
+-- @copyright Adam Grandquist 2016
+-- implemented following (https://tools.ietf.org/html/rfc2898)
+
+local int_to_big = require'rethinkdb.internal.int_to_bytes'.big
+local bits = require 'rethinkdb.internal.bits'
+local crypto = require('crypto')
+
+local bxor = bits.bxor
+local unpack = _G.unpack or table.unpack  -- luacheck: read globals table.unpack
+
+local function xor(t, U)
+  for j=1, string.len(U) do
+    t[j] = bxor(t[j] or 0, string.byte(U, j) or 0)
+  end
+end
+
+--- key derivation function
+-- dtype
+-- password an octet string
+-- salt an octet string
+-- iteration count a positive integer
+-- dkLen length in octets of derived key, a positive integer
+local function hmac_pbkdf2(dtype, password, salt, iteration, dkLen)
+  local function PRF(P, S)
+    return crypto.hmac.digest(dtype, S, P, true)
+  end
+
+  -- length in octets of pseudorandom function output, a positive integer
+  local hLen = string.len(PRF('', ''))
+
+  if dkLen > (2^32 - 1) * hLen then
+    return nil, 'derived key too long'
+  end
+
+  --- length in blocks of derived key, a positive integer
+  -- l = CEIL (dkLen / hLen) ,
+  local l = math.ceil(dkLen / hLen)
+
+  --- intermediate values, octet strings
+  -- T_1 = F (P, S, c, 1) ,
+  -- T_2 = F (P, S, c, 2) ,
+  -- ...
+  -- T_l = F (P, S, c, l) ,
+  local T = {}
+
+  --- underlying pseudorandom function
+  -- local hmac = crypto.hmac.new(dtype, password)
+
+  for i=1, l do
+    --- intermediate values, octet strings
+    -- F (P, S, c, i) = U_1 \xor U_2 \xor ... \xor U_c
+    -- U_1 = PRF (P, S || INT (i)) ,
+    -- U_2 = PRF (P, U_1) ,
+    -- ...
+    -- U_c = PRF (P, U_{c-1}) .
+    local U = PRF(password, salt .. int_to_big(i, 4))
+
+    local t = {}
+
+    for _=2, iteration do
+      xor(t, U)
+      U = PRF(password, U)
+    end
+
+    xor(t, U)
+
+    -- message authentication code, an octet string
+    T[i] = string.char(unpack(t))
+  end
+
+  --- derived key, an octet string
+  -- DK = T_1 || T_2 ||  ...  || T_l<0..r-1>
+  return string.sub(table.concat(T), 1, dkLen)
+end
+
+return hmac_pbkdf2

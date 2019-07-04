@@ -9,17 +9,6 @@
 -- CREATE KEYSPACE cloudfreexiao WITH replication = {'class':'SimpleStrategy', 'replication_factor': 1};
 
 -- CREATE TABLE cloudfreexiao.users(id text PRIMARY KEY,name text, age int);
--- local cassandra = require "cassandra.cassandra"
--- local peer = cassandra.connect({keyspace = "cloudfreexiao"})
-
--- assert(peer:execute("INSERT INTO users(id, name, age) VALUES(?, ?, ?)", {
---     "1144bada-852c-11e3-89fb-e0b9a54a6d11",
---     "John O Reilly",
---     42
--- }))
--- local rows = assert(peer:execute "SELECT * FROM users")
--- DEBUG("user:", inspect(rows[1])) -- John O Reilly
--- peer:close()
 
 
 local socketchannel =  require "skynet.socketchannel"
@@ -222,7 +211,7 @@ end
 -- Uses the `client_options` given at creation to connect to the configured
 -- Cassandra node.
 function _Host.connect(conf)
-  local obj = {
+  local obj = {   
     protocol_version = conf.protocol_version or cql.def_protocol_version,
     keyspace = conf.keyspace,
   }

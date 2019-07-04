@@ -1,4 +1,5 @@
 local inspect_lib = require "inspect"
+
 function inspect(value)
     return inspect_lib(value, {
     process = function(item, path)
