@@ -8,10 +8,8 @@ skynet.start(function ()
 --    skynet.uniqueservice('webclient')
     skynet.uniqueservice('dbproxy', "login")
 
-    -- skynet.uniqueservice("logind")
+    skynet.uniqueservice("logind")
     skynet.uniqueservice("loginw")
-    
-    -- require "rabbitmq.examples.rabbitmq_sub"()
 
     cluster.open "loginnode"
     skynet.exit()

@@ -73,7 +73,7 @@ skynet.start(function()
   skynet.uniqueservice("game_shutdown")
   INFO("-----GameServer-----", node_name, " start OK")
 
-  -- local addr = skynet.newservice("agent", "tcp")
+  local addr = skynet.newservice("agent", "tcp")
   -- skynet_timeout_call(5, addr, "hello", 1, 20)
   -- skynet_call(addr, "hello", 30, 50)
 

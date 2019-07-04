@@ -11,7 +11,7 @@ local login_logic = require "logind.login_logic"
 
 local logind = {
 	host = "0.0.0.0",
-	port = settings.login_conf.login_port,
+	port = settings.login_conf.login_port_tcp,
 	multilogin = false,	-- disallow multilogin
 	name = "login_master",
 	instance = settings.login_conf.login_slave_cout,
@@ -20,9 +20,9 @@ local logind = {
 function logind.auth_handler(args)
     local args_array = string.split(args, "@")
     local openId = crypt.base64decode(args_array[1])
-    local sdk = crypt.base64decode(args_array[2])
-    local pf = crypt.base64decode(args_array[3])
-    local serverId = crypt.base64decode(args_array[4])
+	local sdk = crypt.base64decode(args_array[2])
+	local serverId = crypt.base64decode(args_array[3])
+    local pf = crypt.base64decode(args_array[4])
     local userData = crypt.base64decode(args_array[5])
     
 	DEBUG("login auth_handler openId:", openId, " sdk:", sdk, " pf:", pf, " serverId:", serverId, " userData:", userData)

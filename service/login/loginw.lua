@@ -123,7 +123,7 @@ skynet.start(function()
     end
     local balance = 1
     -- 监听一个 web 端口
-    local id = socket.listen("0.0.0.0", settings.login_conf.login_port)
+    local id = socket.listen("0.0.0.0", settings.login_conf.login_port_http)
     socket.start(id , function(id, addr)
         -- 当一个 http 请求到达的时候, 把 socket id 分发到事先准备好的代理中去处理。
         skynet.send(agent[balance], "lua", id)

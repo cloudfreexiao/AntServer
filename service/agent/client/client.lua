@@ -2,8 +2,6 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 local sprotoloader = require "sprotoloader"
 
-local agent_user = require "agentdata.agent_data".agent_user
-
 local client = {}
 local host
 local sender
@@ -48,11 +46,11 @@ end
 function client.send_package(pack)
 	local package = string.pack(">s2", pack)
 
-	if agent_user.protocol == "tcp" then
-		socket.write(agent_user.fd, package)
-	else
-		wslib.send_text(agent_user.fd, package)
-	end
+	-- if agent_user.protocol == "tcp" then
+	-- 	socket.write(agent_user.fd, package)
+	-- else
+	-- 	wslib.send_text(agent_user.fd, package)
+	-- end
 end
 
 -- function client.close()
@@ -110,7 +108,7 @@ skynet.register_protocol {
 function client.init(proto)
 	return function ()
 		local protoloader = skynet.uniqueservice "protoloader"
-		local slot = skynet.call(protoloader, "lua", "index", proto .. ".c2s")
+		local slot = skynet.call(protoloader, "lua", "index", proto .. "c2s")
 		host = sprotoloader.load(slot):host "package"
 		local slot2 = skynet.call(protoloader, "lua", "index", proto .. ".s2c")
 		sender = host:attach(sprotoloader.load(slot2))
