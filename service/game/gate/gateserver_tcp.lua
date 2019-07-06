@@ -37,8 +37,8 @@ function gateserver.start(handler)
 		local port = assert(conf.port)
 		maxclient = conf.maxclient or 1024
 		nodelay = conf.nodelay
-		socket = socketdriver.listen(address, port)
 		INFO("Listen TCP Gate on:", address, port)
+		socket = socketdriver.listen(address, port)
 
 		socketdriver.start(socket)
 		if handler.open then

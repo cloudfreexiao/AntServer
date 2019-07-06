@@ -19,7 +19,7 @@ local function start_gated()
         skynet.name(gate_name, p)
 
         skynet.call(p, "lua", "open", {
-          address = v.host,
+          -- address = v.host, --TODO: gate host
           port = v[tostring("gate_port_" .. switch)],
           maxclient = v.maxclient,
           nodelay = v.nodelay,
@@ -61,6 +61,7 @@ skynet.start(function()
   skynet.uniqueservice('debug_console', cfg.console_port)
   skynet.uniqueservice('word_crab', cfg.word_crab_file)
   skynet.uniqueservice('dbproxy', node_name)
+  skynet.uniqueservice('hub')
 
   local proto = skynet.uniqueservice "protoloader"
 	skynet.call(proto, "lua", "load", {
@@ -86,5 +87,5 @@ skynet.start(function()
   -- end)
 
   cluster.open(cfg.node_name)
-  -- skynet.exit()
+  skynet.exit()
 end)

@@ -22,8 +22,9 @@ function logind.auth_handler(args)
     local openId = crypt.base64decode(args_array[1])
 	local sdk = crypt.base64decode(args_array[2])
 	local serverId = crypt.base64decode(args_array[3])
-    local pf = crypt.base64decode(args_array[4])
-    local userData = crypt.base64decode(args_array[5])
+	local pf = crypt.base64decode(args_array[4])
+	local protocol = crypt.base64decode(args_array[5])
+    local userData = crypt.base64decode(args_array[6])
     
 	DEBUG("login auth_handler openId:", openId, " sdk:", sdk, " pf:", pf, " serverId:", serverId, " userData:", userData)
 	local ret, newOpenId = login_auth(openId, sdk, userData)
@@ -34,22 +35,20 @@ function logind.auth_handler(args)
         openId = newOpenId
     end
     local uid = login_logic.get_real_openid(openId, sdk, pf)
-	return serverId, uid, pf
+	return serverId, uid, pf, protocol
 end
 
 -- 认证成功后，回调此函数，登录游戏服务器
-function logind.login_handler(serverId, uid, pf, secret)
-    local server, outerIp = login_logic.get_server(serverId)
-    INFO(string.format("%s@%s is login, secret is %s", uid, server, crypt.hexencode(secret)))
+function logind.login_handler(serverId, uid, pf, protocol, secret)
+    local server, host, port = login_logic.get_server(serverId, protocol)
+	DEBUG(string.format("[%s]@[%s] is logining, outerIp is[%s@%d], secret is[%s]", uid, server, host, port, crypt.hexencode(secret)))
+	local hub = ".hub"
+
 	-- only one can login, because disallow multilogin
 	local last = login_logic.get_user_online(uid)
-	-- 如果该用户已经在某个服务器上登录了，先踢下线
 	if last then
-		INFO(string.format("call gameserver %s to kick uid=%d subid=%d ...", last.server, uid, last.subid))
-		local ok = pcall(cluster.call, last.server, "hub", "kick", {uid = uid, subid = last.subid})
-		if not ok then
-			login_logic.del_user_online(uid)
-		end
+		cluster.send(last.server, hub, "kick", {uid = uid,})
+		login_logic.del_user_online(uid)
 	end
 
 	-- login_handler会被并发，可能同一用户在另一处中又登录了，所以再次确认是否登录
@@ -58,14 +57,15 @@ function logind.login_handler(serverId, uid, pf, secret)
 		error(string.format("user %d is already online", uid))
 	end
 
-	INFO(string.format("uid=%s is logging to gameserver %s ...", uid, server))
-	local ok, subid = pcall(cluster.call, server, "hub", "signin", {uid = uid, secret = secret})
+	local ok, subid = pcall(cluster.call, server, hub, "handshake", {uid = uid, secret = secret})
 	if not ok then
 		error("login gameserver error")
     end
 
     login_logic.get_user_online(uid, { subid = subid, server = server })
-	return outerIp .. "@" .. uid .. "@" .. subId
+	local token = host .. "@" .. port .. "@" .. uid .. "@" .. secret .. "@" .. subid .. "@"
+	DEBUG("Auth Sucess token:", token)
+	return token
 end
 
 local CMD = {}
@@ -74,7 +74,6 @@ function CMD.logout(data)
     login_logic.del_user_online(data.uid)
     DEBUG("uid:", data.uid, " subid:", data.subid, " is logout")
 end
-
 
 function logind.command_handler(command, source, ...)
 	local f = assert(CMD[command])

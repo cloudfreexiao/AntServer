@@ -146,8 +146,8 @@ function gateserver.start(handler)
 		maxclient = conf.maxclient or 1024
 		nodelay = conf.nodelay
 
-		socket = socketdriver.listen(address, port)
 		INFO("Listen WebSocket Gate on:", address, port)
+		socket = socketdriver.listen(address, port)
 
 		socketdriver.start(socket)
 		if handler.open then

@@ -63,22 +63,30 @@ local function launch_slave(auth_handler)
 		end
 
 		local serverkey = crypt.randomkey()
-		write("auth", fd, crypt.base64encode(crypt.dhexchange(serverkey)).."\n")
+		-- local dhkey = crypt.dhexchange(serverkey)
+		-- local line = crypt.base64encode(dhkey)
+		-- DEBUG("dhkey ", crypt.hexencode(dhkey))
+
+		local line = crypt.base64encode(serverkey)
+		write("auth", fd, line .."\n")
+		-- DEBUG("serverkey ", crypt.hexencode(serverkey))
 
 		local secret = crypt.dhsecret(clientkey, serverkey)
+		-- DEBUG("secret ", crypt.hexencode(secret))
 
 		local response = assert_socket("auth", socket.readline(fd), fd)
 		local hmac = crypt.hmac64(challenge, secret)
+		-- DEBUG("hmac ", crypt.hexencode(hmac))
 		if hmac ~= crypt.base64decode(response) then
 			write("auth", fd, "400 Bad Request\n")
 			error "challenge failed"
 		end
+		
 		local etoken = assert_socket("auth", socket.readline(fd),fd)
 		local token = crypt.desdecode(secret, crypt.base64decode(etoken))
 
-		local ok, server, uid, pf =  pcall(auth_handler,token)
-
-		return ok, server, uid, pf, secret
+		local ok, server, uid, pf, protocol =  pcall(auth_handler,token)
+		return ok, server, uid, pf, protocol, secret
 	end
 
 	local function ret_pack(ok, err, ...)
@@ -115,7 +123,7 @@ local user_login = {}
 
 local function accept(conf, s, fd, addr)
 	-- call slave auth
-	local ok, server, uid, pf, secret = skynet.call(s, "lua",  fd, addr)
+	local ok, server, uid, pf, protocol, secret = skynet.call(s, "lua",  fd, addr)
 	-- slave will accept(start) fd, so we can write to fd later
 
 	if not ok then
@@ -134,7 +142,7 @@ local function accept(conf, s, fd, addr)
 		user_login[uid] = true
 	end
 
-	local ok, err = pcall(conf.login_handler, server, uid, pf, secret)
+	local ok, err = pcall(conf.login_handler, server, uid, pf, protocol, secret)
 	-- unlock login
 	user_login[uid] = nil
 

@@ -84,5 +84,5 @@ skynet.start(function()
         skynet.retpack(f(...))
     end)
 
-    skynet.register(SERVICE_NAME)
+    skynet.register('.' .. SERVICE_NAME)
 end)
