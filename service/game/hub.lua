@@ -12,8 +12,9 @@ function CMD.kick(user)
 end
 
 function CMD.handshake(token)
+    --TODO: 超时处理 长时间 登陆验证成功但是不 进入游戏token
     subid = subid + 1
-    User_Map[token.uid] = token
+    User_Map[token.uid] = {token = token, tm = os.time(),}
     return subid
 end
 

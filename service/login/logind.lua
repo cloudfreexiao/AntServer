@@ -18,7 +18,7 @@ local logind = {
 }
 
 function logind.auth_handler(args)
-    local args_array = string.split(args, "@")
+    local args_array = string.split(args, "$")
     local openId = crypt.base64decode(args_array[1])
 	local sdk = crypt.base64decode(args_array[2])
 	local serverId = crypt.base64decode(args_array[3])
@@ -41,9 +41,8 @@ end
 -- 认证成功后，回调此函数，登录游戏服务器
 function logind.login_handler(serverId, uid, pf, protocol, secret)
     local server, host, port = login_logic.get_server(serverId, protocol)
-	DEBUG(string.format("[%s]@[%s] is logining, outerIp is[%s@%d], secret is[%s]", uid, server, host, port, crypt.hexencode(secret)))
 	local hub = ".hub"
-
+	secret = crypt.hexencode(secret)
 	-- only one can login, because disallow multilogin
 	local last = login_logic.get_user_online(uid)
 	if last then
@@ -63,7 +62,7 @@ function logind.login_handler(serverId, uid, pf, protocol, secret)
     end
 
     login_logic.get_user_online(uid, { subid = subid, server = server })
-	local token = host .. "@" .. port .. "@" .. uid .. "@" .. secret .. "@" .. subid .. "@"
+	local token = host .. "$" .. port .. "$" .. uid .. "$" .. secret .. "$" .. subid
 	DEBUG("Auth Sucess token:", token)
 	return token
 end

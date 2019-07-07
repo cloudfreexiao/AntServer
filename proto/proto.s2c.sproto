@@ -3,4 +3,6 @@
 	session 1 : integer
 }
 
-heartbeat 1 {}
+.push 1 {
+
+}

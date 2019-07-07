@@ -3,9 +3,9 @@
 	session 1 : integer
 }
 
-ping 1 {}
+heartbeat 1 {}
 
-login 2 {
+handshake 2 {
 	request {
 		secret 0 : string
 		subid 1 : string
@@ -15,4 +15,3 @@ login 2 {
 		res 0 : integer
 	}
 }
-

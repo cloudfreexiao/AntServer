@@ -148,7 +148,7 @@ local function accept(conf, s, fd, addr)
 
 	if ok then
 		err = err or ""
-		write("response 200",fd,  "200 "..crypt.base64encode(err).."\n")
+		write("response 200",fd,  "200 ".. crypt.base64encode(err).."\n")
 	else
 		write("response 403",fd,  "403 Forbidden\n")
 		error(err)
