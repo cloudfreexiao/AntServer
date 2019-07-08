@@ -56,7 +56,7 @@ function logind.login_handler(serverId, uid, pf, protocol, secret)
 		error(string.format("user %d is already online", uid))
 	end
 
-	local ok, subid = pcall(cluster.call, server, hub, "handshake", {uid = uid, secret = secret})
+	local ok, subid = pcall(cluster.call, server, hub, "access", {uid = uid, secret = secret, })
 	if not ok then
 		error("login gameserver error")
     end
@@ -71,7 +71,7 @@ local CMD = {}
 
 function CMD.logout(data)
     login_logic.del_user_online(data.uid)
-    DEBUG("uid:", data.uid, " subid:", data.subid, " is logout")
+    DEBUG("uid:", data.uid, " is logouted")
 end
 
 function logind.command_handler(command, source, ...)

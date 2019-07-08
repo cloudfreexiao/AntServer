@@ -6,4 +6,6 @@ require "inspect_api"
 
 class = require "middleclass"
 
+math.randomseed(os.time())
+
 

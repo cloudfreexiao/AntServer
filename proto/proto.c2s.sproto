@@ -3,15 +3,17 @@
 	session 1 : integer
 }
 
-heartbeat 1 {}
+heartbeat 1 {
+
+}
 
 handshake 2 {
 	request {
-		secret 0 : string
-		subid 1 : string
+		uid 0 : string
+		secret 1 : string
 	}
 
 	response {
-		res 0 : integer
+		res 0: integer
 	}
 }
