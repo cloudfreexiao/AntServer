@@ -1,0 +1,9 @@
+include("config.public")
+
+
+harbor    = 0
+logger    = "./log/battle1.log"
+daemon    = './sh/battle1.pid'
+start     = "battle_main"
+
+battle_name   = "battle1"

@@ -1,12 +1,17 @@
 local skynet = require "skynet"
 require "skynet.manager"
 
+-- 属于哪种节点 关服操作
+local name = ...
 local CMD = {}
 
+
 function CMD.shutdown()
-    -- skynet.call(".lobby", "lua", "stopLobby")
-    -- pcall(skynet.call, ".world", 'lua', 'stopWorld')
     --TODO: 增加其他关服操作 
+    DEBUG("do shutdown " .. name)
+    if name == "battle" then
+    elseif name == "game" then
+    end
 end
 
 skynet.start(function()

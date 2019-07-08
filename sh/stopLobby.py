@@ -25,7 +25,7 @@ def Stop():
         # receive welcom from debug_console
         print "receive: ", s.recv(512)
         # send stop command
-        s.send('call .game_shutdown "shutdown"\n')
+        s.send('call .shutdown "shutdown"\n')
         #read the result
         print "receive: ", s.recv(512)
         #bye

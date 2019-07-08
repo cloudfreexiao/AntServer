@@ -71,7 +71,7 @@ skynet.start(function()
 
   start_gated()
 
-  skynet.uniqueservice("game_shutdown")
+  skynet.uniqueservice("shutdown", "game")
   INFO("-----GameServer-----", node_name, " start OK")
 
   -- local addr = skynet.newservice("agent", "tcp")

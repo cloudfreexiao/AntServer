@@ -21,10 +21,10 @@ COLOR_GREEN='\033[32m'
 COLOR_RESET='\033[0m'
 
 CUR_PATH=$(dirname $(readlink -f $0))
-PID_FILE=$CUR_PATH/game1.pid
+PID_FILE=$CUR_PATH/battle1.pid
 
 if [ -z "$3" ]; then
-  CONFIG=$CUR_PATH/config.game1
+  CONFIG=$CUR_PATH/config.battle1
 else
   CONFIG=$CUR_PATH/$3
 fi
@@ -49,7 +49,7 @@ function check(){
 #后台启动
 function back(){
   #git submodule update
-  echo -n $"Starting gameserver1: "
+  echo -n $"Starting battle1: "
   $CUR_PATH/../skynet/skynet $CONFIG
   if [ $? -eq 0 ]; then
     success && echo
@@ -97,17 +97,17 @@ function stop(){
   sleep 1
 
   if [ ! -f $PID_FILE ] ;then
-    echo "not found pid file have no gameserver1"
+    echo "not found pid file have no battle1"
     exit 0
   fi
 
   pid=`cat $PID_FILE`
   exist_pid=`pgrep skynet | grep $pid`
   if [ -z "$exist_pid" ] ;then
-    echo "have no gameserver1"
+    echo "have no battle1"
     exit 0
   else
-    echo -n $"$pid gameserver1 will killed"
+    echo -n $"$pid battle1 will killed"
     killproc -p $PID_FILE
     echo
   fi
