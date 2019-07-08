@@ -1,12 +1,3 @@
-[submodule "lualib-src/luafilesystem"]
-	path = lualib-src/luafilesystem
-	url = https://github.com/keplerproject/luafilesystem.git
-[submodule "lualib-src/crab"]
-	path = lualib-src/crab
-	url = https://github.com/xjdrew/crab.git
-[submodule "lualib-src/lua-cjson"]
-	path = lualib-src/lua-cjson
-	url = https://github.com/cloudfreexiao/lua-cjson.git
 [submodule "skynet"]
 	path = skynet
 	url = https://github.com/cloudwu/skynet.git

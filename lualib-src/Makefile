@@ -25,19 +25,22 @@ R3_INC ?= lua-r3/
 LUA_CLIB_PATH ?= ../luaclib
 #####################################################
 
+CAOI_SO_NAME = caoi.so
+WEBSOCKETNETPACK_SO_NAME = websocketnetpack.so
+
 HASH_SO_NAME = hash.so
 LFS_SO_NAME = lfs.so
 WEBCLIENT_SO_NAME = webclient.so
 UTF8_SO_NAME = utf8.so
 CRAB_SO_NAME = crab.so
-WEBSOCKETNETPACK_SO_NAME = websocketnetpack.so
 CJSON_SO_NAME = cjson.so
-CAOI_SO_NAME = caoi.so
+
 AES_SO_NAME = aes.so
 CODEC_SO_NAME = codec.so
-CRC_SO_NAME = crc.so
-TBPACK_SO_NAME = libluabpack.so
 CRYPTO_SO_NAME = crypto.so
+
+TBPACK_SO_NAME = libluabpack.so
+
 FFI_SO_NAME = ffi.so
 R3_SO_NAME = libr3.so
 
@@ -53,17 +56,18 @@ CJSON_SO				= $(LUA_CLIB_PATH)/$(CJSON_SO_NAME)
 CAOI_SO					= $(LUA_CLIB_PATH)/$(CAOI_SO_NAME)
 AES_SO                  = $(LUA_CLIB_PATH)/$(AES_SO_NAME)
 CODEC_SO                = $(LUA_CLIB_PATH)/$(CODEC_SO_NAME)
-TBPACK_SO               = $(LUA_CLIB_PATH)/$(TBPACK_SO_NAME)
 CRYPTO_SO               = $(LUA_CLIB_PATH)/$(CRYPTO_SO_NAME)
+
+TBPACK_SO               = $(LUA_CLIB_PATH)/$(TBPACK_SO_NAME)
+
 FFI_SO               	= $(LUA_CLIB_PATH)/$(FFI_SO_NAME)
 R3_SO               	= $(LUA_CLIB_PATH)/$(R3_SO_NAME)
-CRC_SO               	= $(LUA_CLIB_PATH)/$(CRC_SO_NAME)
 
 
 #####################################################
 all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
 	$(WEBSOCKETNETPACK_SO) $(CJSON_SO) $(CAOI_SO) \
-	$(AES_SO) $(CODEC_SO) $(CRC_SO) $(CRYPTO_SO) $(TBPACK_SO) \
+	$(AES_SO) $(CODEC_SO) $(CRYPTO_SO)  $(TBPACK_SO) \
 	$(FFI_SO) $(R3_SO) \
 #####################################################
 
@@ -89,11 +93,9 @@ $(AES_SO): luacrypto/lua-aes.c $<
 $(CODEC_SO): luacrypto/lua-codec.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -L$(TLS_LIB) -I$(TLS_INC) -lcrypto
 
-$(CODEC_SO): luacrypto/lua-codec.c $<
+$(CRYPTO_SO): luacrypto/lcrypto.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -L$(TLS_LIB) -I$(TLS_INC) -lcrypto
 
-$(CRC_SO): luacrypto/lcrc.c $<
-	$(CC) $(LFLAGS) -o $@ $< -I$(SKYNET_SRC)
 
 $(TBPACK_SO): thrift/lua-bpack.c $<
 	$(CC) $(LFLAGS) -o $@ $< -I$(SKYNET_SRC)
