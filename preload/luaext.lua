@@ -32,7 +32,7 @@ table.values = function(t)
 end
 
 -- 浅拷贝
-function clone(object)
+table.clone = function(object)
     local lookup_table = {}
     local function _copy(object)
         if type(object) ~= "table" then
@@ -51,7 +51,7 @@ function clone(object)
 end
 
 -- 深拷贝
-function deepcopy(object)
+table.deepcopy  = function(object)
     if not object then return object end
     local new = {}
     for k, v in pairs(object) do

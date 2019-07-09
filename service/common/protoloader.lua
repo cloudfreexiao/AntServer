@@ -1,9 +1,8 @@
 local skynet = require "skynet"
 local sprotoparser = require "sprotoparser"
 local sprotoloader = require "sprotoloader"
-local service = require "service.service"
 
-local loader = {}
+local CMD = {}
 local data = {}
 
 local function load(name)
@@ -14,7 +13,7 @@ local function load(name)
 	return sprotoparser.parse(t)
 end
 
-function loader.load(list)
+function CMD.load(list)
 	for i, name in ipairs(list) do
 		local p = load(name)
 		INFO(string.format("load proto [%s] in slot %d", name, i) )
@@ -23,11 +22,19 @@ function loader.load(list)
 	end
 end
 
-function loader.index(name)
+function CMD.index(name)
 	return data[name]
 end
 
-service.init {
-	command = loader,
-	info = data
-}
+skynet.start(function()
+	skynet.dispatch("lua", function (_,_, cmd, ...)
+		local f = CMD[cmd]
+		if f then
+			skynet.ret(skynet.pack(f(...)))
+		else
+			ERROR("Unknown command :", cmd)
+			skynet.response()(false)
+		end
+	end)
+	
+end)

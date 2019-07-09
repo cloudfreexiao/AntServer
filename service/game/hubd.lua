@@ -6,15 +6,8 @@ local socket = require "skynet.socket"
 local CMD = {}
 
 local User_Map = {}
+local FD_Map = {}
 local subid = 1
-
-
-function CMD.kick(data)
-    local t = User_Map[data.uid]
-    if t then
-        skynet_send(t.gate, "kick", t.conn.fd)
-    end
-end
 
 ---------------------Login Node-------------------------------------------
 ------------------------Login Node-------------------------------------------
@@ -22,10 +15,8 @@ function CMD.access(token)
     --TODO: 超时处理 长时间 登陆验证成功但是不 进入游戏token
     subid = subid + 1
     token.subid = subid
-    User_Map[token.uid] = {token = token, 
+    User_Map[token.uid] = { token = token, 
                             conn = nil, 
-                            gate = nil,
-                            protocol = nil,
                             tm = os.time(), }
     return subid
 end
@@ -36,36 +27,30 @@ end
 ------------------------Gate Service-------------------------------------------
 ------------------------Gate Service-------------------------------------------
 
-function CMD.register(gate, conn)
-    local t = User_Map[conn.uid]
-    t.conn = conn
-    t.gate = gate
+function CMD.connect(gate, conn)
+    conn.gate = gate
+    FD_Map[conn.fd] = conn
 end
 
 function CMD.logout(conn)
-    skynet_call(conn.agent, "logout", conn)
-    cluster.send("loginnode", "logind", "logout", {uid = conn.uid,})
-
-    User_Map[conn.uid] = nil
+    DEBUG("game_hub logout", inspect(conn))
+    if conn.uid then
+        skynet_call(conn.agent, "logout", conn)
+        cluster.send("loginnode", "logind", "logout", {uid = conn.uid,})
+        User_Map[conn.uid] = nil
+    else
+        if conn.fd then
+            FD_Map[conn.fd] = nil
+        end
+    end
 end
 
 ------------------------Gate Service-------------------------------------------
 ------------------------Gate Service-------------------------------------------
 
-------------------------Agent Service-------------------------------------------
-------------------------Agent Service-------------------------------------------
-
-function CMD.handshake(data)
-    local t = User_Map[data.uid]
-    return t.token
-end
-
-------------------------Agent Service-------------------------------------------
-------------------------Agent Service-------------------------------------------
-
-
+local tcount = 15 --握手超时
 local function handshake_timeout()
-    skynet.timeout(30 * 100, handshake_timeout)
+    skynet.timeout(tcount * 100, handshake_timeout)
 
     local tm = os.time()
     local tbl = {}
@@ -74,7 +59,7 @@ local function handshake_timeout()
             if v.conn then
                 v.tm = os.time()
             else
-                if tm - v.tm >= 30 then
+                if tm - v.tm >= tcount then
                     table.insert(tbl, k)
                 end
             end
@@ -92,42 +77,53 @@ end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------
 ------------------------Auth Client Handshake Logic-------------------------------------------
-local client = require "service.client"
+function CMD.kick(data)
+    local user = User_Map[data.uid]
+    if user then
+        skynet_send(user.conn.gate, "kick", user.conn.fd)
+    end
+end
 
-local auth = client.handler()
-function auth:handshake(args, fd)
-    local function do_handshake()
-        local t = User_Map[args.uid]
-        if not t then
-            return false, {res = SYSTEM_ERROR.login_argument}
-        end
-
-        if t.conn.fd ~= fd then
-            return false, {res = SYSTEM_ERROR.login_argument}
-        end
-
-        if t.token.secret ~= args.secret or 
-            t.token.subid ~= args.subid then
-                return false, {res = SYSTEM_ERROR.unauthorized}
-        end
+local function alloc_agent(user)
+    --TODO: agent 池
+    user.agent = skynet.newservice("agent", user.conn.protocol)
+    skynet_call(user.agent, "start", {
+        fd = user.conn.fd,
+        ip = user.conn.ip,
+        protocol = user.conn.protocol,
+        secret = user.token.secret,
+    })
     
-        return t, {res = SYSTEM_ERROR.success}
+    local gate = user.conn.gate
+    skynet_call(gate, "register", {
+        uid = user.token.uid,
+        agent = user.agent,
+    })
+end
+
+function CMD.handshake(fd, args)
+    local conn = FD_Map[fd]
+    if not conn then
+        return 1
     end
-    local t, pack = do_handshake()
-    if t then
-        client.send_package_ex(fd, t.conn.protocol, pack)
-        --TODO: agent 池 
-        t.agent = skynet.newservice("agent", fd, t.conn.ip, t.conn.protocol, t.token.secret)
-        skynet_call(t.agent, "start")   
-        skynet_call(t.gate, "register", {
-            uid = args.uid,
-            agent = t.agent,
-        })
-    else
-        --TODO:断开socket连接
-        INFO("Hub recv Invalid socket fd:", fd)
-        socket.close(fd)
+
+    local user = User_Map[args.uid]
+    if not user then
+        return 2
     end
+
+    local token = user.token
+    if token.secret ~= args.secret or tostring(token.subid) ~= args.subid then
+        return 3, {res = SYSTEM_ERROR.unauthorized}
+    end
+    
+    user.conn = table.clone(conn)
+    alloc_agent(user)
+
+    DEBUG('=^^^^^^^^^^^=', inspect(user))
+    FD_Map[fd] = nil
+
+    return 0, {res = SYSTEM_ERROR.success}
 end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------
@@ -135,8 +131,6 @@ end
 
 
 skynet.start(function()
-    client.init("proto", nil, false)
-
     handshake_timeout()
 
     skynet.dispatch("lua", function(session, source, cmd, ...)

@@ -22,7 +22,7 @@ settings.nodes = {
         ['node1'] = {
             -- 网络配置
             node_name           = "node1",  -- 每个lobby名字必须唯一
-            console_port        = 15030, -- 执行关服操作 game.sh 中 EXIT_PORT 也要保持一致
+            console_port        = 15030, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
             gate_switch         = {"ws", "tcp", }, -- 定义可以开启的gate 端口
             host                = '0.0.0.0', -- 需要手动修改
             gate_port_tcp       = 15120, 	--(暴露 网关端口 TCP)
@@ -35,11 +35,11 @@ settings.nodes = {
 settings.battles = {
     ['battle1'] = {
         battle_name             = "battle1",  -- 每个battle名字必须唯一
-        console_port            = 15040, -- 执行关服操作 battle.sh 中 EXIT_PORT 也要保持一致
+        console_port            = 15040, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
     },
     ['battle2'] = {
         battle_name             = "battle2",  -- 每个battle名字必须唯一
-        console_port            = 15041, -- 执行关服操作 battle.sh 中 EXIT_PORT 也要保持一致
+        console_port            = 15041, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
     },
 }
 

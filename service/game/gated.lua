@@ -1,9 +1,11 @@
 local skynet = require "skynet"
-local switch = ...
+require "skynet.manager"
 
-local gateserver = require ("gate.gateserver_" .. tostring(switch) )
+local protocol, hub = ...
+
+local gateserver = require ("gate.gateserver_" .. protocol )
 local gate_name = ""
-local hub = ".hub"
+
 
 skynet.register_protocol {
 	name = "client",
@@ -14,23 +16,19 @@ skynet.register_protocol {
 -----------------------------------------------------
 local connection = {} -- fd -> { fd , ip, }
 
-local function create_conn_data(fd, addr)
+local function create_conn_data(fd, ip)
 	local conn = {
 		fd = fd,
-		ip = addr,
-		protocol = tostring(switch),
-		uid = nil,
-		agent = nil,
+		ip = ip,
+		protocol = protocol,
 	}
 
-	skynet_call(hub, "register", skynet.self(),  conn)
+	skynet_call(hub, "connect", skynet.self(), conn)
 	return conn
 end
 
 local function do_del_conn(conn)
-	if conn.uid then
-		skynet_call(hub, "logout", conn)
-	end
+	skynet_call(hub, "logout", conn)
 end
 
 -----------------------------------------------------
@@ -82,6 +80,7 @@ function handler.message(fd, msg, sz)
 	local c = connection[fd]
 	local uid = c.uid
 	local source = skynet.self()
+	DEBUG("gateserver tcp handle message")
 	if uid then
 		--fd为session，特殊用法
 		skynet.redirect(c.agent, source, "client", fd, msg, sz)

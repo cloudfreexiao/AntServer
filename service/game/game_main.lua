@@ -4,18 +4,25 @@ local cluster = require "skynet.cluster"
 
 local settings = require "settings"
 local node_name = skynet.getenv("node_name")
-local cfg = settings.nodes[node_name]
 
 
 local function start_gated()
+  skynet.uniqueservice("hubd")
+
   for _, v in pairs(settings.nodes) do
     for i=1, #v.gate_switch do
       local switch = tostring(v.gate_switch[i])
       local name = "gated"
-      local gate_name = name .. switch .. tostring(i)
+      local gate_name = name .. switch
+
+      local hub = "hub_slave"
+      local hub_slave_name = hub .. switch
 
       if node_name == v.node_name then
-        local p = skynet.newservice(name, switch)
+        local h = skynet.newservice(hub, switch)
+        skynet.name(hub_slave_name, h)
+
+        local p = skynet.newservice(name, switch, hub_slave_name)
         skynet.name(gate_name, p)
 
         skynet.call(p, "lua", "open", {
@@ -26,8 +33,7 @@ local function start_gated()
           name = gate_name,
         })
       else
-        local proxy = cluster.proxy(v.node_name, gate_name)
-        skynet.name(gate_name, proxy)
+        -- cluster proxy ??
       end
     end
   end
@@ -58,15 +64,14 @@ end
 skynet.start(function()
   INFO("-----GameServer-----", node_name, " will begin")
 
+  local cfg = settings.nodes[node_name]
   skynet.uniqueservice('debug_console', cfg.console_port)
   skynet.uniqueservice('word_crab', cfg.word_crab_file)
   skynet.uniqueservice('dbproxy', node_name)
-  skynet.uniqueservice('hub')
-
   local proto = skynet.uniqueservice "protoloader"
 	skynet.call(proto, "lua", "load", {
-		"c2s",
-		"s2c",
+		"proto.c2s",
+		"proto.s2c",
   })
 
   start_gated()
@@ -86,6 +91,6 @@ skynet.start(function()
   --   kafka()
   -- end)
 
-  cluster.open(cfg.node_name)
+  cluster.open(node_name)
   skynet.exit()
 end)

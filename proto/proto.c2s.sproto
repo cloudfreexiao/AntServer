@@ -11,6 +11,7 @@ handshake 2 {
 	request {
 		uid 0 : string
 		secret 1 : string
+		subid 2 : string
 	}
 
 	response {
