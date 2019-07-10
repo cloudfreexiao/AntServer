@@ -113,6 +113,7 @@ function CMD.handshake(fd, args)
             fd = user.conn.fd,
             ip = user.conn.ip,
             protocol = user.conn.protocol,
+            uid = args.uid,
             secret = user.token.secret,
             is_reconnect = is_reconnect,
         })

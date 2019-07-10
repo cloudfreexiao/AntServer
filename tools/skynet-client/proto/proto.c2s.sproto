@@ -1,0 +1,24 @@
+.package {
+	type 0 : integer
+	session 1 : integer
+}
+
+heartbeat 1 {
+	request {
+	}
+
+	response {
+	}
+}
+
+handshake 2 {
+	request {
+		uid 0 : string
+		secret 1 : string
+		subid 2 : string
+	}
+
+	response {
+		res 0: integer
+	}
+}
