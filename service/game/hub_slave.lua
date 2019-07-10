@@ -11,7 +11,7 @@ function CMD.connect(...)
 end
 
 function CMD.logout(conn)
-    skynet_call(hub, "logout", conn)
+    skynet_send(hub, "logout", conn)
 end
 
 function CMD.kick(data)
@@ -30,7 +30,7 @@ end
 ------------------------Auth Client Handshake Logic-------------------------------------------
 
 skynet.start(function()
-    client.init(false)
+    client.init()
 
     skynet.dispatch("lua", function(session, source, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")

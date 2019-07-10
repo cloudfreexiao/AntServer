@@ -3,24 +3,29 @@ local skynet = require "skynet"
 local protocol = ...
 local client = require ("service.client_"  .. protocol)
 
-
 local CMD = {}
 
--- local auth = client.handler()
+local handler = client.handler()
+function handler.heartbeat()
+end
 
-function CMD.start()
+
+function CMD.start(session)
+	DEBUG("agent is starting", inspect(session))
+
 	--Load data from database
-	DEBUG("agent is starting")
-	-- client:push("push", { text = "welcome" })	-- push message to client
+	client.init(session.fd)
+
+	client.push_package("push", {text = "welcome" })
 end
 
-local function init()
-	client.init(true)
+function CMD.logout(conn)
+	DEBUG("agent is logout", inspect(conn))
+	skynet.exit()
 end
+
 
 skynet.start(function()
-	init()
-
 	skynet.dispatch("lua", function (_,_, cmd, ...)
 		local f = CMD[cmd]
 		if f then

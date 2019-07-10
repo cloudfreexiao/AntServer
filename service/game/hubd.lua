@@ -15,9 +15,7 @@ function CMD.access(token)
     --TODO: 超时处理 长时间 登陆验证成功但是不 进入游戏token
     subid = subid + 1
     token.subid = subid
-    User_Map[token.uid] = { token = token, 
-                            conn = nil, 
-                            tm = os.time(), }
+    User_Map[token.uid] = { token = token, tm = os.time(), }
     return subid
 end
 
@@ -33,9 +31,9 @@ function CMD.connect(gate, conn)
 end
 
 function CMD.logout(conn)
-    DEBUG("game_hub logout", inspect(conn))
+    INFO("game hubd logout", inspect(conn))
     if conn.uid then
-        skynet_call(conn.agent, "logout", conn)
+        skynet_send(conn.agent, "logout", conn)
         cluster.send("loginnode", "logind", "logout", {uid = conn.uid,})
         User_Map[conn.uid] = nil
     else
@@ -84,23 +82,6 @@ function CMD.kick(data)
     end
 end
 
-local function alloc_agent(user)
-    --TODO: agent 池
-    user.agent = skynet.newservice("agent", user.conn.protocol)
-    skynet_call(user.agent, "start", {
-        fd = user.conn.fd,
-        ip = user.conn.ip,
-        protocol = user.conn.protocol,
-        secret = user.token.secret,
-    })
-    
-    local gate = user.conn.gate
-    skynet_call(gate, "register", {
-        uid = user.token.uid,
-        agent = user.agent,
-    })
-end
-
 function CMD.handshake(fd, args)
     local conn = FD_Map[fd]
     if not conn then
@@ -116,12 +97,34 @@ function CMD.handshake(fd, args)
     if token.secret ~= args.secret or tostring(token.subid) ~= args.subid then
         return 3, {res = SYSTEM_ERROR.unauthorized}
     end
-    
-    user.conn = table.clone(conn)
-    alloc_agent(user)
 
-    DEBUG('=^^^^^^^^^^^=', inspect(user))
-    FD_Map[fd] = nil
+    do
+        local is_reconnect = false
+        if user.conn then
+            is_reconnect = true
+            skynet_send(user.conn.gate, "kick", user.conn.fd, true)
+        else
+            --TODO: agent 池
+            user.conn = table.clone(conn)
+            user.agent = skynet.newservice("agent", user.conn.protocol)
+        end
+    
+        skynet_call(user.agent, "start", {
+            fd = user.conn.fd,
+            ip = user.conn.ip,
+            protocol = user.conn.protocol,
+            secret = user.token.secret,
+            is_reconnect = is_reconnect,
+        })
+        
+        local res = skynet_call(user.conn.gate, "register", {
+            fd = fd,
+            uid = user.token.uid,
+            agent = user.agent,
+        })
+        assert(res)
+        FD_Map[fd] = nil
+    end
 
     return 0, {res = SYSTEM_ERROR.success}
 end

@@ -27,10 +27,6 @@ local function create_conn_data(fd, ip)
 	return conn
 end
 
-local function do_del_conn(conn)
-	skynet_call(hub, "logout", conn)
-end
-
 -----------------------------------------------------
 -----------------------------------------------------
 
@@ -46,19 +42,21 @@ function CMD.register(_, data)
 	return true
 end
 
-local function close_agent(fd)
+local function close_agent(fd, raw)
+	DEBUG("close agent", fd, raw)
 	local c = connection[fd]
 	if c then
-		do_del_conn(c)
+		if not raw then
+			skynet_call(hub, "logout", c)
+		end
 		connection[fd] = nil
 		gateserver.closeclient(fd)
 	end
-
 	return true
 end
 
-function CMD.kick(_, fd)
-	return close_agent(fd)
+function CMD.kick(_, fd, raw)
+	return close_agent(fd, raw)
 end
 
 -----------------------------------------------------
@@ -80,7 +78,6 @@ function handler.message(fd, msg, sz)
 	local c = connection[fd]
 	local uid = c.uid
 	local source = skynet.self()
-	DEBUG("gateserver tcp handle message")
 	if uid then
 		--fd为session，特殊用法
 		skynet.redirect(c.agent, source, "client", fd, msg, sz)
@@ -94,7 +91,7 @@ function handler.disconnect(fd)
 end
 
 function handler.error(fd, msg)
-	handler.disconnect(fd)
+	return handler.disconnect(fd)
 end
 
 function handler.warning(fd, size)

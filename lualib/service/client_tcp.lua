@@ -9,7 +9,7 @@ local client = {}
 local handler = {}
 local _host
 local _sender
-local _is_agent
+local _fd
 
 function client.handler()
 	return handler
@@ -26,8 +26,8 @@ function client.resp_package(fd, pack, response)
 end
 
 -- push message to client
-function client.push_package(fd, proto_name, data)
-	helper_tcp.send_text(fd, _sender(proto_name, data))
+function client.push_package(proto_name, data)
+	helper_tcp.send_text(_fd, _sender(proto_name, data))
 end
 
 
@@ -37,8 +37,8 @@ local function request(fd, name, args, response)
 	if f then
 		-- f may block , so fork and run
 		skynet.fork(function()
-			if _is_agent then
-				local ok, pack = pcall(f, args, fd)
+			if _fd then
+				local ok, pack = pcall(f, args)
 				if ok then
 					if pack then
 						client.resp_package(fd, pack, response)
@@ -47,17 +47,19 @@ local function request(fd, name, args, response)
 					ERROR("do agent socket rpc command[", name, "] error:", pack)
 				end
 			else
-				local ec, pack = f(args, fd)
-				if pack then
-					client.resp_package(fd, pack, response)
-					if ec ~= 0 then
-						INFO("Hub sigin failed")
-						skynet_send(skynet.self(), "kick", {uid = args.uid})
+				local ok, ec, pack = pcall(f, args, fd)
+				if ok then
+					if pack then
+						client.resp_package(fd, pack, response)
+						if ec ~= 0 then
+							INFO("Hub sigin failed")
+							skynet_send(skynet.self(), "kick", {uid = args.uid})
+						end
+					else
+						--断开socket连接
+						INFO("Hub recv Invalid socket fd:", fd)
+						socket.close(fd)
 					end
-				else
-					--断开socket连接
-					INFO("Hub recv Invalid socket fd:", fd)
-					socket.close(fd)
 				end
 			end
 		end)
@@ -70,7 +72,11 @@ end
 local function dispatch(fd, _, type, ...)
 	-- session is fd, don't call skynet.ret
 	skynet.ignoreret()
-	skynet.trace()
+	-- skynet.trace()
+	if _fd and fd ~= _fd then
+		ERROR("agent dispatch client msg fd is error:", fd, _fd)
+		return
+	end
 
 	if type == "REQUEST" then
 		local ok, result = pcall(request, fd, ...)
@@ -92,14 +98,14 @@ skynet.register_protocol {
 	dispatch = dispatch,
 }
 
-function client.init(is_agent)
+function client.init(fd)
 	local protoloader = skynet.uniqueservice "protoloader"
 	local slot1 = skynet.call(protoloader, "lua", "index", "proto.c2s")
 	_host = sprotoloader.load(slot1):host "package"
 
 	local slot2 = skynet.call(protoloader, "lua", "index", "proto.s2c")
 	_sender = _host:attach(sprotoloader.load(slot2))
-	_is_agent = is_agent
+	_fd = fd
 end
 
 
