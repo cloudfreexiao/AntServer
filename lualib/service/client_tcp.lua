@@ -40,9 +40,8 @@ local function request(fd, name, args, response)
 			if _fd then
 				local ok, pack = pcall(f, args)
 				if ok then
-					if pack then
-						client.resp_package(fd, pack, response)
-					end
+					pack = pack or {}
+					client.resp_package(fd, pack, response)
 				else
 					ERROR("do agent socket rpc command[", name, "] error:", pack)
 				end

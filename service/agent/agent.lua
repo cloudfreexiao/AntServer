@@ -7,7 +7,7 @@ local g_handlers = require ("service.client_" .. protocol)
 local handler = g_handlers.handler()
 function handler.heartbeat()
 	DEBUG("heartbeat", os.time())
-	return {}
+	-- return {}
 end
 
 local g_session = {}
@@ -38,5 +38,4 @@ skynet.start(function()
 			skynet.response()(false)
 		end
 	end)
-	
 end)

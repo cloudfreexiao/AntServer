@@ -1,0 +1,15 @@
+version: '3'
+services:
+    logger:
+        build:
+            context: logger
+        volumes:
+            - syslog_directory:/logs
+        ports:
+            - 514:514/tcp
+            - 514:514/udp
+        restart: always
+        tty: true
+
+volumes:
+    syslog_directory:

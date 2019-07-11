@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  pika:
+    image: registry.cn-hangzhou.aliyuncs.com/ybase/pika:3.0.8
+    ports:
+      - 9221:9221
+    volumes:
+        - ./pika:/pikadb
+    restart: always
