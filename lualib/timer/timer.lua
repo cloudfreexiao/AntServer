@@ -1,5 +1,11 @@
 local skynet = require "skynet"
-local Date   = require "date.date"
+local math = math
+local starttime = skynet.starttime()
+
+local Date = {}
+function Date.second()
+    return math.floor(skynet.now()/100) + starttime
+end
 
 local mt = {}
 mt.__index = mt

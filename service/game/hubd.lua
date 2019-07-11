@@ -98,36 +98,34 @@ function CMD.handshake(fd, args)
         return 3, {res = SYSTEM_ERROR.unauthorized}
     end
 
-    do
-        local is_reconnect = false
-        if user.conn then
-            is_reconnect = true
-            skynet_send(user.conn.gate, "kick", user.conn.fd, true)
-        else
-            --TODO: agent 池
-            user.conn = table.clone(conn)
-            user.agent = skynet.newservice("agent", user.conn.protocol)
-        end
-    
-        skynet_call(user.agent, "start", {
-            fd = user.conn.fd,
-            ip = user.conn.ip,
-            protocol = user.conn.protocol,
-            uid = args.uid,
-            secret = user.token.secret,
-            is_reconnect = is_reconnect,
-        })
-        
-        local res = skynet_call(user.conn.gate, "register", {
-            fd = fd,
-            uid = user.token.uid,
-            agent = user.agent,
-        })
-        assert(res)
-        FD_Map[fd] = nil
+    local is_reconnect = false
+    if user.conn then
+        is_reconnect = true
+        skynet_send(user.conn.gate, "kick", user.conn.fd, true)
+    else
+        --TODO: agent 池
+        user.conn = table.clone(conn)
+        user.agent = skynet.newservice("agent", user.conn.protocol)
     end
 
-    return 0, {res = SYSTEM_ERROR.success}
+    local has_role = skynet_call(user.agent, "start", {
+        fd = user.conn.fd,
+        ip = user.conn.ip,
+        protocol = user.conn.protocol,
+        openid = args.uid, --以免和agent中的uid 重复
+        secret = user.token.secret,
+        is_reconnect = is_reconnect,
+    })
+    
+    local res = skynet_call(user.conn.gate, "register", {
+        fd = fd,
+        uid = user.token.uid,
+        agent = user.agent,
+    })
+    assert(res)
+    FD_Map[fd] = nil
+
+    return 0, {res = SYSTEM_ERROR.success, has_role = has_role,}
 end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------

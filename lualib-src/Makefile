@@ -72,8 +72,8 @@ all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
 #####################################################
 
 # C Lib
-$(HASH_SO): lua-hash.c $<
-	$(CC) $(LFLAGS) -o $@ 
+$(HASH_SO): hash/lua-hash.c $<
+	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $<
 
 $(LFS_SO) :luafilesystem/src/lfs.c $<
 	$(CC) $(LFLAGS) -o $@ -I$(LFS_INC)
@@ -84,7 +84,7 @@ $(UTF8_SO): crab/lua-utf8.c $<
 $(CRAB_SO): crab/lua-crab.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -I$(CRAB_INC)
 
-$(WEBSOCKETNETPACK_SO):lua-websocketnetpack.c $<
+$(WEBSOCKETNETPACK_SO): websocketnetpack/lua-websocketnetpack.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -I$(SKYNET_SRC)
 
 $(AES_SO): luacrypto/lua-aes.c $<

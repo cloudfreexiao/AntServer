@@ -1,7 +1,10 @@
-#include <lua.h>
-#include <lauxlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
+
+#include <lua.h>
+#include <lauxlib.h>
+
 
 #define MAX_DEPTH 16
 
@@ -33,7 +36,8 @@ _hash_string(lua_State *L, int index) {
   size_t len;
   const char* str = lua_tolstring(L, index, &len);
   int h = 0;
-  for (int i=0; i<len; i++) {
+  int i=0;
+  for (i=0; i<len; i++) {
     h = 31 * h + str[i];
   }
   return h;

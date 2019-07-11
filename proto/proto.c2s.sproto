@@ -19,6 +19,7 @@ handshake 2 {
 	}
 
 	response {
-		res 0: integer
+		res 0: integer #是否验证成功 0 成功 
+		has_role 1: integer #是否已经有角色了  0 没有 1有
 	}
 }
