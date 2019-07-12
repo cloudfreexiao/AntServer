@@ -1,0 +1,14 @@
+.Person {
+	name 0 : string
+	age 1 : integer
+	marital 2 : boolean
+	children 3 : *Person
+	data 4 : Data
+}
+
+.Data {
+	numbers 0 : *integer
+	bools 1 : *boolean
+	number 2 : integer
+	bignumber 3 : integer
+}

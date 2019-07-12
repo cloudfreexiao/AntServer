@@ -1,0 +1,45 @@
+before:
+  this_module = 'posix'
+  global_table = '_G'
+
+  M = require(this_module)
+
+specify lposix:
+- before:
+    fcntl, fileno = M.fcntl, M.fileno
+    O_NONBLOCK = M.O_NONBLOCK
+
+- context when required:
+  - it does not touch the global table:
+      expect(show_apis {added_to=global_table, by=this_module}).
+         to_equal {}
+
+- context with fcntl F_GETFL:
+  - before:
+      F_GETFL, F_SETFL = M.F_GETFL, M.F_SETFL
+
+      fdin  = fileno (io.stdin)
+      flags = fcntl (fdin, F_GETFL)
+      restore = flags
+  - after:
+      fcntl (fdin, F_SETFL, restore)
+
+  - it returns flags as a non-negative number:
+      expect (type (flags)).should_be "number"
+      expect (flags >= 0).should_be (true)
+  - it resets O_NONBLOCK bit, if any:
+      fcntl (fdin, F_SETFL, band (flags, bnot (O_NONBLOCK)))
+      flags = fcntl (fdin, F_GETFL)
+      expect (band (flags, O_NONBLOCK)).should_be (0)
+  - it sets O_NONBLOCK bit:
+      fcntl (fdin, F_SETFL, bor (flags, O_NONBLOCK))
+      flags = fcntl (fdin, F_GETFL)
+      expect (band (flags, O_NONBLOCK)).should_not_be (0)
+  - it returns nil for negative fd argument:
+      ret, msg, errno = fcntl (-7, F_GETFL)
+      expect (ret).should_be (nil)
+  - it returns nil for unopened fd argument:
+      ret, msg, errno = fcntl (666, F_GETFL)
+      expect (ret).should_be (nil)
+  - it diagnoses incorrect userdata argument:
+      expect (fcntl ("foobar", F_GETFL)).should_error "int expected"

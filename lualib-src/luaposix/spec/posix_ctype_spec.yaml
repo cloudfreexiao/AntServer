@@ -1,0 +1,38 @@
+before:
+  this_module = 'posix.ctype'
+  global_table = '_G'
+
+  M = require(this_module)
+
+specify posix.ctype:
+- context when required:
+  - it does not touch the global table:
+      expect(show_apis {added_to=global_table, by=this_module}).
+        to_equal {}
+
+- describe isgraph:
+  - before:
+      isgraph = M.isgraph
+
+  - context with bad arguments:
+      badargs.diagnose(isgraph, "(string)")
+
+  - it returns non-zero for successful tests:
+      expect(type(isgraph 'a')).to_be "number"
+      expect(isgraph 'a').not_to_be(0)
+  - it returns zero for failed tests:
+      expect(isgraph ' ').to_be(0)
+
+
+- describe isprint:
+  - before:
+      isprint = M.isprint
+
+  - context with bad arguments:
+      badargs.diagnose(isprint, "(string)")
+
+  - it returns non-zero for successful tests:
+      expect(type(isprint 'a')).to_be "number"
+      expect(isprint 'a').not_to_be(0)
+  - it returns zero for failed tests:
+      expect(isprint(string.char(0))).to_be(0)

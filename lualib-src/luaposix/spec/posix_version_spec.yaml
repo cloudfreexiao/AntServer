@@ -1,0 +1,20 @@
+before:
+  this_module = 'posix.version'
+  global_table = '_G'
+
+  M = require(this_module)
+
+
+specify posix.version:
+- context when required:
+  - it does not touch the global table:
+      expect(show_apis {added_to=global_table, by=this_module}).
+         to_equal {}
+
+
+- it is set:
+    expect(M).not_to_be(nil)
+- it describes this module:
+    expect(M).to_match '^posix '
+- it ends with the release number:
+    expect(M).to_match.any_of {' %d[%.%d]*$', ' git$'}
