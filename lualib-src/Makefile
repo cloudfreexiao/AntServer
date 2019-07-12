@@ -44,6 +44,8 @@ TBPACK_SO_NAME = libluabpack.so
 FFI_SO_NAME = ffi.so
 R3_SO_NAME = libr3.so
 
+RUDP_SO_NAME = rudp.so
+
 #####################################################
 
 HASH_SO      			= $(LUA_CLIB_PATH)/$(HASH_SO_NAME)
@@ -63,11 +65,14 @@ TBPACK_SO               = $(LUA_CLIB_PATH)/$(TBPACK_SO_NAME)
 FFI_SO               	= $(LUA_CLIB_PATH)/$(FFI_SO_NAME)
 R3_SO               	= $(LUA_CLIB_PATH)/$(R3_SO_NAME)
 
+RUDP_SO               	= $(LUA_CLIB_PATH)/$(RUDP_SO_NAME)
+
 
 #####################################################
 all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
 	$(WEBSOCKETNETPACK_SO) $(CJSON_SO) $(CAOI_SO) \
 	$(AES_SO) $(CODEC_SO) $(CRYPTO_SO)  $(TBPACK_SO) \
+	$(RUDP_SO) \
 	$(FFI_SO) $(R3_SO) \
 #####################################################
 
@@ -96,9 +101,11 @@ $(CODEC_SO): luacrypto/lua-codec.c $<
 $(CRYPTO_SO): luacrypto/lcrypto.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -L$(TLS_LIB) -I$(TLS_INC) -lcrypto
 
-
 $(TBPACK_SO): thrift/lua-bpack.c $<
 	$(CC) $(LFLAGS) -o $@ $< -I$(SKYNET_SRC)
+
+$(RUDP_SO): rudp/rudp.c rudp/lua-rudp.c  $<
+	$(CC) $(LFLAGS) $(CFLAGS) $^ -o $@
 
 #####################################################
 

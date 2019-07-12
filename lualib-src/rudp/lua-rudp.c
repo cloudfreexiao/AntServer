@@ -1,12 +1,11 @@
-#define LUA_LIB
-
-#include "rudp.h"
-
 #include <lua.h>
 #include <lauxlib.h>
 
 #include <string.h>
 #include <assert.h>
+
+#include "rudp.h"
+
 
 #define MAX_FROM_LEN (256)
 
@@ -125,8 +124,8 @@ lalloc(lua_State *L) {
 	}
 }
 
-LUAMOD_API int
-luaopen_chestnut_rudp(lua_State *L) {
+int
+luaopen_rudp(lua_State *L) {
 	luaL_checkversion(L);
 	lua_newtable(L); // met
 	luaL_Reg l[] = {

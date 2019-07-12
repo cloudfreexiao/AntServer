@@ -39,6 +39,9 @@ local function start_gated()
   end
 end
 
+-- local rudp = require "rudp"
+-- DEBUG("rudp", DUMP(rudp))
+
 -- local crc = require "crc"
 -- DEBUG("crc", DUMP(crc))
 
