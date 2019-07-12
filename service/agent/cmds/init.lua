@@ -1,22 +1,22 @@
 local skynet = require "skynet"
 require "skynet.manager"
 
-
 local class = require "class"
 local singleton = require "singleton"
 local Commands = class("Commands"):include(singleton)
 
 local mods = require "mods.init"
+local _handler = nil
 
 
-function Commands:initialize(_handler)
-	self._handler = _handler
+function Commands:initialize(handler)
+	_handler = handler
 end
 
 function Commands:start(session)
-	self._handler.init(session.fd)
+	_handler.init(session.fd)
 
-	mods.reg_profile(self._handler, session)
+	mods.reg_profile(_handler, session)
 
 	--检查是否有角色信息
 	local _, profiled = mods.get_profile()
@@ -25,20 +25,21 @@ function Commands:start(session)
 		return 0
 	end
 
-	self:reg_mods({
-		handler = self._handler,
+	self:trigger_mods({
 		profile = data,
 	})
 	return 1
 end
 
-function Commands:reg_mods(data)
-	mods.reg_mods(data)
+function Commands:trigger_mods(data)
+	mods.reg_mods(_handler, data)
 	mods.load()
 	mods.synch_msg()
 	mods.save()
 	mods.update()
-	self._handlers.push_package("verify", {text = "welcome" })
+	skynet.timeout(10, function()
+		_handler.push_package("verify", {text = "welcome" })
+	end)
 end
 
 function Commands:logout(conn)

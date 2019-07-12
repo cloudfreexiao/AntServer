@@ -1,6 +1,7 @@
 .package {
 	type 0 : integer
 	session 1 : integer
+	error 2 : integer #TODO:
 }
 
 heartbeat 1 {
@@ -19,6 +20,19 @@ handshake 2 {
 	}
 
 	response {
-		res 0: integer
+		res 0: integer #是否验证成功 0 成功 
+		role 1: integer #是否已经有角色了  0 没有 1有
+	}
+}
+
+born 3 {
+	request {
+		name 0 : string
+		head 1 : string
+		job 2 : string
+	}
+
+	response {
+		res 0: integer 
 	}
 }

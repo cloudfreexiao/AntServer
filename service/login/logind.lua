@@ -56,7 +56,7 @@ function logind.login_handler(serverId, uid, pf, protocol, secret)
 		error(string.format("user %d is already online", uid))
 	end
 
-	local ok, subid = pcall(cluster.call, server, hub, "access", {uid = uid, secret = secret, })
+	local ok, subid = pcall(cluster.call, server, hub, "access", {uid = uid, secret = secret, serverId = tostring(serverId),})
 	if not ok then
 		error("login gameserver error")
     end

@@ -10,6 +10,13 @@ local MONGODBL_POOL
 --     MONGODBL_POOL = skynet.queryservice("mongodbpool")
 -- end)
 
+--show dbs;
+-- use ant_account 
+--db.dropDatabase()
+-- show collections
+-- db.collection.find() --collection需替换对应具体名字
+--db.collection.find( { qty: { $gt: 4 } } )
+
 local function block_query()
     -- body
     if not MONGODBL_POOL then

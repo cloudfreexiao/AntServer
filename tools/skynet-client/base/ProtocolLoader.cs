@@ -4,8 +4,8 @@ namespace Skynet.DotNetClient
 {
     public class ProtocolLoader
     {
-        private string _path = @"Assets/Scripts/skynet-client/proto/";
-//        private string _path = @"Assets/Game/Scripts/Core/Runtime/skynet-client/proto/";
+        // private string _path = @"Assets/Scripts/skynet-client/proto/";
+        private string _path = @"Assets/Game/Scripts/Core/Runtime/skynet-client/proto/";
         private SpTypeManager _c2s;
         private SpTypeManager _s2c;
 

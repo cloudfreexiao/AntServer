@@ -21,7 +21,7 @@ local function do_register_mod(mods, name, pack, data)
 end
 
 local function do_register_fronts(name, pack, data)
-    return do_register_mod(_fronts, name, pack)
+    return do_register_mod(_fronts, name, pack, data)
 end
 
 local function do_register_backends(name, pack, data)
@@ -31,6 +31,7 @@ end
 function M.reg_profile(handler, session)
     local name = "profile"
     profiled = require("mods.profile.profiled"):new(session)
+    assert(profiled)
     profile = require("mods.profile.profile"):new({
         proxy = profiled,
         handler = handler,
@@ -53,18 +54,17 @@ function M.get_mod(name)
     return _fronts[tostring(name)], _backends[tostring(name)]
 end
 
-function M.reg_mods(data)
+function M.reg_mods(handler, data)
     local name = "property"
     local obj = nil
 
     do
-        obj = do_register_backends(name, "mods.property.propertyd", data.profile)
+        obj = do_register_backends(name, "mods.property.propertyd", data)
         do_register_fronts(name, "mods.property.property", {
-            handler = data.handler,
             proxy = obj, -- --注册当前模块逻辑处理绑定的数据模块 如果需要其他暂时可以获取
+            handler = handler,
         })
     end
-
 end
 
 function M.synch_msg()
@@ -89,7 +89,9 @@ local function on_mod_save()
     for k, mod in pairs(_backends) do
         local f = mod["save"]
         if f then
-            local nhcode = hash.hashcode(mod._data or {})
+            assert(mod._data)
+            
+            local nhcode = hash.hashcode(mod._data)
             local bhashcode = _hashcodes[tostring(k)]
             if (not bhashcode) or (bhashcode ~= nhcode) then
                 f(mod)
@@ -105,6 +107,8 @@ end
 
 function M.save()
     -- 启动定时器 检测是否模块属性有变更
+    M.force_save()
+
     _timers:add_timer(30, function() 
         on_mod_save() 
     end, 
@@ -113,6 +117,12 @@ function M.save()
 end
 
 local function on_mod_update()
+    for k, mod in pairs(_fronts) do
+        local f = mod["update"]
+        if f then
+            f(mod)
+        end
+    end
 end
 
 function M.update()

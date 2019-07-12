@@ -67,6 +67,7 @@ skynet.start(function()
   local cfg = settings.nodes[node_name]
   skynet.uniqueservice("debug_console", cfg.console_port)
   skynet.uniqueservice("word_crab", cfg.word_crab_file)
+  skynet.uniqueservice("redispool", node_name)
   skynet.uniqueservice("dbproxy", node_name)
 
   local proto = skynet.uniqueservice "protoloader"

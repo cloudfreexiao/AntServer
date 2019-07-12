@@ -9,7 +9,6 @@ local g_cmds = cmds:instance(handlers)
 
 
 skynet.start(function()
-
 	skynet.dispatch("lua", function (_,_, cmd, ...)
 		local f = g_cmds[cmd]
 		if f then

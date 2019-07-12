@@ -27,6 +27,7 @@ function M.get_real_openid(openId, sdk, pf)
                 openId = openId,
                 sdk = sdk,
                 pf = pf,
+                tm = os.time(),
             }
         }
 

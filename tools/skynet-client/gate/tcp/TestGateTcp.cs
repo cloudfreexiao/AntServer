@@ -1,21 +1,20 @@
-﻿using System;
-using Skynet.DotNetClient;
+﻿using Skynet.DotNetClient;
 using Skynet.DotNetClient.Gate.TCP;
 using UnityEngine;
 
 public class TestGateTcp 
 {
-	private GateClient skynetClient;
+	private GateClient _client;
 	private AuthPackageResp _req;
 	
 	public void Run (AuthPackageResp req)
 	{
 		_req = req;
 		
-		skynetClient = new GateClient (NetWorkStateCallBack);
+		_client = new GateClient (NetWorkStateCallBack);
 		//服务器验证成功标识
-		skynetClient.On("verify", OnVerifySucess);
-		skynetClient.Connect(_req.gate, _req.port);
+		_client.On("verify", OnVerifySucess);
+		_client.Connect(_req.gate, _req.port);
 	}
 
 	private void NetWorkStateCallBack(NetWorkState state)
@@ -24,19 +23,37 @@ public class TestGateTcp
 		if (state == NetWorkState.CONNECTED)
 		{
 			//TODO:发送 与 gate 握手消息成功后 开启 心跳操作
-			SpObject handshake_requset = new SpObject();
-			handshake_requset.Insert("uid", _req.uid);
-			handshake_requset.Insert("secret", _req.secret);
-			handshake_requset.Insert("subid", _req.subid);
+			SpObject handshakeRequset = new SpObject();
+			handshakeRequset.Insert("uid", _req.uid);
+			handshakeRequset.Insert("secret", _req.secret);
+			handshakeRequset.Insert("subid", _req.subid);
 
-			skynetClient.Request("handshake", handshake_requset, (SpObject obj) =>
+			_client.Request("handshake", handshakeRequset, (SpObject obj) =>
 			{
 				int res = obj["res"].AsInt();
 				if (res == 0)
 				{
-					skynetClient.StartHeartBeatService();
+					int role = obj["role"].AsInt();
+					if (role == 0)
+					{
+						SpObject bornRequest = new SpObject();
+						bornRequest.Insert("name", "helloworld");
+						bornRequest.Insert("head", "1111111111");
+						bornRequest.Insert("job", "1");
+						_client.Request("born", bornRequest, (SpObject bornObj) =>
+						{
+							res = obj["res"].AsInt();
+							if (res != 0)
+							{
+								Debug.LogError("born resp is error" + res);
+							}
+						} );
+					}
+					else
+					{
+						Debug.Log("is has role" + res);
+					}
 				}
-				Debug.Log(obj["res"].AsString());
 			});
 		}
 	}
@@ -44,5 +61,9 @@ public class TestGateTcp
 	void OnVerifySucess(SpObject sp)
 	{
 		Debug.Log("is OnVerifySucess");
+		
+		_client.StartHeartBeatService();
+		
+		//TODO: 请求各模块信息
 	}
 }

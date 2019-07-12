@@ -108,12 +108,13 @@ function CMD.handshake(fd, args)
         user.agent = skynet.newservice("agent", user.conn.protocol)
     end
 
-    local has_role = skynet_call(user.agent, "start", {
+    local role = skynet_call(user.agent, "start", {
         fd = user.conn.fd,
         ip = user.conn.ip,
         protocol = user.conn.protocol,
         openid = args.uid, --以免和agent中的uid 重复
         secret = user.token.secret,
+        serverId = user.token.serverId,
         is_reconnect = is_reconnect,
     })
     
@@ -125,7 +126,7 @@ function CMD.handshake(fd, args)
     assert(res)
     FD_Map[fd] = nil
 
-    return 0, {res = SYSTEM_ERROR.success, has_role = has_role,}
+    return 0, {res = SYSTEM_ERROR.success, role = role,}
 end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------
