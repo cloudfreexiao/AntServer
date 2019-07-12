@@ -4,6 +4,7 @@ settings.word_crab_file = 'data/word_crab/words.txt'
 
 -- 登陆认证服
 settings.login_conf = {
+    node_name                   = "loginnode",
     console_port                = 15010,
     login_port_http             = 15110,   --(暴露) 登陆认证端口
     login_port_tcp              = 15111,   --(暴露) 登录认证端口
@@ -14,8 +15,8 @@ settings.login_conf = {
 
 -- 中心服
 settings.center_conf = {
+    node_name                   = "centernode",
     console_port                = 15020,
-    nodeName                    = "center",
 }
 
 settings.nodes = {
@@ -47,7 +48,7 @@ settings.battles = {
 
 --db 配置
 settings.db_cnf = {
-    login = {
+    loginnode = {
         redis_maxinst = 4,
         redis_cnf = {
             host = "127.0.0.1",
@@ -63,7 +64,7 @@ settings.db_cnf = {
         },
     },
 
-    center = {
+    centernode = {
         redis_maxinst = 4,
         redis_cnf = {
             host = "127.0.0.1",

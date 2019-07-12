@@ -4,18 +4,19 @@ require "skynet.manager"
 
 local class = require "class"
 local singleton = require "singleton"
-local Object = class("SessionSingleton"):include(singleton)
+local Commands = class("Commands"):include(singleton)
 
 local mods = require "mods.init"
 
 
-function Object:initialize(handlers)
-	self._handlers = handlers
+function Commands:initialize(_handler)
+	self._handler = _handler
 end
 
-function Object:start(session)
-	self._handlers.init(session.fd)
-	mods.reg_mods(self._handlers, session)
+function Commands:start(session)
+	self._handler.init(session.fd)
+
+	mods.reg_profile(self._handler, session)
 
 	--检查是否有角色信息
 	local _, profiled = mods.get_profile()
@@ -24,12 +25,15 @@ function Object:start(session)
 		return 0
 	end
 
-	self:reg_mods()
+	self:reg_mods({
+		handler = self._handler,
+		profile = data,
+	})
 	return 1
 end
 
-function Object:reg_mods()
-	mods.reg_mods()
+function Commands:reg_mods(data)
+	mods.reg_mods(data)
 	mods.load()
 	mods.synch_msg()
 	mods.save()
@@ -37,7 +41,7 @@ function Object:reg_mods()
 	self._handlers.push_package("verify", {text = "welcome" })
 end
 
-function Object:logout(conn)
+function Commands:logout(conn)
 	DEBUG("agent is logout", inspect(conn))
 	mods.force_save()
 
@@ -47,4 +51,4 @@ function Object:logout(conn)
 end
 
 
-return Object
+return Commands

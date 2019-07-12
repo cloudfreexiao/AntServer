@@ -6,7 +6,7 @@ local property_db_key = require "dbset".property_db_key
 
 
 function Propertyd:initialize(data)
-    self._profile = data
+    self._profile = data.profile
 end
 
 function Propertyd:load()

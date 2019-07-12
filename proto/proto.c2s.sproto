@@ -23,3 +23,15 @@ handshake 2 {
 		has_role 1: integer #是否已经有角色了  0 没有 1有
 	}
 }
+
+born 3 {
+	request {
+		name 0 : string
+		head 1 : string
+		job 2 : string
+	}
+
+	response {
+		res 0: integer 
+	}
+}

@@ -65,9 +65,10 @@ skynet.start(function()
   INFO("-----GameServer-----", node_name, " will begin")
 
   local cfg = settings.nodes[node_name]
-  skynet.uniqueservice('debug_console', cfg.console_port)
-  skynet.uniqueservice('word_crab', cfg.word_crab_file)
-  skynet.uniqueservice('dbproxy', node_name)
+  skynet.uniqueservice("debug_console", cfg.console_port)
+  skynet.uniqueservice("word_crab", cfg.word_crab_file)
+  skynet.uniqueservice("dbproxy", node_name)
+
   local proto = skynet.uniqueservice "protoloader"
 	skynet.call(proto, "lua", "load", {
 		"proto.c2s",
@@ -80,7 +81,7 @@ skynet.start(function()
   INFO("-----GameServer-----", node_name, " start OK")
 
   local addr = skynet.newservice("agent", "tcp")
-  -- skynet_timeout_call(5, addr, "hello", 1, 20)
+  skynet_timeout_call(5, addr, "start", {fd = 20, secret = "ed483fc8254b7f16", subid = "2", uid = "1_2_test_cloudfreexiao_001" })
   -- skynet_call(addr, "hello", 30, 50)
 
   -- skynet.timeout(200, function()

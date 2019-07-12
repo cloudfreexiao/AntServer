@@ -2,8 +2,8 @@ local class		=  require "class"
 local Property   = class("Property")
 
 
-function Property:initialize(handler)
-	self._handler = handler
+function Property:initialize(data)
+	self._handler = data.handler
 end
 
 return Property
