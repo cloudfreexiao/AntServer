@@ -124,23 +124,30 @@ namespace Skynet.DotNetClient.Gate.TCP
 			}
 		}
 
-		internal void ProcessMessage(SpRpcResult result)
+		internal void ProcessMessage(SpRpcResult msg)
 		{
-			switch (result.Op) {
+			if (msg.ud != 0)
+			{
+				Debug.LogError("resp error code is: " + msg.ud);
+				_eventManager.RemoveCallBack(msg.Session);
+				return;
+			}
+			
+			switch (msg.Op) {
 			case SpRpcOp.Request:
-				Util.Log ("Recv Request : " + result.Protocol.Name + ", session : " + result.Session);
+				Util.Log ("Recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
 				
-				if (result.Data != null)
-					Util.DumpObject (result.Data);
+				if (msg.Data != null)
+					Util.DumpObject (msg.Data);
 				
-				_eventManager.InvokeOnEvent(result.Protocol.Name, result.Data);
+				_eventManager.InvokeOnEvent(msg.Protocol.Name, msg.Data);
 				break;
 			case SpRpcOp.Response:
-				Util.Log ("Recv Response : " + result.Protocol.Name + ", session : " + result.Session);
-				if (result.Data != null)
-					Util.DumpObject (result.Data);
+				Util.Log ("Recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
+				if (msg.Data != null)
+					Util.DumpObject (msg.Data);
 
-				_eventManager.InvokeCallBack(result.Session, result.Data);
+				_eventManager.InvokeCallBack(msg.Session, msg.Data);
 				break;
 			}
 		}

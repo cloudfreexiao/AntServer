@@ -101,12 +101,12 @@ namespace Skynet.DotNetClient.Login.TCP
                 resp.secret = split[3];
                 resp.subid = split[4];
             }
-            Debug.Log("login result code:" + code);
-            Debug.Log("login result gate:" + resp.gate);
-            Debug.Log("login result port:" + resp.port);
-            Debug.Log("login result uid:" + resp.uid);
-            Debug.Log("login result subid:" + resp.subid);
-            Debug.Log("login result secret:" + resp.secret);
+//            Debug.Log("login result code:" + code);
+//            Debug.Log("login result gate:" + resp.gate);
+//            Debug.Log("login result port:" + resp.port);
+//            Debug.Log("login result uid:" + resp.uid);
+//            Debug.Log("login result subid:" + resp.subid);
+//            Debug.Log("login result secret:" + resp.secret);
             _state = Login_Auth_State.LOGIN_FINISHED;
             OnLoginCallBack.Invoke(code, resp);
         }

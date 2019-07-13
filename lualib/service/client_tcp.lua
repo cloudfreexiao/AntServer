@@ -20,14 +20,13 @@ function client.sender()
 end
 
 -- resp message to client
-function client.resp_package(fd, pack, response)
-	local package = response(pack)
-	helper_tcp.send_text(fd, package)
+function client.resp_package(fd, pack, ud, response)
+	helper_tcp.send_text(fd, response(pack, ud))
 end
 
 -- push message to client
-function client.push_package(proto_name, data)
-	helper_tcp.send_text(_fd, _sender(proto_name, data))
+function client.push_package(proto_name, data, ud)
+	helper_tcp.send_text(_fd, _sender(proto_name, data, 0, ud))
 end
 
 
@@ -38,26 +37,27 @@ local function request(fd, name, args, response)
 		-- f may block , so fork and run
 		skynet.fork(function()
 			if _fd then
-				local ok, pack = pcall(f, args)
+				local ok, errcode, pack = pcall(f, args)
 				if ok then
+					errcode = SYSTEM_ERROR.success
 					pack = pack or {}
-					DEBUG("request:", name, "resp package:", inspect(pack))
-					client.resp_package(fd, pack, response)
+					DEBUG("request:", name, " errcode:", errcode, "resp package:", inspect(pack))
+					client.resp_package(fd, pack, errcode, response)
 				else
 					ERROR("do agent socket rpc command[", name, "] error:", pack)
 				end
 			else
-				local ok, ec, pack = pcall(f, args, fd)
+				local ok, errcode, pack = pcall(f, args, fd)
 				if ok then
 					if pack then
-						client.resp_package(fd, pack, response)
-						if ec ~= 0 then
-							INFO("Hub sigin failed")
+						client.resp_package(fd, pack, errcode, response)
+						INFO("Hub sigin errcode:", errcode, "resp package:", inspect(pack))
+						if errcode ~= SYSTEM_ERROR.success then
 							skynet_send(skynet.self(), "kick", {uid = args.uid})
 						end
 					else
 						--断开socket连接
-						INFO("Hub recv Invalid socket fd:", fd)
+						ERROR("Hub recv Invalid socket fd:", fd, " uid:", args.uid)
 						socket.close(fd)
 					end
 				end

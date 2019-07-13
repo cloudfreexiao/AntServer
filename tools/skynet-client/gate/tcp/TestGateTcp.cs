@@ -30,8 +30,6 @@ public class TestGateTcp
 
 			_client.Request("handshake", handshakeRequset, (SpObject obj) =>
 			{
-				int res = obj["res"].AsInt();
-				if (res == 0)
 				{
 					int role = obj["role"].AsInt();
 					if (role == 0)
@@ -42,16 +40,12 @@ public class TestGateTcp
 						bornRequest.Insert("job", "1");
 						_client.Request("born", bornRequest, (SpObject bornObj) =>
 						{
-							res = obj["res"].AsInt();
-							if (res != 0)
-							{
-								Debug.LogError("born resp is error" + res);
-							}
+							Debug.LogError("born resp is ok");
 						} );
 					}
 					else
 					{
-						Debug.Log("is has role" + res);
+						Debug.Log("is has role");
 					}
 				}
 			});

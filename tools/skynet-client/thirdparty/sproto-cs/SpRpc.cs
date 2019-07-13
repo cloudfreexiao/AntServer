@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 public enum SpRpcOp {
 	Request,
@@ -12,22 +13,22 @@ public class SpRpcResult {
 	public SpProtocol Protocol;
 	public SpRpcOp Op;
 	public SpObject Data;
-    public int Error;
+    public int ud;
 	public SpRpcResult () {
 		Session = 0;
 		Protocol = null;
 		Op = SpRpcOp.Unknown;
 		Data = null;
-        Error = 0;
+        ud = 0;
 	}
 
-    public SpRpcResult(int s, SpProtocol proto, SpRpcOp op, SpObject data, int error)
+    public SpRpcResult(int s, SpProtocol proto, SpRpcOp op, SpObject data, int u)
     {
         Session = s;
 		Protocol = proto;
 		Op = op;
         Data = data;
-        Error = error;
+        ud = u;
     }
 }
 
@@ -144,10 +145,10 @@ public class SpRpc {
         {
             session = header["session"].AsInt();
         }
-        int error = 0;
-        if (header["error"] != null)
+        int ud = 0;
+        if (header["ud"] != null)
         {
-            error = header["error"].AsInt();
+            ud = header["ud"].AsInt();
         }
 		if (header["type"] != null)
         {
@@ -158,7 +159,7 @@ public class SpRpc {
             {
                 mSessions[session] = protocol;
             }
-			return new SpRpcResult (session, protocol, SpRpcOp.Request, obj,error);
+			return new SpRpcResult (session, protocol, SpRpcOp.Request, obj, ud);
         }
 		else
         {
@@ -176,10 +177,10 @@ public class SpRpc {
             }
 			if (protocol.Response == null)
             {
-                return new SpRpcResult(session, protocol, SpRpcOp.Response, null, error);
+                return new SpRpcResult(session, protocol, SpRpcOp.Response, null, ud);
             }
 			SpObject obj = mAttachTypeManager.Codec.Decode (protocol.Response, unpack_stream);
-            return new SpRpcResult(session, protocol, SpRpcOp.Response, obj, error);
+            return new SpRpcResult(session, protocol, SpRpcOp.Response, obj, ud);
 		}
     }
 

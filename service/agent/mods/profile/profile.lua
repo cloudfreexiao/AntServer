@@ -31,7 +31,6 @@ function M.born(args)
 	})
 
 	_profiled:save()
-	return {res = SYSTEM_ERROR.success, }
 end
 
 function Profile:initialize(data)

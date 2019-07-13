@@ -126,7 +126,7 @@ function CMD.handshake(fd, args)
     assert(res)
     FD_Map[fd] = nil
 
-    return 0, {res = SYSTEM_ERROR.success, role = role,}
+    return SYSTEM_ERROR.success, {role = role,}
 end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------

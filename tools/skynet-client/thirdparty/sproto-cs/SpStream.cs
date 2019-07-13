@@ -32,7 +32,7 @@ public class SpStream {
         mPosition = mOffset;
 
 		if (t >= 0)
-        	mTail = o + t;
+            mTail = o + t;
 		else 
 			mTail = mPosition;
     }

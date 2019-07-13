@@ -29,6 +29,11 @@ namespace Skynet.DotNetClient.Gate.TCP
             _callBackMap[id].Invoke(data);
         }
 
+        public void RemoveCallBack(int id)
+        {
+            _callBackMap.Remove(id);
+        }
+        
         public void AddOnEvent(string eventName, Action<SpObject> callback)
         {
             List<Action<SpObject>> list = null;
