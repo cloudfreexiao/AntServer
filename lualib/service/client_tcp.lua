@@ -39,7 +39,7 @@ local function request(fd, name, args, response)
 			if _fd then
 				local ok, errcode, pack = pcall(f, args)
 				if ok then
-					errcode = SYSTEM_ERROR.success
+					errcode = errcode or SYSTEM_ERROR.success
 					pack = pack or {}
 					DEBUG("request:", name, " errcode:", errcode, "resp package:", inspect(pack))
 					client.resp_package(fd, pack, errcode, response)
