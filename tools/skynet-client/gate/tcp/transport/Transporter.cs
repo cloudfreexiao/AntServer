@@ -80,7 +80,7 @@ namespace Skynet.DotNetClient.Gate.TCP
                 }
                 else
                 {
-                    Debug.LogError("接受数据大小0 远端连接断开");
+                    Debug.LogError("没有接收到任何数据 远端连接断开");
 
                     if (onDisconnect != null)
                         onDisconnect();

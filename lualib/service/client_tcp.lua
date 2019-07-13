@@ -31,7 +31,10 @@ end
 
 
 local function request(fd, name, args, response)
-	DEBUG("recv requsest ", fd, " name ", name, " args ", inspect(args))
+	if name ~= "heartbeat" then
+		DEBUG("recv requsest ", fd, " name ", name, " args ", inspect(args))
+	end
+
 	local f = handler[name]
 	if f then
 		-- f may block , so fork and run
@@ -41,7 +44,11 @@ local function request(fd, name, args, response)
 				if ok then
 					errcode = errcode or SYSTEM_ERROR.success
 					pack = pack or {}
-					DEBUG("request:", name, " errcode:", errcode, "resp package:", inspect(pack))
+
+					if name ~= "heartbeat" then
+						DEBUG("request:", name, " errcode:", errcode, "resp package:", inspect(pack))
+					end
+
 					client.resp_package(fd, pack, errcode, response)
 				else
 					ERROR("do agent socket rpc command[", name, "] error:", pack)

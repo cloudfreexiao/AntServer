@@ -136,16 +136,16 @@ namespace Skynet.DotNetClient.Gate.TCP
 			switch (msg.Op) {
 			case SpRpcOp.Request:
 				Util.Log ("Recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
-				
-				if (msg.Data != null)
-					Util.DumpObject (msg.Data);
+				Util.DumpObject (msg.Data);
 				
 				_eventManager.InvokeOnEvent(msg.Protocol.Name, msg.Data);
 				break;
 			case SpRpcOp.Response:
-				Util.Log ("Recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
-				if (msg.Data != null)
+				if (msg.Protocol.Name != "heartbeat")
+				{
+					Util.Log ("Recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
 					Util.DumpObject (msg.Data);
+				}
 
 				_eventManager.InvokeCallBack(msg.Session, msg.Data);
 				break;

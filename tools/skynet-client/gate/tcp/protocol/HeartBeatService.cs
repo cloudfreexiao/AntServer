@@ -18,11 +18,6 @@
 		{
 			_interval = interval * 1000;
 			_client = sc;
-
-//			_client.On("heartbeat", (SpObject obj) => {
-//				Debug.Log("heartbeat");
-//				resetTimeout();
-//			});
 		}
 
 		public void Start()
@@ -44,7 +39,6 @@
 		{
 			TimeSpan span = DateTime.Now - _lastTime;
 			Timeout = (int)span.TotalMilliseconds;
-			Debug.Log("sendHeartBeat");
 			if (Timeout > _interval * 2)
 			{
 				Debug.Log ("timeout disconnect");

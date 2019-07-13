@@ -6,7 +6,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 	
 	
 	public class Protocol {
-		private SpStream _stream = new SpStream ();
+		private SpStream _stream = new SpStream (1024);
 		private SpRpc _rpc;
 
 		private GateClient _client;
@@ -34,7 +34,10 @@ namespace Skynet.DotNetClient.Gate.TCP
 		public void Send (string proto, int session, SpObject args) {
 			_stream.Reset ();
 
-			Debug.Log("Send Request : " + proto + ", session : " + session);
+			if (proto != "heartbeat")
+			{
+				Debug.Log("Send Request : " + proto + ", session : " + session);
+			}
 
 			_stream.Write ((short)0);
 			_rpc.Request (proto, args, session, _stream);

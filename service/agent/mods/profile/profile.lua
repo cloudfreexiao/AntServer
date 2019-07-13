@@ -7,7 +7,6 @@ local _profiled = nil
 local _handler = nil 
 
 function M.heartbeat(args)
-	DEBUG("heartbeat", os.time())
 end
 
 --创建角色
