@@ -2,10 +2,9 @@ local skynet = require "skynet"
 require "skynet.manager"
 
 local protocol = ...
-local handlers = require ("service.client_" .. protocol)
 
 local cmds = require "cmds.init"
-local g_cmds = cmds:instance(handlers)
+local g_cmds = cmds:instance(protocol)
 
 
 skynet.start(function()

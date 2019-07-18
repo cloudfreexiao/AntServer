@@ -6,15 +6,15 @@ local singleton = require "singleton"
 local Commands = class("Commands"):include(singleton)
 
 local mods = require "mods.init"
-local _handler = nil
+local _handler = require "service.client"
 
 
-function Commands:initialize(handler)
-	_handler = handler
+function Commands:initialize(protocol)
+	self._protocol = protocol
 end
 
 function Commands:start(session)
-	_handler.init(session.fd)
+	_handler.init(self._protocol, session.fd)
 
 	mods.reg_profile(_handler, session)
 
@@ -43,7 +43,6 @@ function Commands:trigger_mods(data)
 end
 
 function Commands:logout(conn)
-	DEBUG("agent is logout", inspect(conn))
 	mods.force_save()
 
 	skynet.timeout(500, function()

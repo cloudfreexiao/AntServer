@@ -20,7 +20,7 @@ end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------
 ------------------------Auth Client Handshake Logic-------------------------------------------
-local client = require ("service.client_" .. protocol)
+local client = require ("service.client")
 local auth = client.handler()
 function auth.handshake(args, fd)
     return skynet_call(hub, "handshake", fd, args)
@@ -30,7 +30,7 @@ end
 ------------------------Auth Client Handshake Logic-------------------------------------------
 
 skynet.start(function()
-    client.init()
+    client.init(protocol)
 
     skynet.dispatch("lua", function(session, source, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")

@@ -11,6 +11,6 @@ skynet.start(function()
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)
-
+    
     skynet.register('.' .. SERVICE_NAME)
 end)
