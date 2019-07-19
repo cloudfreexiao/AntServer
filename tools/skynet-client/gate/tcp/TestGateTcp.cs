@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class TestGateTcp 
 {
-	private GateClient _client;
+	private GateTcpClient _client;
 	private AuthPackageResp _req;
 	
 	public void Run (AuthPackageResp req)
 	{
 		_req = req;
 		
-		_client = new GateClient (NetWorkStateCallBack);
+		_client = new GateTcpClient (NetWorkStateCallBack);
 		//服务器验证成功标识
 		_client.On("verify", OnVerifySucess);
 		_client.Connect(_req.gate, _req.port);

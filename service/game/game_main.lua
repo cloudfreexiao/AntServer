@@ -1,4 +1,4 @@
-local skynet = require 'skynet'
+local skynet = require "skynet"
 require "skynet.manager"
 local cluster = require "skynet.cluster"
 

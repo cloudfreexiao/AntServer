@@ -7,7 +7,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 	using UnityEngine;
 	using Util;
 	
-	public class GateClient : IDisposable 
+	public class GateTcpClient : GateClient,  IDisposable 
 	{
 		public event Action<NetWorkState> _networkStateCallBack;
 
@@ -23,7 +23,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 		//不能使用0，使用0默认没有Response
 		private int _session;
 
-		public GateClient(Action<NetWorkState> networkCallBack)
+		public GateTcpClient(Action<NetWorkState> networkCallBack)
 		{
 			_networkStateCallBack = networkCallBack;
 			_eventManager = new EventManager();
@@ -124,7 +124,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 			}
 		}
 
-		internal void ProcessMessage(SpRpcResult msg)
+		public void ProcessMessage(SpRpcResult msg)
 		{
 			if (msg.ud != 0)
 			{

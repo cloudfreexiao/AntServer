@@ -2347,7 +2347,7 @@ namespace WebSocketSharp
       var buff = new StringBuilder (base64Key, 64);
       buff.Append (_guid);
       SHA1 sha1 = new SHA1CryptoServiceProvider ();
-      var src = sha1.ComputeHash (buff.ToString ().UTF8Encode ());
+      var src = sha1.ComputeHash (buff.ToString ().GetUTF8EncodedBytes ());
 
       return Convert.ToBase64String (src);
     }
@@ -3370,6 +3370,19 @@ namespace WebSocketSharp
       send (Opcode.Binary, new MemoryStream (data));
     }
 
+    public void Send (byte[] data, int offset, int len)
+    {
+      if (_readyState != WebSocketState.Open) {
+        var msg = "The current state of the connection is not Open.";
+        throw new InvalidOperationException (msg);
+      }
+
+      if (data == null)
+        throw new ArgumentNullException ("data");
+
+      send (Opcode.Binary, new MemoryStream (data, offset, len));
+    }
+    
     /// <summary>
     /// Sends the specified file using the WebSocket connection.
     /// </summary>

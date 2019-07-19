@@ -5,11 +5,11 @@ using Skynet.DotNetClient;
 public class TestSkynetClient : MonoBehaviour 
 {
 	private TestLoginTcp _login;
-	private TestGateTcp _gate;
-
+	private string protocol = "ws"; // "ws"; //"tcp";
+	
 	void Start () 
 	{
-		_login = new TestLoginTcp ();
+		_login = new TestLoginTcp (protocol);
 		_login.Run(ProcessLoginResp);
 	}
 	
@@ -19,8 +19,17 @@ public class TestSkynetClient : MonoBehaviour
 
 		if(code == 200)
 		{
-			_gate = new TestGateTcp();
-			_gate.Run(resp);
+			if (protocol == "tcp")
+			{
+				TestGateTcp gate = new TestGateTcp();
+				gate.Run(resp);
+			}
+			else
+			{
+				TestGateWS gate = new TestGateWS();
+				gate.Run(resp);
+			}
+
 		}
 
 		_login = null;

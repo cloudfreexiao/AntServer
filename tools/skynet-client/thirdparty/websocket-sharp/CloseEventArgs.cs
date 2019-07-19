@@ -85,23 +85,14 @@ namespace WebSocketSharp
 
     #endregion
 
-    #region Internal Properties
-
-    internal PayloadData PayloadData {
-      get {
-        return _payloadData;
-      }
-    }
-
-    #endregion
-
     #region Public Properties
 
     /// <summary>
-    /// Gets the status code for the close.
+    /// Gets the status code for the connection close.
     /// </summary>
     /// <value>
-    /// A <see cref="ushort"/> that represents the status code for the close if any.
+    /// A <see cref="ushort"/> that represents the status code for
+    /// the connection close if present.
     /// </value>
     public ushort Code {
       get {
@@ -110,14 +101,15 @@ namespace WebSocketSharp
     }
 
     /// <summary>
-    /// Gets the reason for the close.
+    /// Gets the reason for the connection close.
     /// </summary>
     /// <value>
-    /// A <see cref="string"/> that represents the reason for the close if any.
+    /// A <see cref="string"/> that represents the reason for
+    /// the connection close if present.
     /// </value>
     public string Reason {
       get {
-        return _payloadData.Reason ?? String.Empty;
+        return _payloadData.Reason;
       }
     }
 
@@ -125,7 +117,8 @@ namespace WebSocketSharp
     /// Gets a value indicating whether the connection has been closed cleanly.
     /// </summary>
     /// <value>
-    /// <c>true</c> if the connection has been closed cleanly; otherwise, <c>false</c>.
+    /// <c>true</c> if the connection has been closed cleanly; otherwise,
+    /// <c>false</c>.
     /// </value>
     public bool WasClean {
       get {

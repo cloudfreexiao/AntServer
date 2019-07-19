@@ -4,7 +4,6 @@ namespace Skynet.DotNetClient.Login.TCP
     using System.Text;
     using System.Text.RegularExpressions;
     using Util;
-    using UnityEngine;
     
     public class EventManager : IDisposable
     { 

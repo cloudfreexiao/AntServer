@@ -1,5 +1,5 @@
 
-namespace Skynet.DotNetClient.Gate.TCP
+namespace Skynet.DotNetClient.Gate
 {
     using System;
     using System.Collections.Generic;
