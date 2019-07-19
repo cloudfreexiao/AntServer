@@ -1,7 +1,8 @@
-using System.IO;
-
 namespace Skynet.DotNetClient
 {
+    using System.IO;
+    using Sproto;
+    
     public class ProtocolLoader
     {
         private string _path = @"Assets/Scripts/skynet-client/proto/";

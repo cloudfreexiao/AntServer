@@ -1,11 +1,14 @@
-﻿public class SpTable : SpObject
+﻿namespace Sproto
 {
-    public SpTable(params object[] args)
+    public class SpTable : SpObject
     {
-        mType = ArgType.Null;
-        for (int i = 0; i < args.Length; i += 2)
+        public SpTable(params object[] args)
         {
-            Insert(args[i], args[i + 1]);
+            mType = ArgType.Null;
+            for (int i = 0; i < args.Length; i += 2)
+            {
+                Insert(args[i], args[i + 1]);
+            }
         }
     }
 }

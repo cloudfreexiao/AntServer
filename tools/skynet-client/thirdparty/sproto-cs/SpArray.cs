@@ -1,11 +1,16 @@
-﻿public class SpArray : SpObject
+﻿namespace Sproto
 {
-    public SpArray(params object[] args)
+    public class SpArray : SpObject
     {
-        mType = ArgType.Null;
-        for (int i = 0; i < args.Length; i++)
+        public SpArray(params object[] args)
         {
-            Insert(i, args[i]);
+            mType = ArgType.Null;
+            for (int i = 0; i < args.Length; i++)
+            {
+                Insert(i, args[i]);
+            }
         }
-    }
+    }   
+
 }
+

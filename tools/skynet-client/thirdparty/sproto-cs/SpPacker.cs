@@ -1,6 +1,9 @@
-﻿using System.Collections;
-using System.IO;
-using System;
+﻿namespace Sproto
+{
+
+
+
+    using System;
 
 /*
 0 压缩
@@ -13,221 +16,224 @@ packed (hex):  51 08 03 02   31 19 aa 01
 所以，在最坏情况下，如果有 2K 的全不为 0 的数据块，需要增加两个字节 FF FF 的数据头（表示后续有 256 组 8 字节的非 0 块）。
 */
 
-public class SpPacker
-{
-    private static int PackSeg(byte[] src, int src_offset, SpStream output, int n)
+    public class SpPacker
     {
-        byte header = 0;
-        int notzero = 0;
-
-        int dest_begin = output.Position;
-        output.Position++;
-
-        for (int i = 0; i < 8; i++)
+        private static int PackSeg(byte[] src, int src_offset, SpStream output, int n)
         {
-            if (src[src_offset + i] != 0)
+            byte header = 0;
+            int notzero = 0;
+
+            int dest_begin = output.Position;
+            output.Position++;
+
+            for (int i = 0; i < 8; i++)
             {
-                notzero++;
-                header |= (byte)(1 << i);
+                if (src[src_offset + i] != 0)
+                {
+                    notzero++;
+                    header |= (byte) (1 << i);
 
-                output.Write(src[src_offset + i]);
+                    output.Write(src[src_offset + i]);
+                }
             }
+
+            if ((notzero == 7 || notzero == 6) && n > 0)
+                notzero = 8;
+
+            if (notzero == 8)
+            {
+                if (n > 0)
+                    return 8;
+                else
+                    return 10;
+            }
+
+            int dest_end = output.Position;
+            output.Position = dest_begin;
+            output.Write(header);
+            output.Position = dest_end;
+
+            return notzero + 1;
         }
 
-        if ((notzero == 7 || notzero == 6) && n > 0)
-            notzero = 8;
-
-        if (notzero == 8)
+        public static void WriteFF(byte[] src, int src_offset, SpStream output, int n, int correctPos)
         {
-            if (n > 0)
-                return 8;
-            else
-                return 10;
+            int align8_n = (n + 7) & (~7);
+            output.Write((byte) 0xff);
+            output.Write((byte) (align8_n / 8 - 1));
+            output.Write(src, src_offset, n);
+            for (int i = 0; i < align8_n - n; i++)
+                output.Write((byte) 0);
+            output.CorrectLength(correctPos);
         }
 
-        int dest_end = output.Position;
-        output.Position = dest_begin;
-        output.Write(header);
-        output.Position = dest_end;
-
-        return notzero + 1;
-    }
-
-    public static void WriteFF(byte[] src, int src_offset, SpStream output, int n, int correctPos)
-    {
-        int align8_n = (n + 7) & (~7);
-        output.Write((byte)0xff);
-        output.Write((byte)(align8_n / 8 - 1));
-        output.Write(src, src_offset, n);
-        for (int i = 0; i < align8_n - n; i++)
-            output.Write((byte)0);
-        output.CorrectLength(correctPos);
-    }
-
-    public static SpStream Pack(SpStream input)
-    {
-        SpStream stream = new SpStream();
-
-        int pos = input.Position;
-        if (Pack(input, stream) == false)
+        public static SpStream Pack(SpStream input)
         {
-            int size = stream.Position;
-            size = ((size + 7) / 8) * 8;
-            stream = new SpStream(size);
+            SpStream stream = new SpStream();
 
-            input.Position = pos;
-            // do we need this check? it's not possible it will return false this time
+            int pos = input.Position;
             if (Pack(input, stream) == false)
-                return null;
-        }
-
-        return stream;
-    }
-
-    public static bool Pack(SpStream input, SpStream output)
-    {
-        int src_size = input.Length;
-        if (src_size % 8 != 0)
-        {
-            int new_size = ((src_size + 7) / 8) * 8;
-            if (input.Capacity < new_size)
             {
-                SpStream new_input = new SpStream(new_size);
-                Array.Copy(input.Buffer, input.Offset, new_input.Buffer, new_input.Offset, input.Length);
-                new_input.Position = new_input.Offset;
-                input = new_input;
-                src_size = new_size;
-            }
-            else
-            {
-                int pos = input.Position;
-                input.Position = input.Tail;
-                for (int i = src_size; i < new_size; i++)
-                {
-                    input.Write((byte)0);
-                }
+                int size = stream.Position;
+                size = ((size + 7) / 8) * 8;
+                stream = new SpStream(size);
+
                 input.Position = pos;
+                // do we need this check? it's not possible it will return false this time
+                if (Pack(input, stream) == false)
+                    return null;
             }
+
+            return stream;
         }
 
-        int src_start = input.Offset;
-        int src_offset = input.Offset;
-        byte[] src = input.Buffer;
-
-        int ff_n = 0;
-        int ff_src_start = 0;
-        int ff_dest_start = 0;
-
-        for (; src_offset < src_size; src_offset += 8)
+        public static bool Pack(SpStream input, SpStream output)
         {
-            int pos = output.Position;
-            int n = PackSeg(src, src_offset, output, ff_n);
-
-            if (n == 10)
+            int src_size = input.Length;
+            if (src_size % 8 != 0)
             {
-                ff_src_start = src_offset;
-                ff_dest_start = pos;
-                ff_n = 1;
-            }
-            else if (n == 8 && ff_n > 0)
-            {
-                ff_n++;
-                if (ff_n == 256)
+                int new_size = ((src_size + 7) / 8) * 8;
+                if (input.Capacity < new_size)
                 {
-                    output.Position = ff_dest_start;
-                    WriteFF(src, ff_src_start, output, 256 * 8, n);
-                    ff_n = 0;
+                    SpStream new_input = new SpStream(new_size);
+                    Array.Copy(input.Buffer, input.Offset, new_input.Buffer, new_input.Offset, input.Length);
+                    new_input.Position = new_input.Offset;
+                    input = new_input;
+                    src_size = new_size;
                 }
-            }
-            else
-            {
-                if (ff_n > 0)
+                else
                 {
-                    output.Position = ff_dest_start;
-                    WriteFF(src, ff_src_start, output, ff_n * 8, n);
-                    ff_n = 0;
+                    int pos = input.Position;
+                    input.Position = input.Tail;
+                    for (int i = src_size; i < new_size; i++)
+                    {
+                        input.Write((byte) 0);
+                    }
+
+                    input.Position = pos;
                 }
             }
 
-            output.Position = pos + n;
+            int src_start = input.Offset;
+            int src_offset = input.Offset;
+            byte[] src = input.Buffer;
+
+            int ff_n = 0;
+            int ff_src_start = 0;
+            int ff_dest_start = 0;
+
+            for (; src_offset < src_size; src_offset += 8)
+            {
+                int pos = output.Position;
+                int n = PackSeg(src, src_offset, output, ff_n);
+
+                if (n == 10)
+                {
+                    ff_src_start = src_offset;
+                    ff_dest_start = pos;
+                    ff_n = 1;
+                }
+                else if (n == 8 && ff_n > 0)
+                {
+                    ff_n++;
+                    if (ff_n == 256)
+                    {
+                        output.Position = ff_dest_start;
+                        WriteFF(src, ff_src_start, output, 256 * 8, n);
+                        ff_n = 0;
+                    }
+                }
+                else
+                {
+                    if (ff_n > 0)
+                    {
+                        output.Position = ff_dest_start;
+                        WriteFF(src, ff_src_start, output, ff_n * 8, n);
+                        ff_n = 0;
+                    }
+                }
+
+                output.Position = pos + n;
+            }
+
+            if (ff_n == 1)
+            {
+                output.Position = ff_dest_start;
+                WriteFF(src, ff_src_start, output, 8, 0);
+            }
+            else if (ff_n > 1)
+            {
+                output.Position = ff_dest_start;
+                WriteFF(src, ff_src_start, output, src_size - (ff_src_start - src_start), 0);
+            }
+
+            return (output.IsOverflow() == false);
         }
 
-        if (ff_n == 1)
+        public static SpStream Unpack(SpStream input)
         {
-            output.Position = ff_dest_start;
-            WriteFF(src, ff_src_start, output, 8, 0);
-        }
-        else if (ff_n > 1)
-        {
-            output.Position = ff_dest_start;
-            WriteFF(src, ff_src_start, output, src_size - (ff_src_start - src_start), 0);
-        }
+            SpStream stream = new SpStream();
 
-        return (output.IsOverflow() == false);
-    }
-
-    public static SpStream Unpack(SpStream input)
-    {
-        SpStream stream = new SpStream();
-
-        int pos = input.Position;
-        if (Unpack(input, stream) == false)
-        {
-            stream = new SpStream(stream.Position);
-
-            input.Position = pos;
+            int pos = input.Position;
             if (Unpack(input, stream) == false)
-                return null;
+            {
+                stream = new SpStream(stream.Position);
+
+                input.Position = pos;
+                if (Unpack(input, stream) == false)
+                    return null;
+            }
+
+            return stream;
         }
 
-        return stream;
-    }
-
-    public static bool Unpack(SpStream input, SpStream output)
-    {
-        int src_size = input.Tail;
-        int src_offset = input.Offset;
-        byte[] src = input.Buffer;
-
-        while (src_offset < src_size)
+        public static bool Unpack(SpStream input, SpStream output)
         {
-            byte header = src[src_offset];
-            src_offset++;
+            int src_size = input.Tail;
+            int src_offset = input.Offset;
+            byte[] src = input.Buffer;
 
-            if (header == 0xff)
+            while (src_offset < src_size)
             {
-                if (src_offset > src_size)
-                    return false;
-
-                int n = (src[src_offset] + 1) * 8;
-                if (src_size - src_offset < n + 1)
-                    return false;
-
+                byte header = src[src_offset];
                 src_offset++;
-                output.Write(src, src_offset, n);
-                src_offset += n;
-            }
-            else
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    int nz = (header >> i) & 1;
-                    if (nz != 0)
-                    {
-                        if (src_offset > src_size)
-                            return false;
 
-                        output.Write(src[src_offset]);
-                        src_offset++;
-                    }
-                    else
+                if (header == 0xff)
+                {
+                    if (src_offset > src_size)
+                        return false;
+
+                    int n = (src[src_offset] + 1) * 8;
+                    if (src_size - src_offset < n + 1)
+                        return false;
+
+                    src_offset++;
+                    output.Write(src, src_offset, n);
+                    src_offset += n;
+                }
+                else
+                {
+                    for (int i = 0; i < 8; i++)
                     {
-                        output.Write((byte)0);
+                        int nz = (header >> i) & 1;
+                        if (nz != 0)
+                        {
+                            if (src_offset > src_size)
+                                return false;
+
+                            output.Write(src[src_offset]);
+                            src_offset++;
+                        }
+                        else
+                        {
+                            output.Write((byte) 0);
+                        }
                     }
                 }
             }
-        }
 
-        return (output.IsOverflow() == false);
+            return (output.IsOverflow() == false);
+        }
     }
+
 }

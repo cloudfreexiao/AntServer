@@ -3,7 +3,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 {
 	using UnityEngine;
 	using System.Net.Sockets;
-	
+	using Sproto;
 	
 	public class Protocol {
 		private SpStream _stream = new SpStream (1024);

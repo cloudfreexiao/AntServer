@@ -1,11 +1,16 @@
-﻿public class SpList<T> : SpObject
+﻿
+namespace Sproto
 {
-    public SpList(T[] args)
+    public class SpList<T> : SpObject
     {
-        mType = ArgType.Null;
-        for (int i = 0; i < args.Length; i++)
+        public SpList(T[] args)
         {
-            Insert(i, args[i]);
+            mType = ArgType.Null;
+            for (int i = 0; i < args.Length; i++)
+            {
+                Insert(i, args[i]);
+            }
         }
-    }
+    }    
+
 }

@@ -1,9 +1,8 @@
 namespace Skynet.DotNetClient.Gate.WS
 {
-    using System;
     using System.Text;
+    using Sproto;
     using UnityEngine;
-    using WebSocketSharp;
 
     public class Protocol
     {
@@ -32,13 +31,6 @@ namespace Skynet.DotNetClient.Gate.WS
 
             _rpc.Request (proto, args, session, _stream);
             return _stream;
-////            _socket.Send(_stream.Buffer, 0, _stream.Length);
-//            byte[] bytes = new byte[_stream.Length+1];
-//            
-//            Array.Copy(_stream.Buffer, 0, bytes, 0, _stream.Length);
-//            
-//            string text  = Encoding.UTF8.GetString(bytes);
-//            _socket.Send(text);
         }
 
         public void ProcessMessage(string data)

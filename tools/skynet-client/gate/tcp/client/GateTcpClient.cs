@@ -6,6 +6,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 	using System.Net.Sockets;
 	using UnityEngine;
 	using Util;
+	using Sproto;
 	
 	public class GateTcpClient : GateClient,  IDisposable 
 	{

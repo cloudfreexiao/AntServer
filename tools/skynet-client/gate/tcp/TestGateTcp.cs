@@ -1,6 +1,7 @@
 ﻿using Skynet.DotNetClient;
 using Skynet.DotNetClient.Gate.TCP;
 using UnityEngine;
+using Sproto;
 
 public class TestGateTcp 
 {

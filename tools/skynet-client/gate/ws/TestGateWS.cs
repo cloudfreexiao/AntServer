@@ -2,6 +2,7 @@
 using Skynet.DotNetClient;
 using Skynet.DotNetClient.Gate.WS;
 using UnityEngine;
+using Sproto;
 
 public class TestGateWS 
 {

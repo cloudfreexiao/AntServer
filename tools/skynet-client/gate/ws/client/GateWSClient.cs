@@ -4,6 +4,7 @@ namespace Skynet.DotNetClient.Gate.WS
     using UnityEngine;
     using WebSocketSharp;
     using Util;
+    using Sproto;
 
     public class GateWSClient : IDisposable , GateClient
     {

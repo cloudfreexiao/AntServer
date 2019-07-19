@@ -3,7 +3,8 @@ namespace Skynet.DotNetClient.Gate
 {
     using System;
     using System.Collections.Generic;
-    
+    using Sproto;
+
     public class EventManager : IDisposable
     {
         private Dictionary<int, Action<SpObject>> _callBackMap;

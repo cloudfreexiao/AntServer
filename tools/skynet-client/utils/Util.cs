@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
-using System;
-using UnityEngine;
+﻿
 
-namespace Skynet.DotNetClient.Util {
+namespace Skynet.DotNetClient.Util 
+{
+	using System.Collections.Generic;
+	using System;
+	using UnityEngine;
+	using Sproto;
+	
 	public class Util {
 		public static void DumpStream (SpStream stream) {
 			string str = "";

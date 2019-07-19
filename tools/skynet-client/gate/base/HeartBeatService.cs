@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.Timers;
+	using Sproto;
 	using UnityEngine;
 	
 	public class HeartBeatService
