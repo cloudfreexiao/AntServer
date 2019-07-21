@@ -113,7 +113,7 @@ function string:isutf8()
                         tune = (a - 0xF0) * 2 ^ 18 +
                                (b - 0x80) * 2 ^ 12 +
                                (c - 0x80) * 2 ^ 6 +
-                               (d - 0x80) - 0x10000
+                                (d - 0x80) - 0x10000
                         if 0 <= rune and rune <= 0xFFFFF then
                             pos = pos + 1
                         else

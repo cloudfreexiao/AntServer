@@ -55,7 +55,6 @@ local function send_buried()
         local ok, ret = M.buried_handle:Log(M.buriedlst)
         if (not ok) or (ret ~= ResultCode.OK) then
             skynet.error("send scribe logenrty error")
-            end
         else
             M.buriedlst = {}
         end

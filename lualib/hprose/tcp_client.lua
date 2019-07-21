@@ -43,10 +43,10 @@ function TcpClient:new(uri)
 end
 
 function TcpClient:close()
-  if self.conn ~= nil then
-      self.conn:close()
-      self.conn = nil
-  end
+    if self.conn ~= nil then
+        self.conn:close()
+        self.conn = nil
+    end
 end
 
 function TcpClient:useService(uri, namespace)

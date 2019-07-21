@@ -89,10 +89,10 @@ local digits = {
 local function isserializable(val)
     local t = type(val)
     return t == "nil" or
-           t == "boolean" or
-           t == "number" or
-           t == "string" or
-           t == "table"
+        t == "boolean" or
+        t == "number" or
+        t == "string" or
+        t == "table"
 end
 
 local function getfields(val, fields)
@@ -100,7 +100,7 @@ local function getfields(val, fields)
     if val == nil then return fields end
     for k, v in pairs(val) do
         if isserializable(k) and isserializable(v) and
-           (type(k) ~= "string" or k:sub(1, 2) ~= "__") then
+            (type(k) ~= "string" or k:sub(1, 2) ~= "__") then
             fields[#fields + 1] = k
         end
     end
@@ -269,7 +269,7 @@ function Writer:writeDate(val)
             self.stream:write(Tags.Time, val:fmt("%H%M%\f", time), timezone)
         else
             self.stream:write(Tags.Date, val:fmt("%Y%m%d", time),
-                              Tags.Time, val:fmt("%H%M%\f", time), timezone)
+                            Tags.Time, val:fmt("%H%M%\f", time), timezone)
         end
     end
 end
@@ -290,7 +290,7 @@ function Writer:writeDateTime(val)
             self.stream:write(Tags.Time, osdate("%H%M%S", time), timezone)
         else
             self.stream:write(Tags.Date, osdate("%Y%m%d", time),
-                              Tags.Time, osdate("%H%M%S", time), timezone)
+                            Tags.Time, osdate("%H%M%S", time), timezone)
         end
     end
 end

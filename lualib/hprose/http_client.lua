@@ -48,10 +48,10 @@ function setCookie(headers, host)
             --[[ Tomcat can return SetCookie2 with path wrapped in " --]]
             if cookie.PATH then
                 if cookie.PATH:sub(1, 1) == '"' then
-                   cookie.PATH = cookie.PATH:sub(2)
+                    cookie.PATH = cookie.PATH:sub(2)
                 end
                 if cookie.PATH:sub(-1, -1) == '"' then
-                   cookie.PATH = cookie.PATH:sub(1, -2)
+                    cookie.PATH = cookie.PATH:sub(1, -2)
                 end
             else
                 cookie.PATH = '/'
