@@ -3,24 +3,6 @@
 -- @module cassandra
 -- @author thibaultcha
 -- @release 1.3.4
---https://www.vultr.com/docs/how-to-install-apache-cassandra-3-11-x-on-centos-7
-
-
--- CREATE KEYSPACE cloudfreexiao WITH replication = {'class':'SimpleStrategy', 'replication_factor': 1};
-
--- CREATE TABLE cloudfreexiao.users(id text PRIMARY KEY,name text, age int);
--- local cassandra = require "cassandra.cassandra"
--- local peer = cassandra.connect({keyspace = "cloudfreexiao"})
-
--- assert(peer:execute("INSERT INTO users(id, name, age) VALUES(?, ?, ?)", {
---     "1144bada-852c-11e3-89fb-e0b9a54a6d11",
---     "John O Reilly",
---     42
--- }))
--- local rows = assert(peer:execute "SELECT * FROM users")
--- DEBUG("user:", inspect(rows[1])) -- John O Reilly
--- peer:close()
-
 
 local socketchannel =  require "skynet.socketchannel"
 local cql = require 'cassandra.cql'
@@ -90,11 +72,12 @@ local find = string.find
 -- @field plain_text The plain text auth provider.
 --     local auth = cassandra.auth_provider.plain_text("username", "password")
 -- @table cassandra.auth_providers
+
 local _Host = {
   _VERSION = '1.3.4',
   cql_errors = cql.errors,
   consistencies = cql.consistencies,
-  auth_providers = require 'cassandra.auth',
+  auth_providers = require 'cassandra.auth'
 }
 
 _Host.__index = _Host
@@ -128,43 +111,40 @@ _Host.__index = _Host
 --
 -- @usage
 -- local cassandra = require "cassandra"
--- local client = cassandra.connect {
+-- local client = cassandra.new {
 --   host = "10.0.0.1",
 --   port = 9042,
 --   keyspace = "my_keyspace"
 -- }
 --
-local function __dispatch_resp(sock)
-  do
-      -- receive frame version byte
-      local v_byte, err = sock:read(1)
-      if not v_byte then
-        return false, err 
-      end
-
-      -- -1 because of the v_byte we just read
-      local version, n_bytes = cql.frame_reader.version(v_byte)
-    -- receive frame header
-    local header_bytes, err = sock:read(n_bytes)
-    if not header_bytes then
-      return false, err 
+local function read_response(fd)
+    -- receive frame version byte
+    local v_byte, err = fd:read(1)
+    if not v_byte then 
+      return nil, err 
     end
 
-    local header = cql.frame_reader.read_header(version, header_bytes)
-    -- receive frame body
-    local body_bytes
-    if header.body_length > 0 then
-      body_bytes, err = sock:read(header.body_length)
-      if not body_bytes then
-        return false, err
-      end
-    end
-    local res, err, cql_err_code = cql.frame_reader.read_body(header, body_bytes)
-    if not res then
-      return false, err .. " errcode:" .. cql_err_code
-    end
-    return true, res
+    -- -1 because of the v_byte we just read
+    local version, n_bytes = cql.frame_reader.version(v_byte)
+  -- receive frame header
+  local header_bytes, err = fd:receive(n_bytes)
+  if not header_bytes then return nil, err end
+
+  local header = cql.frame_reader.read_header(version, header_bytes)
+  -- receive frame body
+  local body_bytes
+  if header.body_length > 0 then
+    body_bytes, err = self.sock:receive(header.body_length)
+    if not body_bytes then return nil, err end
   end
+
+  -- res, err, cql_err_code
+  return cql.frame_reader.read_body(header, body_bytes)
+end
+
+function _Host:send(request)
+  local frame = request:build_frame(self.protocol_version)
+  return self.__sock:request(frame, read_response)
 end
 
 local function send_startup(self)
@@ -185,54 +165,64 @@ end
 
 
 local function cassandra_login(self)
-  return function(sc)
+  return function(so)
       -- startup request on first connection
       local res, err, code = send_startup(self)
       if not res then
         if code == cql.errors.PROTOCOL then
           error("Invalid or unsupported protocol version")
+          assert(false)
         end
 
-        if res.must_authenticate then
-          if not self.auth then
-            error("authentication required")
-          end
+      if res.must_authenticate then
+        if not self.auth then
+          error("authentication required")
+          assert(false)
 
-          local ok, err = send_auth(self)
-          if not ok then
-            error("auth error:", err)
-          end
+        end
+
+        local ok, err = send_auth(self)
+        if not ok then
+          error("auth error:", err)
+          assert(false)
+
         end
       end
-      
-      local keyspace_req = requests.keyspace.new(self.keyspace)
-      local res, err = self:send(keyspace_req)
-      if not res then
-        error("set keyspace error:", err)
+
+      if self.keyspace then
+        local keyspace_req = requests.keyspace.new(self.keyspace)
+        local res, err = self:send(keyspace_req)
+        if not res then
+          error("set keyspace error:", err)
+          assert(false)
+
+        end
       end
   end
-end
-
-function _Host:send(request)
-  local frame = request:build_frame(self.protocol_version)
-  return self.__sock:request(frame, __dispatch_resp)
 end
 
 --- Connect to the remote node.
 -- Uses the `client_options` given at creation to connect to the configured
 -- Cassandra node.
-function _Host.connect(conf)
-  local obj = {
-    protocol_version = conf.protocol_version or cql.def_protocol_version,
-    keyspace = conf.keyspace,
-  }
+--
+-- @usage
+-- local cassandra = require "cassandra"
+-- local client = cassandra.new()
+-- assert(client:connect())
+--
+-- @treturn boolean `ok`: `true` if success, `nil` if failure.
+-- @treturn string `err`: String describing the error if failure.
+function _Host:connect(opts)
+  local obj = {}
 
   obj.__sock = socketchannel.channel {
     auth = cassandra_login(obj),
-    host = conf.host or "127.0.0.1",
-    port = conf.port or 9042,
+    overload = opts.overload,
     nodelay = true,
-    overload = conf.overload,
+    host = opts.host or "127.0.0.1",
+    port = opts.port or 9042,
+    keyspace = opts.keyspace,
+    protocol_version = opts.protocol_version or cql.def_protocol_version,
   }
 
   setmetatable(obj, _Host)

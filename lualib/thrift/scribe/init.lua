@@ -54,9 +54,7 @@ local function send_buried()
     if #M.buriedlst >0 then
         local ok, ret = M.buried_handle:Log(M.buriedlst)
         if (not ok) or (ret ~= ResultCode.OK) then
-            for n=1, #M.buriedlst do
-                local sql = string.format("insert into scribe(category,message,ret,groupId) values('%s','%s',%d,%d);", M.buriedlst[n].category, M.buriedlst[n].message, ret, GroupId)
-                skynet.send(".db","lua","update", sql)
+            skynet.error("send scribe logenrty error")
             end
         else
             M.buriedlst = {}

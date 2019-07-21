@@ -20,7 +20,7 @@ namespace Skynet.DotNetClient.Rudp
 
         public event Action OnFixedUpdate;
 
-        private double _updateFrequency;
+        private readonly double _updateFrequency;
         private double _lastUpdate;
 
         public RudpClock(double updateFrequency)
