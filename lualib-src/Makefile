@@ -10,8 +10,8 @@ SKYNET_SRC ?= $(SKYNET_ROOT)/skynet-src
 
 LFLAGS = $(SHARED) -I$(SKYNET_LUA_INC) -llua -L$(SKYNET_LUA_LIB) 
 
-TLS_LIB=/usr/local/ssl/lib
-TLS_INC=/usr/local/include
+TLS_LIB ?=/usr/local/ssl/lib
+TLS_INC ?=/usr/local/include
 
 #####################################################
 
@@ -72,8 +72,8 @@ RUDP_SO               	= $(LUA_CLIB_PATH)/$(RUDP_SO_NAME)
 all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
 	$(WEBSOCKETNETPACK_SO) $(CJSON_SO) $(CAOI_SO) \
 	$(AES_SO) $(CODEC_SO) $(CRYPTO_SO)  $(TBPACK_SO) \
-	$(RUDP_SO) \
-	$(FFI_SO) $(R3_SO) \
+	$(RUDP_SO) $(FFI_SO) \
+	#$(R3_SO) \
 #####################################################
 
 # C Lib
