@@ -48,5 +48,21 @@ function Commands:logout(conn)
 	skynet_send(".agent_mgr", "recycle", skynet.self(), self._protocol)
 end
 
+function Commands:call_front_mod(...)
+	return mods.call_front_mod(...)
+end
+
+function Commands:send_front_mod(...)
+	mods.send_front_mod(...)
+end
+
+function Commands:call_backend_mod(...)
+	return mods.call_front_mod(...)
+end
+
+function Commands:send_front_mod(...)
+	mods.send_front_mod(...)
+end
+
 
 return Commands

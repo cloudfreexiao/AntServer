@@ -42,30 +42,73 @@ function M.get_profile()
     return profile, profiled
 end
 
--- function M.get_fronts()
---     return _fronts
--- end
-
--- function M.get_backends()
---     return _backends
--- end
-
 function M.get_mod(name)
     return _fronts[tostring(name)], _backends[tostring(name)]
 end
 
 function M.reg_mods(handler, data)
-    local name = "property"
+    local name = nil
     local obj = nil
-
     do
+        name = "property"
         obj = do_register_backends(name, "mods.property.propertyd", data)
         do_register_fronts(name, "mods.property.property", {
             proxy = obj, -- --注册当前模块逻辑处理绑定的数据模块 如果需要其他暂时可以获取
             handler = handler,
         })
     end
+
+    do
+        name = "battle"
+        obj = do_register_backends(name, "mods.battle.battled", data)
+        do_register_fronts(name, "mods.battle.battle", {
+            proxy = obj, -- --注册当前模块逻辑处理绑定的数据模块 如果需要其他暂时可以获取
+            handler = handler,
+        })
+    end
 end
+
+local function get_front_func(mod_name, func)
+    local mod = _fronts[tostring(mod_name)]
+    assert(mod)
+
+    local f = mod[tostring(func)]
+    assert(f)
+    return mod, f
+end
+
+local function get_backend_func(mod_name, func)
+    local mod = _backends[tostring(mod_name)]
+    assert(mod)
+    
+    local f = mod[tostring(func)]
+    assert(f)
+    return mod, f
+end
+
+function M.call_front_mod(mod_name, func, ...)
+    DEBUG("FRONT", DUMP(_fronts))
+    DEBUG("mod", mod_name, " func", func)
+    local mod, f = get_front_func(mod_name, func)
+    return f(mod)
+end
+
+function M.send_front_mod(mod_name, func, ...)
+    local mod, f = get_front_func(mod_name, func)
+    f(mod)
+end
+
+function M.call_backend_mod(mod_name, func, ...)
+    local mod, f = get_backend_func(mod_name, func)
+    return f(mod)
+end
+
+function M.send_front_mod(mod_name, func, ...)
+    local mod, f = get_backend_func(mod_name, func)
+    f(mod)
+end
+
+
 
 function M.synch_msg()
     for k, mod in pairs(_fronts) do

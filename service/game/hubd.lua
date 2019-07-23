@@ -126,8 +126,7 @@ function CMD.handshake(fd, args)
     assert(res)
     FD_Map[fd] = nil
 
-    return SYSTEM_ERROR.success, {role = role, a = {{name = 'a', value = 100}, {name = 'b', value = 18976865679} }, 
-    b = {{name = 'm', str = 'dsfggg', v = {{name = 'q', value = 7777,}, {name = 'yyyy', value = 78907}  } }, {name = 'm', str = '的呼唤基金会'} },  c = {name = '点点滴滴', str = 'ddddgfggg'}   }
+    return SYSTEM_ERROR.success, {role = role, }
 end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------

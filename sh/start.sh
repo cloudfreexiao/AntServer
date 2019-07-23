@@ -15,8 +15,8 @@ $LOGIN_ON       && bash "$CUR_DIR/login.sh"     start release config.login
 
 sleep 1s
 $BATTLE1_ON      && bash "$CUR_DIR/battle1.sh"  start release config.battle1
-# sleep 1s
-# $BATTLE2_ON      && bash "$CUR_DIR/battle2.sh"  start release config.battle2
+sleep 1s
+$BATTLE2_ON      && bash "$CUR_DIR/battle2.sh"  start release config.battle2
 
 sleep 1s
 $GAME1_ON        && bash "$CUR_DIR/game1.sh"    start release config.game1

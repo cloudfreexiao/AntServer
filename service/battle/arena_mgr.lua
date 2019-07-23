@@ -7,7 +7,7 @@ local pool = {}
 local agent_map = {}
 local maxnum = 1024
 
-local function expend_pool()
+local function expand_pool()
 	for i=1, 10 do 
 		local agent = skynet.newservice("arena")
 		table.insert(pool, agent)
@@ -19,16 +19,19 @@ function CMD.get()
 	local agent = table.remove(pool)
 	if not agent then 
 		agent = assert(skynet.newservice("arena"))
-		agent_map[agent] = agent
+        agent_map[agent] = agent
+        
+        expand_pool()
 	end
 	return agent
 end
 
 function CMD.recycle(agent)
-	assert(agent)
 	if #pool >maxnum then
 		agent_map[agent] = nil 
-		skynet.kill(agent)
+        skynet.kill(agent)
+    else
+        table.insert(pool, agent)
 	end
 end
 

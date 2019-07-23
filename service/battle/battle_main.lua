@@ -12,11 +12,17 @@ skynet.start(function()
 
     skynet.uniqueservice("debug_console", cfg.console_port)
     skynet.uniqueservice("dbproxy", battle_name)
-    local addr = skynet.uniqueservice("battle_hub", battle_name)
+    local addr = skynet.uniqueservice("battled", battle_name)
     skynet_call(addr, "open", cfg)
 
     skynet.uniqueservice("arena_mgr")
     
+    local proto = skynet.uniqueservice "protoloader"
+	skynet.call(proto, "lua", "load", {
+		"proto.c2s",
+        "proto.s2c",
+    })
+
     skynet.uniqueservice("shutdown", "battle")
 
     cluster.open(battle_name)

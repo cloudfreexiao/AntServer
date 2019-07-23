@@ -32,6 +32,11 @@ M.property_db_key = {
     cname = "property",
 }
 
+M.battle_db_key = {
+    tbname = M.mongodb_tb.game,
+    cname = "battle",
+}
+
 ------------------------------------------------------
 ------------------------------------------------------
 

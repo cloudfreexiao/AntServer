@@ -40,10 +40,12 @@ settings.battles = {
         host                    = "0.0.0.0", -- 需要手动修改
         port                    = 15220, -- udp 开启对gate 端口
     },
-    -- ['battle2'] = {
-    --     battle_name             = "battle2",  -- 每个battle名字必须唯一
-    --     console_port            = 15041, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
-    -- },
+    ['battle2'] = {
+        battle_name             = "battle2",  -- 每个battle名字必须唯一
+        console_port            = 15041, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
+        host                    = "0.0.0.0", -- 需要手动修改
+        port                    = 15221, -- udp 开启对gate 端口
+    },
 }
 
 --db 配置

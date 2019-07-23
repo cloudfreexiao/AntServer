@@ -10,7 +10,7 @@ local pool = {}	 -- the least agent
 local agent_map = {} -- all of agent, include dispatched
 local maxnum = 1024
 
-local function expend_pool()
+local function expand_pool()
 	for i=1, 10 do 
 		local agent = skynet.newservice("agent", protocol)
 		table.insert(pool, agent)
@@ -24,7 +24,7 @@ function CMD.get()
         agent = assert(skynet.newservice("agent", protocol))
         agent_map[agent] = agent
 
-        expend_pool()
+        expand_pool()
 	end
 	return agent
 end

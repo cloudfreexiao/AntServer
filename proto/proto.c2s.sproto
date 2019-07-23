@@ -12,17 +12,6 @@ heartbeat 1 {
 	}
 }
 
-.propint {
-	name 0 : string
-	value 1 : integer
-}
-
-.propstring {
-	name 0 : string
-	str 1 : string
-	v 2 : *propint
-}
-
 handshake 2 {
 	request {
 		uid 0 : string
@@ -32,9 +21,6 @@ handshake 2 {
 
 	response {
 		role 0: integer #是否已经有角色了  0 没有 1有
-		a 1 : *propint
-		b 2 : *propstring
-		c 3: propstring
 	}
 }
 
@@ -46,5 +32,17 @@ born 3 {
 	}
 
 	response {
+	}
+}
+
+join 4 {
+	request {
+		arena 0 : integer
+	}
+
+	response {
+		session 0 : integer
+		host 1 : string
+		port 2 : integer
 	}
 }
