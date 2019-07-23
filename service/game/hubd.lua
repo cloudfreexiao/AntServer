@@ -105,7 +105,7 @@ function CMD.handshake(fd, args)
     else
         --TODO: agent 池
         user.conn = table.clone(conn)
-        user.agent = skynet.newservice("agent", user.conn.protocol)
+        user.agent = skynet_call(".agent_mgr", "get", user.conn.protocol)
     end
 
     local role = skynet_call(user.agent, "start", {

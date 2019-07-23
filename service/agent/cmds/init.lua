@@ -44,10 +44,8 @@ end
 
 function Commands:logout(conn)
 	mods.force_save()
-
-	skynet.timeout(500, function()
-		skynet.exit()
-	end)
+	--TODO: 不做其他处理是否出现问题? fd 保存定时器
+	skynet_send(".agent_mgr", "recycle", skynet.self(), self._protocol)
 end
 
 

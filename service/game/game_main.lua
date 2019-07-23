@@ -72,6 +72,7 @@ skynet.start(function()
   skynet.uniqueservice("word_crab", cfg.word_crab_file)
   skynet.uniqueservice("redispool", node_name)
   skynet.uniqueservice("dbproxy", node_name)
+  skynet.uniqueservice("agent_mgr")
 
   local proto = skynet.uniqueservice "protoloader"
 	skynet.call(proto, "lua", "load", {
@@ -84,8 +85,10 @@ skynet.start(function()
   skynet.uniqueservice("shutdown", "game")
   INFO("-----GameServer-----", node_name, " start OK")
 
-  local addr = skynet.newservice("agent", "tcp")
+  local addr = skynet_call(".agent_mgr", "get", "tcp")
   skynet_timeout_call(5, addr, "start", {fd = 20, secret = "ed483fc8254b7f16", subid = "2", uid = "1_2_test_cloudfreexiao_001" })
+  skynet_send(".agent_mgr", "recycle", addr, "tcp")
+
   -- skynet_call(addr, "hello", 30, 50)
 
   -- skynet.timeout(200, function()
