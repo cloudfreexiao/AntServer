@@ -50,7 +50,7 @@ local function request(fd, name, args, response)
 
 					client.resp_package(fd, pack, errcode, response)
 				else
-					ERROR("do agent socket rpc command[", name, "] error:", pack)
+					ERROR("do agent socket rpc command[", name, "] error:", errcode)
 				end
 			else
 				local ok, errcode, pack = pcall(f, args, fd)

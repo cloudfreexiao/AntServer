@@ -44,9 +44,10 @@ namespace Skynet.DotNetClient.Gate.TCP
 			int len = _stream.Length - 2;
 			_stream.Buffer[0] = (byte)((len >> 8) & 0xff);
 			_stream.Buffer[1] = (byte)(len & 0xff);
+			
 			_transporter.Send (_stream.Buffer, _stream.Length);
 		}
-
+		
 		private void OnDisconnect()
 		{
 			_client.Disconnect();

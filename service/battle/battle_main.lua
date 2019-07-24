@@ -13,6 +13,7 @@ skynet.start(function()
     skynet.uniqueservice("debug_console", cfg.console_port)
     skynet.uniqueservice("dbproxy", battle_name)
     local addr = skynet.uniqueservice("battled", battle_name)
+    skynet.name(cfg.battled_name, addr)
     skynet_call(addr, "open", cfg)
 
     skynet.uniqueservice("arena_mgr")

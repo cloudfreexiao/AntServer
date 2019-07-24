@@ -7,7 +7,7 @@ local node_name = skynet.getenv("node_name")
 
 
 local function start_gated()
-  skynet.uniqueservice("hubd")
+  skynet.uniqueservice("hubd", node_name)
 
   for _, v in pairs(settings.nodes) do
     for i=1, #v.gate_switch do
@@ -38,6 +38,8 @@ local function start_gated()
     end
   end
 end
+
+
 
 -- local rudp = require "rudp"
 -- DEBUG("rudp", DUMP(rudp))
@@ -86,7 +88,7 @@ skynet.start(function()
   INFO("-----GameServer-----", node_name, " start OK")
 
   local addr = skynet_call(".agent_mgr", "get", "tcp")
-  skynet_timeout_call(5, addr, "start", {fd = 20, secret = "d7cfe9e8cf78b5f9", subid = "2", uid = "1_2_test_cloudfreexiao_001" })
+  skynet_timeout_call(5, addr, "start", {fd = 20, secret = "d7cfe9e8cf78b5f9", subid = "2", uid = "1_2_test_cloudfreexiao_001", skynet_node_name = node_name, })
   -- skynet_call(addr, "call_front_mod", "battle", "test", {ddd = "fffff"})
   -- skynet_call(addr, "call_backend_mod", "battle", "test", {ddd = "fffff"})
 

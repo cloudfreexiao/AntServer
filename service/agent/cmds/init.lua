@@ -5,8 +5,10 @@ local class = require "class"
 local singleton = require "singleton"
 local Commands = class("Commands"):include(singleton)
 
+local sessions = require "globals.sessions.init"
 local mods = require "mods.init"
 local _handler = require "service.client"
+
 
 
 function Commands:initialize(protocol)
@@ -14,6 +16,8 @@ function Commands:initialize(protocol)
 end
 
 function Commands:start(session)
+	sessions.session = session
+
 	_handler.init(self._protocol, session.fd)
 
 	mods.reg_profile(_handler, session)
@@ -32,6 +36,8 @@ function Commands:start(session)
 end
 
 function Commands:trigger_mods(data)
+	sessions.set_uin(data.profile.uin)
+
 	mods.reg_mods(_handler, data)
 	mods.load()
 	mods.synch_msg()

@@ -12,6 +12,7 @@ local U
 local S = {}
 local SESSION = 0
 local timeout = 10 * 60 * 100	-- 10 mins
+local _conf = {}
 
 
 local CMD = {}
@@ -34,7 +35,7 @@ end
 local function udpdispatch(str, from)
     DEBUG("from:", socket.udp_address(from), " data:", str)
 	local localtime, eventtime, session = string.unpack(">III", str, 9)
-    local s = S[session] -- 1-8 9-16 17-
+    local s = S[session]
     if s then
         if s.address ~= from then
 			if crypt.hmac_hash(s.key, str:sub(9)) ~= str:sub(1,8) then
@@ -89,17 +90,26 @@ local function keepalive()
 end
 
 
-function CMD.register()
+function CMD.register(data)
+	DEBUG("$$$$$$$$$$$$$$register$$$$$$$$$$", inspect(data))
 	SESSION = (SESSION + 1) & 0xffffffff
 	S[SESSION] = {
 		session = SESSION,
-		-- key = key,             --TODO:
-		-- arena = snax.bind(service, "room"),
-		address = nil,
+		uid = data.uid,
+		key = data.key,
+		agent = data.agent,
+
+		arena = nil, -- arena service addr 
+		address = nil, -- socket addr
 		time = skynet.now(),
 		lastevent = nil,
 	}
-	return SESSION
+
+	return {
+		session = SESSION,
+		host = _conf.host,
+		port = _conf.port,
+	}
 end
 
 function CMD.unregister(session)
@@ -116,6 +126,7 @@ function CMD.post(session, data)
 end
 
 function CMD.open(conf)
+	_conf = conf
     U = socket.udp(udpdispatch, "0.0.0.0", conf.port)
     INFO("Udp Server Listen fd:", U, " port:", conf.port)
     skynet.fork(keepalive)
@@ -126,6 +137,4 @@ skynet.start(function()
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)
-    
-    skynet.register('.' .. SERVICE_NAME)
 end)

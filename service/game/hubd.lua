@@ -3,6 +3,8 @@ require "skynet.manager"
 local cluster = require "skynet.cluster"
 local socket = require "skynet.socket"
 
+local skynet_node_name = ...
+
 local CMD = {}
 
 local User_Map = {}
@@ -116,6 +118,7 @@ function CMD.handshake(fd, args)
         secret = user.token.secret,
         serverId = user.token.serverId,
         is_reconnect = is_reconnect,
+        skynet_node_name = skynet_node_name,
     })
     
     local res = skynet_call(user.conn.gate, "register", {

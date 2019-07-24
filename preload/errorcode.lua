@@ -16,12 +16,13 @@ local function add(err)
 end
 
 SYSTEM_ERROR = {
-    success                     = add{code = 0, desc = "请求成功"},
+    success                     = add{code = 0,   desc = "请求成功"},
     invalid_param               = add{code = 101, desc = "非法参数"},
     unknow                      = add{code = 102, desc = "未知错误"},
     argument                    = add{code = 103, desc = "参数错误"},
     invalid_action              = add{code = 104, desc = "非法操作"},
     player_not_found            = add{code = 105, desc = "没有此玩家"},
+    arena_forbid                = add{code = 106, desc = "稍等片刻访问"},
 }
 
 LOGIN_ERROR = {
@@ -32,7 +33,6 @@ LOGIN_ERROR = {
     unauthorized                = add{code = 204, desc = "未认证通过"},
     unsupport                   = add{code = 205, desc = "未支持方法"},
 }
-
 
 
 return errorcode

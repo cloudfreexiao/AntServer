@@ -5,7 +5,7 @@ using Skynet.DotNetClient;
 public class TestSkynetClient : MonoBehaviour 
 {
 	private TestLoginTcp _login;
-	private string protocol = "ws"; // "ws"; //"tcp";
+	private string protocol = "tcp"; // "ws"; //"tcp";
 	
 	void Start () 
 	{

@@ -60,5 +60,20 @@ public class TestGateTcp
 		_client.StartHeartBeatService();
 		
 		//TODO: 请求各模块信息
+		
+		//请求进入战斗服
+		Join();
+	}
+	
+	void Join()
+	{
+		SpObject joinRequest = new SpObject();
+		joinRequest.Insert("arena", 0);
+		_client.Request("join", joinRequest, (SpObject obj) =>
+		{
+			int session = obj["session"].AsInt();
+			string host = obj["host"].AsString();
+			int port = obj["port"].AsInt();
+		} );
 	}
 }
