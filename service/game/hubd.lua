@@ -50,28 +50,31 @@ end
 
 local tcount = 15 --握手超时
 local function handshake_timeout()
-    skynet.timeout(tcount * 100, handshake_timeout)
+    while true do
+        local tm = skynet.now()
+        local tbl = {}
 
-    local tm = os.time()
-    local tbl = {}
-    do
-        for k, v in pairs(User_Map) do
-            if v.conn then
-                v.tm = os.time()
-            else
-                if tm - v.tm >= tcount then
-                    table.insert(tbl, k)
+        do
+            for k, v in pairs(User_Map) do
+                if v.conn then
+                    v.tm = skynet.now()
+                else
+                    if tm - v.tm >= tcount then
+                        table.insert(tbl, k)
+                    end
                 end
             end
         end
-    end
-
-    do
-        for m=1, #tbl do
-            local uid = tbl[m]
-            cluster.send("loginnode", "logind", "logout", {uid = uid,})
-            User_Map[uid] = nil
+    
+        do
+            for m=1, #tbl do
+                local uid = tbl[m]
+                cluster.send("loginnode", "logind", "logout", {uid = uid,})
+                User_Map[uid] = nil
+            end
         end
+
+        skynet.sleep(1500)	-- 15 sec
     end
 end
 
@@ -134,10 +137,12 @@ end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------
 ------------------------Auth Client Handshake Logic-------------------------------------------
-
+local hub_mod = require "hub.init"
 
 skynet.start(function()
-    handshake_timeout()
+    skynet.fork(handshake_timeout)
+
+    hub_mod.init(skynet_node_name)
 
     skynet.dispatch("lua", function(session, source, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")

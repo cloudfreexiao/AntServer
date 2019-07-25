@@ -23,7 +23,6 @@ local function dispatch_resp(sock)
     end
 
     local len = to_int32(header)
-    -- DEBUG("len", len)
     local data, err = sock:read(len)
     if not data then
         return false, nil, err

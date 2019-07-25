@@ -2,6 +2,8 @@ local settings = {}
 
 settings.word_crab_file = 'data/word_crab/words.txt'
 
+settings.platform_id = 1 --平台Id 可以做为 渠道标识
+
 -- 登陆认证服
 settings.login_conf = {
     node_name                   = "loginnode",
@@ -22,6 +24,7 @@ settings.center_conf = {
 settings.nodes = {
         ['node1'] = {
             -- 网络配置
+            server_id           = 1, --serverId
             node_name           = "node1",  -- 每个lobby名字必须唯一
             console_port        = 15030, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
             gate_switch         = {"ws", "tcp", }, -- 定义可以开启的gate 端口
@@ -35,6 +38,7 @@ settings.nodes = {
 
 settings.battles = {
     ['battle1'] = {
+        battle_id               = 1,
         battle_name             = "battle1",  -- 每个battle名字必须唯一
         console_port            = 15040, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
         host                    = "0.0.0.0", -- 需要手动修改
@@ -42,6 +46,7 @@ settings.battles = {
         battled_name            = "battle1d",
     },
     ['battle2'] = {
+        battle_id               = 2,
         battle_name             = "battle2",  -- 每个battle名字必须唯一
         console_port            = 15041, -- 执行关服操作 stop.sh 中 EXIT_PORT 也要保持一致
         host                    = "0.0.0.0", -- 需要手动修改

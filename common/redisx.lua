@@ -17,6 +17,10 @@ local function block_query()
   end
 end
 
+function redisx.hsetnx(key,  field, value)
+  block_query()
+  return skynet.call(REDIS_POOL, 'lua', 'hsetnx', _, key, field, value)
+end
 
 function redisx.hincrby(key, field, increment)
   block_query()

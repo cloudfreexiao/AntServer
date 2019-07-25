@@ -140,8 +140,7 @@ end
 _M.refresh = _fetch_metadata
 
 local function pid()
-    --TODO:skynet env 
-    return 1
+    return skynet.self()
 end
 
 local function meta_refresh(premature, self, interval)
