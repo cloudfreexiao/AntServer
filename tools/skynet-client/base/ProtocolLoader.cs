@@ -12,12 +12,12 @@ namespace Skynet.DotNetClient
             SpTypeManager _c2s;
             SpTypeManager _s2c;
 
-            string c2s = _path + "proto.c2s.sproto";
+            string c2s = _path + "rpc/c2s.sproto";
             using (FileStream stream = new FileStream (c2s, FileMode.Open)) {
                 _c2s = SpTypeManager.Import (stream);
             }
 
-            string s2c = _path + "proto.s2c.sproto";
+            string s2c = _path + "rpc/s2c.sproto";
             using (FileStream stream = new FileStream (s2c, FileMode.Open)) {
                 _s2c = SpTypeManager.Import (stream);
             }

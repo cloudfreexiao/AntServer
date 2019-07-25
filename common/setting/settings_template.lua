@@ -4,6 +4,19 @@ settings.word_crab_file = 'data/word_crab/words.txt'
 
 settings.platform_id = 1 --平台Id 可以做为 渠道标识
 
+settings.sproto = {
+    rpc = {
+        "proto/rpc/c2s",
+        "proto/rpc/s2c",        
+    },
+
+    battle = {
+        "proto/battle/c2s",
+        "proto/battle/s2c",
+    }
+}
+
+
 -- 登陆认证服
 settings.login_conf = {
     node_name                   = "loginnode",

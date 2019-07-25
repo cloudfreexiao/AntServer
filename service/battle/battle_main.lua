@@ -19,10 +19,7 @@ skynet.start(function()
     skynet.uniqueservice("arena_mgr")
     
     local proto = skynet.uniqueservice "protoloader"
-	skynet.call(proto, "lua", "load", {
-		"proto.c2s",
-        "proto.s2c",
-    })
+	skynet.call(proto, "lua", "load", settings.sproto.battle)
 
     skynet.uniqueservice("shutdown", "battle")
 

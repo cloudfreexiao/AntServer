@@ -6,7 +6,7 @@ local CMD = {}
 local data = {}
 
 local function load(name)
-	local filename = string.format("proto/%s.sproto", name)
+	local filename = string.format("%s.sproto", name)
 	local f = assert(io.open(filename), "Can't open " .. name)
 	local t = f:read "a"
 	f:close()

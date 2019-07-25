@@ -1,5 +1,13 @@
 namespace Skynet.DotNetClient
 {
+    public class LoginwReqPack
+    {
+        public string module = "login_auth";
+        public string method = "login";
+        public string server_ca = "hDJ^54D@!&DHkkdh095hj";
+        public string parms = "'";
+    }
+    
     public class AuthPackageReq
     {
         public string openId = "1";

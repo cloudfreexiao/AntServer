@@ -4,5 +4,6 @@ local M = require"setting.settings_template"
 M.nodes['node1'].host = "47.110.245.229"
 
 M.battles['battle1'].host = "47.110.245.229"
+M.battles['battle2'].host = "47.110.245.229"
 
 return M

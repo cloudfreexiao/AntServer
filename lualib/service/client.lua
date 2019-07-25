@@ -2,6 +2,9 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 local sprotoloader = require "sprotoloader"
 
+local settings = require "settings"
+
+
 local client = {}
 
 local handler = {}
@@ -106,10 +109,11 @@ skynet.register_protocol {
 
 local function do_load_sproto()
 	local protoloader = skynet.uniqueservice "protoloader"
-	local slot1 = skynet.call(protoloader, "lua", "index", "proto.c2s")
+	local rpc = settings.sproto.rpc
+	local slot1 = skynet.call(protoloader, "lua", "index", rpc[1])
 	_host = sprotoloader.load(slot1):host "package"
 
-	local slot2 = skynet.call(protoloader, "lua", "index", "proto.s2c")
+	local slot2 = skynet.call(protoloader, "lua", "index", rpc[2])
     _sender = _host:attach(sprotoloader.load(slot2))
 end
 
