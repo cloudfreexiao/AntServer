@@ -1,5 +1,4 @@
 local skynet = require "skynet"
-require "skynet.manager"
 local cluster = require "skynet.cluster"
 local settings = require "settings"
 
@@ -31,11 +30,16 @@ function M.set_uin(uin)
     proxy_battle()
 end
 
-function M.fill_arena_data()
+function M.fill_arena_data(data)
     return {
-        agent = skynet.self(),
-        key = M.session.secret,
+        session = data.session,
+        model = data.model,
+
         uid = M.session.uin,
+        secret = M.session.secret,
+        ip = M.session.ip,
+
+        agent = skynet.self(),
         skynet_node_name = M.session.skynet_node_name,
     }
 end

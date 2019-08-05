@@ -160,7 +160,7 @@ function array_find(t, val)
 end
 
 function array_remove(t, val)
-    local idx = luautils.array_find(t, val)
+    local idx = array_find(t, val)
     if idx ~= -1 then
         table.remove(t, idx)
         return true

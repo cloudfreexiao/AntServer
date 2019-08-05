@@ -13,42 +13,40 @@ local HTTP_NO_CONTENT = 204
 
 _M.version = "0.2"
 
-function _M.write_udp(msg, host, port)
-	local sock = socket.udp(function(str, from)
-		print("client recv", str, socket.udp_address(from))
+local udp_handler = nil
+
+function _M.init_udp(params)
+	udp_handler = socket.udp(function(str, from)
+		DEBUG("recv addr:", socket.udp_address(from))
 	end)
-	socket.udp_connect(sock, host, port)
-	return socket.write(sock, msg)
+	socket.udp_connect(udp_handler, params.host, params.port)
+end
+
+function _M.write_udp(msg)
+	return socket.write(udp_handler,  msg)
 end
 
 function _M.write_http(msg, params)
-
-	local scheme     = 'http'
-	local ssl_verify = false
-
+	local scheme   = 'http'
 	if params.ssl then
 		scheme     = 'https'
-		ssl_verify = true
 	end
 
-	local header = { 
-	}
-
+	local header = {}
 	if params.auth then
 		header.Authorization = str_fmt("Basic %s", encode_base64(params.auth))
 	end
 
 	local recvheader = {}
 
-	local host    = str_fmt('%s:%s', params.host, params.port)
-	return url .. '?' .. encode_args(params)
+	local host  = str_fmt("%s://%s:%s", scheme, params.host, params.port)
 	local url = '/write' .. '?' .. 'db=' .. params.db .. '&' .. 'precision=' .. params.precision
-	local method  = 'POST'
-    local status, body = httpc.request(method, host, url, recvheader, header, msg)
+	local method  = "POST"
+	local ok, status, body = pcall(httpc.request, method, host, url, recvheader, header, msg)
 	if status == HTTP_NO_CONTENT then
-		return true
+		return true, body
 	else
-		return false, body
+		return false, status
 	end
 end
 

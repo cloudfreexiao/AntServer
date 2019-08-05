@@ -2,8 +2,8 @@ local _M = {}
 
 local skynet = require "skynet"
 
-local lp   = require "resty.influx.lineproto"
-local util = require "resty.influx.util"
+local lp   = require "influxdb.lineproto"
+local util = require "influxdb.util"
 
 local str_gsub = string.gsub
 local str_rep  = string.rep
@@ -22,13 +22,12 @@ local msg_buf = {}
 
 _M.version = "0.2"
 
-local function _do_write(p, msg)
+local function _do_write(msg)
 	local proto = my_opts.proto
-
-	if (proto == 'http') then
+	if proto == 'http' then
 		return util.write_http(msg, my_opts)
-	elseif (proto == 'udp') then
-		return util.write_udp(msg, my_opts.host, my_opts.port)
+	elseif proto == 'udp' then
+		return util.write_udp(msg)
 	else
 		return false, 'unknown proto'
 	end
@@ -37,7 +36,6 @@ end
 function _M.clear()
 	msg_cnt = 0
 	msg_buf = {}
-
 	return true
 end
 
@@ -60,7 +58,6 @@ end
 function _M.flush()
 	local msg = tbl_cat(msg_buf, "\n")
 	_M.clear()
-
 	skynet.fork(_do_write, msg)
 end
 
@@ -77,6 +74,11 @@ function _M.init(opts)
 
 	my_opts = opts
 	initted = true
+
+	local proto = my_opts.proto
+	if proto == 'udp' then
+		util.init_udp(my_opts)
+	end
 
 	return true
 end

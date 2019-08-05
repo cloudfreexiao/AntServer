@@ -31,10 +31,9 @@ local mt = {
 
 function _M.do_write(self, msg)
 	local proto = self.proto
-
-	if (proto == 'http') then
+	if proto == 'http' then
 		return util.write_http(msg, self)
-	elseif (proto == 'udp') then
+	elseif proto == 'udp' then
 		return util.write_udp(msg, self.host, self.port)
 	else
 		return false, 'unknown proto'
@@ -63,7 +62,7 @@ function _M.set_measurement(self, measurement)
 end
 
 function _M.stamp(self, time)
-	if (time) then
+	if time then
 		if (type(time) == 'number') then
 			self._stamp = time
 			return
@@ -73,7 +72,6 @@ function _M.stamp(self, time)
 	end
 
 	local precision = self.precision
-
 	if (precision == 'ms') then
 		self._stamp = tostring(os.time() * 1000)
 	elseif (precision == 's') then
@@ -85,8 +83,7 @@ end
 
 function _M.timestamp(self)
 	local stamp = self._stamp
-
-	if (not stamp) then
+	if not stamp then
 		self:stamp()
 		return self._stamp
 	else
@@ -106,11 +103,11 @@ function _M.clear(self)
 end
 
 function _M.buffer_ready(self)
-	if (not self._measurement) then
+	if not self._measurement then
 		return false, 'no measurement'
 	end
 
-	if (self._field_cnt == 0) then
+	if self._field_cnt == 0 then
 		return false, 'no fields'
 	end
 
@@ -118,15 +115,15 @@ function _M.buffer_ready(self)
 end
 
 function _M.flush_ready(self)
-	if (self._measurement) then
+	if self._measurement then
 		return false, 'unbuffered measurement'
 	end
 
-	if (self._field_cnt ~= 0) then
+	if self._field_cnt ~= 0 then
 		return false, 'unbuffered fields'
 	end
 
-	if (self._msg_cnt == 0) then
+	if self._msg_cnt == 0 then
 		return false, 'no buffered fields'
 	end
 
@@ -135,8 +132,7 @@ end
 
 function _M.buffer(self)
 	local ready, err_msg = self:buffer_ready()
-
-	if (not ready) then
+	if not ready then
 		return false, err_msg
 	end
 
@@ -157,8 +153,7 @@ end
 
 function _M.flush(self)
 	local ready, err_msg = self:flush_ready()
-
-	if (not ready) then
+	if not ready then
 		return false, err_msg
 	end
 
@@ -172,8 +167,7 @@ end
 
 function _M.write(self)
 	local ready, err_msg = self:buffer_ready()
-
-	if (not ready) then
+	if not ready then
 		return false, err_msg
 	end
 
@@ -183,8 +177,7 @@ function _M.write(self)
 	self:timestamp()
 
 	local ok, err_msg = self:do_write(lp.build_line_proto_stmt(self))
-
-	if (not ok) then
+	if not ok then
 		return false, err_msg
 	end
 

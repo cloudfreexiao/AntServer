@@ -6,6 +6,7 @@ local CMD = {}
 local pool = {}
 local agent_map = {}
 local maxnum = 1024
+local free = nil
 
 local function expand_pool()
 	for i=1, 10 do 
@@ -33,6 +34,20 @@ function CMD.recycle(agent)
     else
         table.insert(pool, agent)
 	end
+end
+
+-- model 玩家进入模式 fight watch
+function CMD.find(data)
+	if not free then
+		free = CMD.get()
+	else
+		local is_free = skynet_call(free, "free")
+		if not is_free then
+			free = CMD.get()
+		end
+	end
+
+	return free
 end
 
 skynet.start(function()

@@ -113,9 +113,11 @@ function CMD.handshake(fd, args)
         user.agent = skynet_call(".agent_mgr", "get", user.conn.protocol)
     end
 
+    local sip = string.split(user.conn.ip, ":")
     local role = skynet_call(user.agent, "start", {
         fd = user.conn.fd,
-        ip = user.conn.ip,
+        ip = sip[1],
+        port = sip[2],
         protocol = user.conn.protocol,
         openid = args.uid, --以免和agent中的uid 重复
         secret = user.token.secret,

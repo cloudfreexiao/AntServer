@@ -95,8 +95,14 @@ skynet.start(function()
   --   -- local rethinkdb = require "rethinkdb.examples.example"
   --   -- rethinkdb.connect()
 
-  --   local kafka = require "kafka.examples.kafka"
-  --   kafka()
+  --   -- local kafka = require "kafka.examples.kafka"
+  --   -- kafka()
+
+  --   -- local influxdb = require "influxdb.examples.influxdb"
+  --   -- influxdb()
+
+  --   local etcd = require "etcd.examples.etcd"
+  --   etcd()
   -- end)
 
   cluster.open(node_name)

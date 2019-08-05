@@ -94,7 +94,7 @@ local function dispatch(fd, _, type, ...)
 		end
 	else
 		assert(type == "RESPONSE")
-		error "This example doesn't support request client"
+		error "tcp client doesn't support request client"
 	end
 end
 

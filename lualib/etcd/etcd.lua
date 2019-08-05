@@ -1,17 +1,14 @@
--- https://github.com/ledgetech/lua-resty-http
-local http = require "resty.http"
-local typeof = require "typeof"
-local encode_args = ngx.encode_args
+local skynet = require "skynet"
+local httpc = require "http.httpc"
+
+local typeof = require "etcd.typeof"
+local encode_args = require "etcd.encode_args"
 local setmetatable = setmetatable
-local decode_json, encode_json
-do
-    local cjson = require "cjson.safe"
-    decode_json = cjson.decode
-    encode_json = cjson.encode
-end
-local clear_tab = require "table.clear"
-local tab_nkeys = require "table.nkeys"
-local split = require "ngx.re" .split
+
+local cjson = require "cjson.safe"
+local decode_json = cjson.decode
+local encode_json = cjson.encode
+
 local concat_tab = table.concat
 local tostring = tostring
 local select = select
@@ -22,6 +19,30 @@ local error = error
 
 local _M = {}
 local mt = { __index = _M }
+
+
+local clear_tab = function (obj)
+    obj = {}
+end
+
+local tab_nkeys = function(obj)
+    local num = 0
+    for _, v in pairs(obj) do
+        if v then
+            num = num + 1
+        end
+    end
+    return num
+end
+
+local split = function(s, delim)
+    local sp = {}
+    local pattern = "[^" .. delim .. "]+"
+    string.gsub(s, pattern, function(v) table.insert(sp, v) end)
+    return sp
+end
+
+
 
 
 local normalize
@@ -80,13 +101,13 @@ _M.normalize = normalize
 function _M.new(opts)
     if opts == nil then
         opts = {}
-
     elseif not typeof.table(opts) then
         return nil, 'opts must be table'
     end
+    
+    opts.host = opts.host or "http://127.0.0.1:2379"
 
     local timeout = opts.timeout or 5000    -- 5 sec
-    local http_host = opts.host or "http://127.0.0.1:2379"
     local ttl = opts.ttl or -1
     local prefix = opts.prefix or "/v2/keys"
 
@@ -94,7 +115,7 @@ function _M.new(opts)
         return nil, 'opts.timeout must be unsigned integer'
     end
 
-    if not typeof.string(http_host) then
+    if not typeof.string(opts.host) then
         return nil, 'opts.host must be string'
     end
 
@@ -110,24 +131,24 @@ function _M.new(opts)
             timeout = timeout,
             ttl = ttl,
             endpoints = {
-                full_prefix = http_host .. normalize(prefix),
-                http_host = http_host,
+                full_prefix = normalize(prefix),
+                http_host = opts.host,
                 prefix = prefix,
-                version     = http_host .. '/version',
-                stats_leader = http_host .. '/v2/stats/leader',
-                stats_self   = http_host .. '/v2/stats/self',
-                stats_store  = http_host .. '/v2/stats/store',
-                keys        = http_host .. '/v2/keys',
+                version     = opts.host .. '/version',
+                stats_leader = opts.host .. '/v2/stats/leader',
+                stats_self   = opts.host .. '/v2/stats/self',
+                stats_store  = opts.host .. '/v2/stats/store',
+                keys        = opts.host .. '/v2/keys',
             }
         },
         mt)
 end
 
-    local content_type = {
-        ["Content-Type"] = "application/x-www-form-urlencoded",
-    }
+local header = {
+    ["Content-Type"] = "application/x-www-form-urlencoded",
+}
 
-local function _request(method, uri, opts, timeout)
+local function _request(host, method, uri, opts, timeout)
     local body
     if opts and opts.body and tab_nkeys(opts.body) > 0 then
         body = encode_args(opts.body)
@@ -137,38 +158,19 @@ local function _request(method, uri, opts, timeout)
         uri = uri .. '?' .. encode_args(opts.query)
     end
 
-    local http_cli, err = http.new()
-    if err then
-        return nil, err
+    local recvheader = {}
+    
+    local status, body = httpc.request(method, host, uri, recvheader, header, body)
+    if status >= 500 then
+        return nil, "invalid response code: " .. status
     end
 
-    if timeout then
-        http_cli:set_timeout(timeout * 1000)
+    if not typeof.string(body) then
+        return body
     end
 
-    local res
-    res, err = http_cli:request_uri(uri, {
-        method = method,
-        body = body,
-        headers = content_type,
-    })
-
-    if err then
-        return nil, err
-    end
-
-    if res.status >= 500 then
-        return nil, "invalid response code: " .. res.status
-    end
-
-    if not typeof.string(res.body) then
-        return res
-    end
-
-    res.body = decode_json(res.body)
-    return res
+    return decode_json(body)
 end
-
 
 local function set(self, key, val, attr)
     local err
@@ -208,16 +210,17 @@ local function set(self, key, val, attr)
     end
 
     local res
-    res, err = _request(attr.in_order and 'POST' or 'PUT',
+    res, err = _request(self.endpoints.http_host,
+                        attr.in_order and 'POST' or 'PUT',
                         self.endpoints.full_prefix .. key,
-                        opts, self.timeout)
+                        opts, 
+                        self.timeout)
     if err then
         return nil, err
     end
 
     -- get
-    if res.status < 300 and res.body.node and
-           not res.body.node.dir then
+    if res.status < 300 and res.body.node and not res.body.node.dir then
         res.body.node.value, err = decode_json(res.body.node.value)
         if err then
             return nil, err
@@ -226,7 +229,6 @@ local function set(self, key, val, attr)
 
     return res
 end
-
 
 local function decode_dir_value(body_node)
     if not body_node.dir then
@@ -243,8 +245,7 @@ local function decode_dir_value(body_node)
         if type(val) == "string" then
             node.value, err = decode_json(val)
             if err then
-                error("failed to decode node[" .. node.key .. "] value: "
-                      .. err)
+                error("failed to decode node[" .. node.key .. "] value: " .. err)
             end
         end
 
@@ -253,7 +254,6 @@ local function decode_dir_value(body_node)
 
     return true
 end
-
 
 local function get(self, key, attr)
     local opts
@@ -278,17 +278,18 @@ local function get(self, key, attr)
         }
     end
 
-    local res, err = _request("GET",
-                              self.endpoints.full_prefix .. normalize(key),
-                              opts, attr and attr.timeout or self.timeout)
+    local res, err = _request(self.endpoints.http_host,
+                            "GET", 
+                            self.endpoints.full_prefix .. normalize(key),
+                            opts, 
+                            attr and attr.timeout or self.timeout)
     if err then
         return nil, err
     end
 
     -- readdir
     if attr and attr.dir then
-        if res.status == 200 and res.body.node and
-           not res.body.node.dir then
+        if res.status == 200 and res.body.node and not res.body.node.dir then
             res.body.node.dir = false
         end
     end
@@ -307,7 +308,6 @@ local function get(self, key, attr)
 
     return res
 end
-
 
 local function delete(self, key, attr)
     local val, err = attr.prev_value
@@ -338,9 +338,11 @@ local function delete(self, key, attr)
     }
 
     -- todo: check arguments
-    return _request("DELETE",
+    return _request(self.endpoints.http_host,
+                    "DELETE",
                     self.endpoints.full_prefix .. normalize(key),
-                    opts, self.timeout)
+                    opts,
+                    self.timeout)
 end
 
 do
@@ -385,20 +387,20 @@ end
 
 -- /version
 function _M.version(self)
-    return _request('GET', self.endpoints.version, nil, self.timeout)
+    return _request(self.endpoints.http_host, 'GET', self.endpoints.version, nil, self.timeout)
 end
 
 -- /stats
 function _M.stats_leader(self)
-    return _request('GET', self.endpoints.stats_leader, nil, self.timeout)
+    return _request(self.endpoints.http_host, 'GET', self.endpoints.stats_leader, nil, self.timeout)
 end
 
 function _M.stats_self(self)
-    return _request('GET', self.endpoints.stats_self, nil, self.timeout)
+    return _request(self.endpoints.http_host, 'GET', self.endpoints.stats_self, nil, self.timeout)
 end
 
 function _M.stats_store(self)
-    return _request('GET', self.endpoints.stats_store, nil, self.timeout)
+    return _request(self.endpoints.http_host, 'GET', self.endpoints.stats_store, nil, self.timeout)
 end
 
 end -- do
