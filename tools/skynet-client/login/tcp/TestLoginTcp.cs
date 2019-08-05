@@ -2,27 +2,28 @@ using System;
 using Skynet.DotNetClient;
 using Skynet.DotNetClient.Login.TCP;
 
-public class TestLoginTcp 
+public class TestLoginTcp
 {
-	private LoginClient skynetClient;
-	private string protocol = "tcp";
+	private LoginClient _client;
+	private readonly string _protocol = "tcp";
 	public TestLoginTcp(string p)
 	{
-		protocol = p;
+		_protocol = p;
 	}
+	
 	public void Run (Action<int, AuthPackageResp> loginCallBack) {
-		skynetClient = new LoginClient ();
+		_client = new LoginClient ();
 
         AuthPackageReq req = new AuthPackageReq();
         req.openId = "test_cloudfreexiao_001";
         req.sdk = "2";
-        req.protocol = protocol;
+        req.protocol = _protocol;
         
-		skynetClient.Connect ("47.110.245.229", 15111, req, loginCallBack);
+        _client.Connect ("47.110.245.229", 15111, req, loginCallBack);
 	}
 
 	public void DisConnect()
 	{
-		skynetClient.Disconnect();
+		_client.Disconnect();
 	}
 }

@@ -3,7 +3,7 @@ namespace Skynet.DotNetClient.Login.TCP
     using System;
     using System.Text;
     using System.Text.RegularExpressions;
-    using Util;
+    using Utils.Crypt;
     
     public class EventManager : IDisposable
     { 
@@ -17,7 +17,7 @@ namespace Skynet.DotNetClient.Login.TCP
         {
             _challenge = new AuthChallenge();
 
-            _state = Login_Auth_State.GET_CHALLENGE;
+            _state = Login_Auth_State.GetChallenge;
             _req = req;
             _client = c;
             OnLoginCallBack = loginCallBack;
@@ -25,75 +25,79 @@ namespace Skynet.DotNetClient.Login.TCP
 
         public void InvokeCallBack(byte[] bytes)
         {
-            string msg = Encoding.UTF8.GetString(bytes);
+            var msg = Encoding.UTF8.GetString(bytes);
             switch (_state)
             {
-                case Login_Auth_State.GET_CHALLENGE:
+                case Login_Auth_State.GetChallenge:
                     GetChallenge(msg);
                     break;
-                case Login_Auth_State.GET_SECRET:
+                case Login_Auth_State.GetSecret:
                     GetSecret(msg);
                     break;
-                case Login_Auth_State.LOGIN_RESULT:
-                    OnLoginResult(msg);
+                case Login_Auth_State.LoginResult:
+                    LoginResult(msg);
                     break;
+                case Login_Auth_State.Nil:
+                    break;
+                case Login_Auth_State.SendLogin:
+                    break;
+                case Login_Auth_State.LoginFinished:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
         private void GetChallenge(string socketline)
         {
-            byte[] challengeByte = Crypt.Base64Decode(socketline);
-            if (challengeByte.Length == 8)
-            {
-                _challenge.challenge = challengeByte;
-                byte[] dhkey = Crypt.RandomKey();
-                _challenge.clientkey = Crypt.DHExchange(dhkey);
-                Request(_challenge.clientkey);
+            var challengeByte = Crypt.Base64Decode(socketline);
+            if (challengeByte.Length != 8) return;
+            _challenge.challenge = challengeByte;
+            var dhkey = Crypt.RandomKey();
+            _challenge.clientkey = Crypt.DHExchange(dhkey);
+            Request(_challenge.clientkey);
 
-                _state = Login_Auth_State.GET_SECRET;
-            }
+            _state = Login_Auth_State.GetSecret;
         }
         
         private void GetSecret(string socketstr)
         {
-            byte[] lineByte = Crypt.Base64Decode(socketstr);
-            if (lineByte.Length == 8)
-            {
-                byte[] serverkey = lineByte; //Crypt.DHExchange(lineByte);
+            var lineByte = Crypt.Base64Decode(socketstr);
+            if (lineByte.Length != 8) return;
+            var serverkey = lineByte; //Crypt.DHExchange(lineByte);
 //                Debug.Log("dhkey: " + Crypt.HexEncode(serverkey));
 
-                _challenge.secret = Crypt.DHSecret(_challenge.clientkey, serverkey);;
+            _challenge.secret = Crypt.DHSecret(_challenge.clientkey, serverkey);;
 //                Debug.Log("secret: " + Crypt.HexEncode(_challenge.secret));
 
-                byte[] hmackey = Crypt.HMAC64(_challenge.challenge, _challenge.secret);
+            var hmackey = Crypt.HMAC64(_challenge.challenge, _challenge.secret);
 //                Debug.Log("hmac: " + Crypt.HexEncode(hmackey));
 
-                Request(hmackey);
+            Request(hmackey);
                 
-                _state = Login_Auth_State.SEND_LOGIN;
+            _state = Login_Auth_State.SendLogin;
                 
-                DoLoginAction();
-            }
+            DoLoginAction();
         }
-        
-        public void DoLoginAction()
+
+        private void DoLoginAction()
         {
-            string token = EncodeToken(_req);
-            byte [] etoken = Crypt.DesEncode(_challenge.secret, Encoding.UTF8.GetBytes(token));
+            var token = EncodeToken(_req);
+            var etoken = Crypt.DesEncode(_challenge.secret, Encoding.UTF8.GetBytes(token));
             Request(etoken);
-            _state = Login_Auth_State.LOGIN_RESULT;
+            _state = Login_Auth_State.LoginResult;
         }
         
-        private void OnLoginResult(string socketstr)
+        private void LoginResult(string socketstr)
         {
             AuthPackageResp resp = new AuthPackageResp();
 
-            int code = int.Parse(socketstr.Substring(0, 3));
-            byte[] subidByte = Crypt.Base64Decode(socketstr.Substring(4));
-            string resultString = Encoding.UTF8.GetString(subidByte);
+            var code = int.Parse(socketstr.Substring(0, 3));
+            var subidByte = Crypt.Base64Decode(socketstr.Substring(4));
+            var resultString = Encoding.UTF8.GetString(subidByte);
             if (code == 200)
             {
-                string[] split = Regex.Split(resultString, "['$']");
+                var split = Regex.Split(resultString, "['$']");
                 resp.gate = split[0];
                 resp.port = Int32.Parse(split[1]);
                 resp.uid = split[2];
@@ -106,8 +110,8 @@ namespace Skynet.DotNetClient.Login.TCP
 //            Debug.Log("login result uid:" + resp.uid);
 //            Debug.Log("login result subid:" + resp.subid);
 //            Debug.Log("login result secret:" + resp.secret);
-            _state = Login_Auth_State.LOGIN_FINISHED;
-            OnLoginCallBack.Invoke(code, resp);
+            _state = Login_Auth_State.LoginFinished;
+            OnLoginCallBack?.Invoke(code, resp);
         }
         
         private string EncodeToken(AuthPackageReq auth_package)
@@ -124,8 +128,8 @@ namespace Skynet.DotNetClient.Login.TCP
         
         private void Request(byte[] buf)
         {
-            string base64key = Crypt.Base64Encode(buf) + '\n';
-            byte[] message = Encoding.UTF8.GetBytes(base64key);
+            var base64key = Crypt.Base64Encode(buf) + '\n';
+            var message = Encoding.UTF8.GetBytes(base64key);
             _client.Request(message);
         }
         
@@ -135,7 +139,7 @@ namespace Skynet.DotNetClient.Login.TCP
             GC.SuppressFinalize(this);
         }
 
-        protected void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
         }
 

@@ -50,7 +50,7 @@
 --@author Paul Chakravarti (paulc@passtheaardvark.com)
 --@author Manoel Campos da Silva Filho
 local xml2lua = {}
-local XmlParser = require("bw.xml.XmlParser")
+local XmlParser = require("xml.XmlParser")
 
 ---Recursivelly prints a table in an easy-to-ready format
 --@param tb The table to be printed

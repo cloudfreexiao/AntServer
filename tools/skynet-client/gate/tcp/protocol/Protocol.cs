@@ -6,18 +6,18 @@ namespace Skynet.DotNetClient.Gate.TCP
 	using Sproto;
 	
 	public class Protocol {
-		private SpStream _stream = new SpStream (1024);
-		private SpRpc _rpc;
+		private readonly SpStream _stream = new SpStream (1024);
+		private readonly SpRpc _rpc;
 
-		private GateClient _client;
-		private Transporter _transporter;
-		private ProtocolLoader _loader;
+		private readonly IGateClient _client;
+		private readonly Transporter _transporter;
+		private readonly ProtocolLoader _loader;
 
-		public Protocol(GateClient sc, Socket socket)
+		public Protocol(IGateClient sc, Socket socket)
 		{
 			_client = sc;
 			_transporter = new Transporter(socket, this);
-			_transporter.onDisconnect = OnDisconnect;
+			_transporter.onDisconnect = Disconnect;
 			_transporter.Start ();
 
 			_loader = new ProtocolLoader();
@@ -26,8 +26,8 @@ namespace Skynet.DotNetClient.Gate.TCP
 		
 		internal void ProcessMessage(byte[] bytes)
 		{
-			SpStream stream = new SpStream (bytes, 0, bytes.Length, bytes.Length);
-			SpRpcResult result = _rpc.Dispatch (stream);
+			var stream = new SpStream (bytes, 0, bytes.Length, bytes.Length);
+			var result = _rpc.Dispatch (stream);
 			_client.ProcessMessage (result);
 		}
 
@@ -41,14 +41,14 @@ namespace Skynet.DotNetClient.Gate.TCP
 
 			_stream.Write ((short)0);
 			_rpc.Request (proto, args, session, _stream);
-			int len = _stream.Length - 2;
+			var len = _stream.Length - 2;
 			_stream.Buffer[0] = (byte)((len >> 8) & 0xff);
 			_stream.Buffer[1] = (byte)(len & 0xff);
 			
 			_transporter.Send (_stream.Buffer, _stream.Length);
 		}
 		
-		private void OnDisconnect()
+		private void Disconnect()
 		{
 			_client.Disconnect();
 		}

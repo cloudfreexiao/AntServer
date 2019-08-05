@@ -1,14 +1,14 @@
-namespace Skynet.DotNetClient.LockStep.UDP
+namespace Skynet.DotNetClient.Gate.UDP
 {
     using System;
     using System.Net.Sockets;
     using MiniUDP;
     
-    public class UDPConnector
+    public class UdpConnector
     {
         private readonly NetCore _netCore;
 
-        public UDPConnector(string version, bool allowConnections)
+        public UdpConnector(string version, bool allowConnections)
         {
             _netCore = new NetCore(version, allowConnections);
             _netCore.PeerConnected += OnPeerConnected;

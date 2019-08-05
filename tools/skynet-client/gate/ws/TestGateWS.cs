@@ -22,7 +22,7 @@ public class TestGateWS
     private void NetWorkStateCallBack(NetWorkState state)
     {
         Debug.Log("Gate WS NetWorkStateCallBack:" + state);
-        if (state == NetWorkState.CONNECTED)
+        if (state == NetWorkState.Connected)
         {
             //TODO:发送 与 gate 握手消息成功后 开启 心跳操作
             SpObject handshakeRequset = new SpObject();
@@ -62,4 +62,10 @@ public class TestGateWS
 		
         //TODO: 请求各模块信息
     }
+    
+    public void DisConnect()
+    {
+        _client.Disconnect();
+    }
+    
 }

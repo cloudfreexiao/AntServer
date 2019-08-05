@@ -5,14 +5,13 @@ namespace Skynet.DotNetClient.Login.TCP
 
     public class Protocol
     {
-        private LoginClient _client;
-        private Transporter _transporter;
+        private readonly LoginClient _client;
+        private readonly Transporter _transporter;
 
         public Protocol(LoginClient sc, Socket socket)
         {
             _client = sc;
-            _transporter = new Transporter(socket, this);
-            _transporter.onDisconnect = OnDisconnect;
+            _transporter = new Transporter(socket, this) {onDisconnect = Disconnect};
             _transporter.Start();
         }
         
@@ -34,7 +33,7 @@ namespace Skynet.DotNetClient.Login.TCP
         
         private  byte[] Merge(byte[] source, byte append)
         {
-            int len = source.Length + 1;
+            var len = source.Length + 1;
             var merge = new byte[len];
             Array.Copy(source, 0, merge, 0, source.Length);
             merge[source.Length] = append;
@@ -46,7 +45,7 @@ namespace Skynet.DotNetClient.Login.TCP
             _client.ProcessMessage(bytes);
         }
 
-        private void OnDisconnect()
+        private void Disconnect()
         {
             _client.Disconnect();
         }

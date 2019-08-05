@@ -1,59 +1,58 @@
 ﻿using Skynet.DotNetClient;
 using Skynet.DotNetClient.Gate.TCP;
+using Skynet.DotNetClient.Utils.Signals;
+
 using UnityEngine;
 using Sproto;
+
 
 public class TestGateTcp 
 {
 	private GateTcpClient _client;
 	private AuthPackageResp _req;
-	
+
 	public void Run (AuthPackageResp req)
 	{
 		_req = req;
 		
 		_client = new GateTcpClient (NetWorkStateCallBack);
 		//服务器验证成功标识
-		_client.On("verify", OnVerifySucess);
+		_client.On("verify", VerifySucess);
 		_client.Connect(_req.gate, _req.port);
 	}
 
 	private void NetWorkStateCallBack(NetWorkState state)
 	{
 		Debug.Log("Gate Tcp NetWorkStateCallBack:" + state);
-		if (state == NetWorkState.CONNECTED)
-		{
-			//TODO:发送 与 gate 握手消息成功后 开启 心跳操作
-			SpObject handshakeRequset = new SpObject();
-			handshakeRequset.Insert("uid", _req.uid);
-			handshakeRequset.Insert("secret", _req.secret);
-			handshakeRequset.Insert("subid", _req.subid);
+		if (state != NetWorkState.Connected) return;
+		//TODO:发送 与 gate 握手消息成功后 开启 心跳操作
+		SpObject handshakeRequset = new SpObject();
+		handshakeRequset.Insert("uid", _req.uid);
+		handshakeRequset.Insert("secret", _req.secret);
+		handshakeRequset.Insert("subid", _req.subid);
 
-			_client.Request("handshake", handshakeRequset, (SpObject obj) =>
+		_client.Request("handshake", handshakeRequset, (SpObject obj) =>
+		{
+			var role = obj["role"].AsInt();
+			if (role == 0)
 			{
+				SpObject bornRequest = new SpObject();
+				bornRequest.Insert("name", "helloworld");
+				bornRequest.Insert("head", "1111111111");
+				bornRequest.Insert("job", "1");
+				_client.Request("born", bornRequest, (SpObject bornObj) =>
 				{
-					int role = obj["role"].AsInt();
-					if (role == 0)
-					{
-						SpObject bornRequest = new SpObject();
-						bornRequest.Insert("name", "helloworld");
-						bornRequest.Insert("head", "1111111111");
-						bornRequest.Insert("job", "1");
-						_client.Request("born", bornRequest, (SpObject bornObj) =>
-						{
-							Debug.LogError("born resp is ok");
-						} );
-					}
-					else
-					{
-						Debug.Log("is has role");
-					}
-				}
-			});
-		}
+					Debug.LogError("born resp is ok");
+				} );
+			}
+			else
+			{
+				Debug.Log("is has role");
+			}
+		});
 	}
 
-	void OnVerifySucess(SpObject sp)
+	void VerifySucess(SpObject sp)
 	{
 		Debug.Log("is OnVerifySucess");
 		
@@ -68,12 +67,26 @@ public class TestGateTcp
 	void Join()
 	{
 		SpObject joinRequest = new SpObject();
-		joinRequest.Insert("arena", 0);
+		joinRequest.Insert("session", 0);
+		joinRequest.Insert("model", "fight");
+		
 		_client.Request("join", joinRequest, (SpObject obj) =>
 		{
-			int session = obj["session"].AsInt();
-			string host = obj["host"].AsString();
-			int port = obj["port"].AsInt();
+			UdpSession udpSession = new UdpSession();
+			udpSession.session = obj["session"].AsInt();
+			udpSession.host = obj["host"].AsString();
+			udpSession.port = obj["port"].AsInt();
+			udpSession.secret = obj["secret"].AsString();
+			
+			Signals.Get<UdpSignal>().Dispatch(udpSession);
+			
 		} );
 	}
+	
+	
+	public void DisConnect()
+	{
+		_client.Disconnect();
+	}
+	
 }

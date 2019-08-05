@@ -1,11 +1,16 @@
 ﻿using UnityEngine;
-
 using Skynet.DotNetClient;
+using Skynet.DotNetClient.Utils.Signals;
+
 
 public class TestSkynetClient : MonoBehaviour 
 {
 	private TestLoginTcp _login;
-	private string protocol = "tcp"; // "ws"; //"tcp";
+	private readonly string protocol = "tcp"; // "ws"; //"tcp";
+
+	private TestGateTcp _gateTcp;
+	private TestGateWS _gateWs;
+	private TestGateUdp _gateUdp;
 	
 	void Start () 
 	{
@@ -21,17 +26,53 @@ public class TestSkynetClient : MonoBehaviour
 		{
 			if (protocol == "tcp")
 			{
-				TestGateTcp gate = new TestGateTcp();
-				gate.Run(resp);
+				_gateTcp = new TestGateTcp();
+				_gateTcp.Run(resp);
 			}
 			else
 			{
-				TestGateWS gate = new TestGateWS();
-				gate.Run(resp);
+				_gateWs = new TestGateWS();
+				_gateWs.Run(resp);
 			}
-
+			
+			Signals.Get<UdpSignal>().AddListener(SignalUdp);
 		}
 
 		_login = null;
+	}
+
+	private void SignalUdp(UdpSession session)
+	{
+		_gateUdp = new TestGateUdp();
+		_gateUdp.Run(session);
+	}
+	
+	private void OnDestroy()
+	{
+		if (_login != null)
+		{
+			_login.DisConnect();
+			_login = null;
+		}
+
+		if (_gateTcp != null)
+		{
+			_gateTcp.DisConnect();
+			_gateTcp = null;
+		}
+
+		if (_gateWs != null)
+		{
+			_gateWs.DisConnect();
+			_gateWs = null;
+		}
+
+		if (_gateUdp != null)
+		{
+			_gateUdp.DisConnect();
+			_gateUdp = null;
+		}
+		
+		Debug.LogError("++++++SkynetClient Destroy++++");
 	}
 }

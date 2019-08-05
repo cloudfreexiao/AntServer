@@ -1,19 +1,19 @@
-namespace Skynet.DotNetClient.LockStep.UDP
+namespace Skynet.DotNetClient.Gate.UDP
 {
     using System;
     using System.Diagnostics;
     
-    public class UDPClock
+    public class UdpClock
     {
         private static readonly long _start = Stopwatch.GetTimestamp();
         private static readonly double _frequency = 1.0 / (double)Stopwatch.Frequency;
 
 
-        public static double Time
+        private static double Time
         {
             get
             {
-                long diff = Stopwatch.GetTimestamp() - _start;
+                var diff = Stopwatch.GetTimestamp() - _start;
                 return (double)diff * _frequency;
             }
         }
@@ -23,22 +23,21 @@ namespace Skynet.DotNetClient.LockStep.UDP
         private readonly double _updateFrequency;
         private double _lastUpdate;
 
-        public UDPClock(double updateFrequency)
+        public UdpClock(double updateFrequency)
         {
             _updateFrequency = updateFrequency;
         }
 
         public void Start()
         { 
-            _lastUpdate = UDPClock.Time;
+            _lastUpdate = UdpClock.Time;
         }
 
         public void Tick()
         {
-            while ((_lastUpdate + _updateFrequency) <UDPClock.Time)
+            while ((_lastUpdate + _updateFrequency) <UdpClock.Time)
             {
-                if (OnFixedUpdate != null)
-                    OnFixedUpdate.Invoke();
+                OnFixedUpdate?.Invoke();
                 _lastUpdate += _updateFrequency;
             }
         }        

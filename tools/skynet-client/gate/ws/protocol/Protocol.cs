@@ -9,10 +9,10 @@ namespace Skynet.DotNetClient.Gate.WS
         private SpStream _stream = new SpStream (1024);
         private SpRpc _rpc;
 
-        private GateClient _client;
+        private IGateClient _client;
         private ProtocolLoader _loader;
 
-        public Protocol(GateClient sc)
+        public Protocol(IGateClient sc)
         {
             _client = sc;
 

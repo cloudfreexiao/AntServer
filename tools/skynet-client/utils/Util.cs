@@ -1,6 +1,6 @@
 ﻿
 
-namespace Skynet.DotNetClient.Util 
+namespace Skynet.DotNetClient.Utils
 {
 	using System.Collections.Generic;
 	using System;

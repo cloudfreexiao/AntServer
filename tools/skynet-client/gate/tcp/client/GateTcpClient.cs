@@ -5,16 +5,16 @@ namespace Skynet.DotNetClient.Gate.TCP
 	using System.Net;
 	using System.Net.Sockets;
 	using UnityEngine;
-	using Util;
+	using Utils;
 	using Sproto;
 	
-	public class GateTcpClient : GateClient,  IDisposable 
+	public class GateTcpClient : IGateClient,  IDisposable 
 	{
 		public event Action<NetWorkState> _networkStateCallBack;
 
-		private NetWorkState _netWorkState = NetWorkState.CLOSED;   //current network state
+		private NetWorkState _netWorkState = NetWorkState.Closed;   //current network state
 
-		private EventManager _eventManager;
+		private readonly EventManager _eventManager;
 		private Socket _socket;
 		private Protocol _protocol;
 		private bool _disposed;
@@ -35,7 +35,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 		
 		public void Connect(string host, int port)
 		{
-			NetWorkChanged(NetWorkState.CONNECTING);
+			NetWorkChanged(NetWorkState.Connecting);
 			IPAddress ipAddress = null;
 
 			try
@@ -43,16 +43,14 @@ namespace Skynet.DotNetClient.Gate.TCP
 				IPAddress[] addresses = Dns.GetHostEntry(host).AddressList;
 				foreach (var item in addresses)
 				{
-					if (item.AddressFamily == AddressFamily.InterNetwork)
-					{
-						ipAddress = item;
-						break;
-					}
+					if (item.AddressFamily != AddressFamily.InterNetwork) continue;
+					ipAddress = item;
+					break;
 				}
 			}
 			catch (Exception e)
 			{
-				NetWorkChanged(NetWorkState.ERROR);
+				NetWorkChanged(NetWorkState.Error);
 				return;
 			}
 
@@ -66,7 +64,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 				_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 				IPEndPoint ie = new IPEndPoint(ipAddress, port);
 
-				_socket.BeginConnect(ie, new AsyncCallback(OnConnect), null);
+				_socket.BeginConnect(ie, new AsyncCallback(Connect), null);
 			}
 			catch (Exception e)
 			{
@@ -74,19 +72,19 @@ namespace Skynet.DotNetClient.Gate.TCP
 			}
 		}
 
-		private void OnConnect(IAsyncResult asr)
+		private void Connect(IAsyncResult asr)
 		{
 			try
 			{
 				_socket.EndConnect(asr);
 				_protocol = new Protocol(this, this._socket);
-				NetWorkChanged(NetWorkState.CONNECTED);
+				NetWorkChanged(NetWorkState.Connected);
 			}
 			catch (Exception e)
 			{
 				Debug.LogError(string.Format("连接服务器异步结果错误:{0}", e.Message.ToString()));
 
-				NetWorkChanged(NetWorkState.ERROR);
+				NetWorkChanged(NetWorkState.Error);
 				Dispose();
 			}
 		}
@@ -150,12 +148,16 @@ namespace Skynet.DotNetClient.Gate.TCP
 
 				_eventManager.InvokeCallBack(msg.Session, msg.Data);
 				break;
+			case SpRpcOp.Unknown:
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
 			}
 		}
 
 		public void Disconnect()
 		{
-			NetWorkChanged(NetWorkState.DISCONNECTED);
+			NetWorkChanged(NetWorkState.Disconnected);
 			Dispose();
 		}
 
@@ -172,19 +174,11 @@ namespace Skynet.DotNetClient.Gate.TCP
 			if (disposing)
 			{
 				// free managed resources
-				if (_protocol != null)
-				{ 
-					_protocol.Close();
-				}
+				_protocol?.Close();
 
-				if (_heartBeatService != null) {
-					_heartBeatService.Stop ();
-				}
+				_heartBeatService?.Stop ();
 
-				if (_eventManager != null)
-				{
-					_eventManager.Dispose();
-				}
+				_eventManager?.Dispose();
 
 				try
 				{

@@ -13,9 +13,9 @@
 		Timer _timer;
 		DateTime _lastTime;
 
-		GateClient _client;
+		IGateClient _client;
 
-		public HeartBeatService(int interval, GateClient sc)
+		public HeartBeatService(int interval, IGateClient sc)
 		{
 			_interval = interval * 1000;
 			_client = sc;

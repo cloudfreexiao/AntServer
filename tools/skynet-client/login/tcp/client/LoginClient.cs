@@ -12,10 +12,10 @@ namespace Skynet.DotNetClient.Login.TCP
     
     public class LoginClient :IDisposable
     {
-        public event Action<NetWorkState> NetWorkStateChangedEvent;
+        public event Action<NetWorkState> OnNetWorkStateChangedEvent;
         
-        private ManualResetEvent _timeoutEvent;
-        private int _timeoutMSec = 8000;    //connect timeout count in millisecond
+        private readonly ManualResetEvent _timeoutEvent;
+        private readonly int _timeoutMSec = 8000;    //connect timeout count in millisecond
         
         private NetWorkState _netWorkState;   //current network state
         private Socket _socket;
@@ -27,14 +27,14 @@ namespace Skynet.DotNetClient.Login.TCP
         public LoginClient()
         {
             _disposed = false;
-            _netWorkState = NetWorkState.CLOSED;
+            _netWorkState = NetWorkState.Closed;
             _timeoutMSec = 8000;
             _timeoutEvent = new ManualResetEvent(false);
         }
 
         public void Connect(string host, int port, AuthPackageReq req, Action<int, AuthPackageResp> loginCallBack)
         {
-            if (_netWorkState != NetWorkState.CLOSED)
+            if (_netWorkState != NetWorkState.Closed)
             {
                 Debug.Log("LoginClient has connect action");
                 return;
@@ -43,25 +43,23 @@ namespace Skynet.DotNetClient.Login.TCP
             _timeoutEvent.Reset();
             _eventManager = new EventManager(req, loginCallBack, this);
             
-            NetWorkChanged(NetWorkState.CONNECTING);
+            NetWorkChanged(NetWorkState.Connecting);
 			
             IPAddress ipAddress = null;
 
             try
             {
-                IPAddress[] addresses = Dns.GetHostEntry(host).AddressList;
+                var addresses = Dns.GetHostEntry(host).AddressList;
                 foreach (var item in addresses)
                 {
-                    if (item.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        ipAddress = item;
-                        break;
-                    }
+                    if (item.AddressFamily != AddressFamily.InterNetwork) continue;
+                    ipAddress = item;
+                    break;
                 }
             }
             catch (Exception e)
             {
-                NetWorkChanged(NetWorkState.ERROR);
+                NetWorkChanged(NetWorkState.Error);
                 return;
             }
 
@@ -79,13 +77,13 @@ namespace Skynet.DotNetClient.Login.TCP
                 {
                     _socket.EndConnect(result);
                     _protocol = new Protocol(this, this._socket);
-                    NetWorkChanged(NetWorkState.CONNECTED);
+                    NetWorkChanged(NetWorkState.Connected);
                 }
                 catch (SocketException e)
                 {
-                    if (_netWorkState != NetWorkState.TIMEOUT)
+                    if (_netWorkState != NetWorkState.Timeout)
                     {
-                        NetWorkChanged(NetWorkState.ERROR);
+                        NetWorkChanged(NetWorkState.Error);
                     }
                     Dispose();
                 }
@@ -95,14 +93,10 @@ namespace Skynet.DotNetClient.Login.TCP
                 }
             }), _socket);
 
-            if (_timeoutEvent.WaitOne(_timeoutMSec, false))
-            {
-                if (_netWorkState != NetWorkState.CONNECTED && _netWorkState != NetWorkState.ERROR)
-                {
-                    NetWorkChanged(NetWorkState.TIMEOUT);
-                    Dispose();
-                }
-            }
+            if (!_timeoutEvent.WaitOne(_timeoutMSec, false)) return;
+            if (_netWorkState == NetWorkState.Connected || _netWorkState == NetWorkState.Error) return;
+            NetWorkChanged(NetWorkState.Timeout);
+            Dispose();
         }
 
         public void Request(byte[] packet)
@@ -118,16 +112,13 @@ namespace Skynet.DotNetClient.Login.TCP
         public void Disconnect()
         {
             Dispose();
-            NetWorkChanged(NetWorkState.DISCONNECTED);
+            NetWorkChanged(NetWorkState.Disconnected);
         }
 
         private void NetWorkChanged(NetWorkState state)
         {
             _netWorkState = state;
-            if (NetWorkStateChangedEvent != null)
-            {
-                NetWorkStateChangedEvent(state);
-            }
+            OnNetWorkStateChangedEvent?.Invoke(state);
         }
         
         public void Dispose() 
@@ -142,21 +133,19 @@ namespace Skynet.DotNetClient.Login.TCP
             if (_disposed)
                 return;
 
-            if (disposing)
+            if (!disposing) return;
+            try
             {
-                try
-                {
-                    _socket.Shutdown(SocketShutdown.Both);
-                    _socket.Close();
-                    _socket = null;
-                }
-                catch (Exception)
-                {
-                    //todo : 有待确定这里是否会出现异常，这里是参考之前官方github上pull request。emptyMsg
-                }
-
-                _disposed = true;
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Close();
+                _socket = null;
             }
+            catch (Exception)
+            {
+                //todo : 有待确定这里是否会出现异常，这里是参考之前官方github上pull request。emptyMsg
+            }
+
+            _disposed = true;
         }
     }
 }

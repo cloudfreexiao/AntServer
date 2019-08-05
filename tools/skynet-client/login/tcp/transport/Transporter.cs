@@ -6,18 +6,18 @@ namespace Skynet.DotNetClient.Login.TCP
 
     public class Transporter
     {
-        private Socket _socket;
-        private Protocol _protocol;
+        private readonly Socket _socket;
+        private readonly Protocol _protocol;
 
-        private StateObject _stateObject = new StateObject();
+        private readonly StateObject _stateObject = new StateObject();
         private TransportState _transportState;
 
         internal Action onDisconnect = null;
 
-        private StateObject _buffObject = new StateObject();
+        private readonly StateObject _buffObject = new StateObject();
 
         /// 协议格式为 数据包+换行符(\n)，即在每个数据包末尾加上一个换行符表示包的结束
-        private readonly char _lineFeed = '\n';
+        private const char LineFeed = '\n';
 
         public Transporter(Socket socket, Protocol input)
         {
@@ -29,7 +29,7 @@ namespace Skynet.DotNetClient.Login.TCP
 
         public byte GetLineFeed()
         {
-            return (byte)_lineFeed;
+            return (byte)LineFeed;
         }
         
         internal void Close()
@@ -56,8 +56,8 @@ namespace Skynet.DotNetClient.Login.TCP
         {
             Receive();
         }
-        
-        public void Receive()
+
+        private void Receive()
         {
              _socket.BeginReceive(_stateObject.buffer, 0, 
                 _stateObject.buffer.Length, SocketFlags.None, new AsyncCallback(EndReceive), _stateObject);
@@ -69,11 +69,11 @@ namespace Skynet.DotNetClient.Login.TCP
                 return;
             
             StateObject state = (StateObject)asyncReceive.AsyncState;
-            Socket socket = _socket;
+            var socket = _socket;
 
             try
             {
-                int length = socket.EndReceive(asyncReceive);
+                var length = socket.EndReceive(asyncReceive);
                 if (length > 0)
                 {
                     ProcessBytes(state.buffer, 0, length);
@@ -82,19 +82,17 @@ namespace Skynet.DotNetClient.Login.TCP
                 }
                 else
                 {
-                    if (onDisconnect != null) 
-                        onDisconnect();
+                    onDisconnect?.Invoke();
                 }
 
             }
             catch (SocketException)
             {
-                if (onDisconnect != null)
-                    onDisconnect();
+                onDisconnect?.Invoke();
             }
         }
-        
-        internal void ProcessBytes(byte[] bytes, int offset, int limit)
+
+        private void ProcessBytes(byte[] bytes, int offset, int limit)
         {
             if (_transportState == TransportState.ReadBody)
             {
@@ -104,12 +102,12 @@ namespace Skynet.DotNetClient.Login.TCP
 
         private void ReadBody(byte[] bytes, int start, int length)
         { 
-            _buffObject.writeBytes(bytes, start, length);
+            _buffObject.WriteBytes(bytes, start, length);
 
-            int idx = _buffObject.checkLineFeed(_lineFeed);
+            var idx = _buffObject.CheckLineFeed(LineFeed);
             if (idx >= 0)
             {
-                int len = idx;
+                var len = idx;
                 var requested = new byte[len];
                 Array.Copy(_buffObject.buffer, 0, requested, 0, len);
                 _protocol.ProcessMessage(requested);

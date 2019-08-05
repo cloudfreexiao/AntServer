@@ -1,3 +1,4 @@
+
 namespace Skynet.DotNetClient
 {
     public class LoginwReqPack
@@ -36,12 +37,22 @@ namespace Skynet.DotNetClient
     
     public enum Login_Auth_State : int
     {
-        NIL, //无效
-        GET_CHALLENGE,
-        GET_SECRET,
-        SEND_LOGIN,
-        LOGIN_RESULT,
-        LOGIN_FINISHED,
+        Nil, //无效
+        GetChallenge,
+        GetSecret,
+        SendLogin,
+        LoginResult,
+        LoginFinished,
+    }
+
+
+    [System.Serializable]
+    public class UdpSession
+    {
+        public int session;
+        public string host;
+        public int port;
+        public string secret;
     }
     
 }

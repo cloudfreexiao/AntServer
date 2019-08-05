@@ -3,7 +3,7 @@ namespace Skynet.DotNetClient.Gate
     using System;
     using Sproto;
     
-    public interface GateClient
+    public interface IGateClient
     {
         void Request(string proto, Action<SpObject> action);
         void Disconnect();

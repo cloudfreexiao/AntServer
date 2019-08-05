@@ -2,11 +2,11 @@ namespace Skynet.DotNetClient
 {
     class StateObject
     {
-        public const int BufferSize = 1024;
-        public byte[] buffer = new byte[BufferSize];
+        private const int BufferSize = 1024;
+        public readonly byte[] buffer = new byte[BufferSize];
         public int offset = 0;
         
-        public void writeBytes(byte[] bytes, int start, int length)
+        public void WriteBytes(byte[] bytes, int start, int length)
         {
             for (int i = 0; i < length; i++)
             {
@@ -15,11 +15,11 @@ namespace Skynet.DotNetClient
             }
         }
 
-        public int checkLineFeed(char lineFeed)
+        public int CheckLineFeed(char lineFeed)
         {
-            for (int i = 0; i < offset; i++)
+            for (var i = 0; i < offset; i++)
             {
-                char c = (char)buffer[i];
+                var c = (char)buffer[i];
                 if(c.Equals(lineFeed))
                 {
                     return i;

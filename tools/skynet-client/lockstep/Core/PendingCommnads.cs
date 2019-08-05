@@ -147,7 +147,8 @@ namespace Skynet.DotNetClient.LockStep
             }
         }
 	
-        private int[] WhosNotReady(Command[] actions, int count) {
+        private int[] WhosNotReady(Command[] actions, int count) 
+        {
             if(count < _lockStepManager.NumberOfPlayers) {
                 var notReadyPlayers = new int[_lockStepManager.NumberOfPlayers - count];
 			
@@ -164,5 +165,6 @@ namespace Skynet.DotNetClient.LockStep
                 return null;
             }
         }
+        
     }
 }

@@ -7,8 +7,8 @@ namespace Skynet.DotNetClient.Gate
 
     public class EventManager : IDisposable
     {
-        private Dictionary<int, Action<SpObject>> _callBackMap;
-        private Dictionary<string, List<Action<SpObject>>> _eventMap;
+        private readonly Dictionary<int, Action<SpObject>> _callBackMap;
+        private readonly Dictionary<string, List<Action<SpObject>>> _eventMap;
 
         public EventManager()
         {
@@ -64,7 +64,7 @@ namespace Skynet.DotNetClient.Gate
             GC.SuppressFinalize(this);
         }
 
-        protected void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             _callBackMap.Clear();
             _eventMap.Clear();

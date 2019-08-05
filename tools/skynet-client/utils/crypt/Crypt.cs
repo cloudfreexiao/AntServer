@@ -282,7 +282,7 @@
 
 
 
-namespace Skynet.DotNetClient.Util
+namespace Skynet.DotNetClient.Utils.Crypt
 {
     using System;
     using System.Text;

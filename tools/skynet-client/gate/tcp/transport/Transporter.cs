@@ -10,7 +10,7 @@ namespace Skynet.DotNetClient.Gate.TCP
     
     public class Transporter
     {
-        public const int HeadLength = 2;
+        private const int HeadLength = 2;
         private byte[] _headBuffer = new byte[HeadLength];
 
         private Socket _socket;
@@ -100,7 +100,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 //            }
         }
 
-        internal void ProcessBytes(byte[] bytes, int offset, int limit)
+        private void ProcessBytes(byte[] bytes, int offset, int limit)
         {
             if (_transportState == TransportState.ReadHead)
             {
@@ -114,8 +114,8 @@ namespace Skynet.DotNetClient.Gate.TCP
 
         private void ReadHead(byte[] bytes, int offset, int limit)
         {
-            int length = limit - offset;
-            int headNum = HeadLength - _bufferOffset;
+            var length = limit - offset;
+            var headNum = HeadLength - _bufferOffset;
 
             if (length >= headNum)
             {
@@ -141,7 +141,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 
         private void ReadBody(byte[] bytes, int offset, int limit)
         {
-            int length = _pkgLength - _bufferOffset;
+            var length = _pkgLength - _bufferOffset;
             if ((offset + length) <= limit)
             {
                 WriteBytes(bytes, offset, length, _bufferOffset, _buffer);

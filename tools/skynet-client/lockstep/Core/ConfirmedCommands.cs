@@ -1,6 +1,5 @@
 namespace Skynet.DotNetClient.LockStep
 {
-    using System;
     using System.Diagnostics;
     
     public class ConfirmedCommands

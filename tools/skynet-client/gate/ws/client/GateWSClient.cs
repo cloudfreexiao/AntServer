@@ -3,10 +3,10 @@ namespace Skynet.DotNetClient.Gate.WS
     using System;
     using UnityEngine;
     using WebSocketSharp;
-    using Util;
+    using Utils;
     using Sproto;
 
-    public class GateWSClient : IDisposable , GateClient
+    public class GateWSClient : IDisposable , IGateClient
     {
         public event Action<NetWorkState> _networkStateCallBack;
         
@@ -27,12 +27,12 @@ namespace Skynet.DotNetClient.Gate.WS
 
             _session = 1;
             _disposed = false;
-            _netWorkState = NetWorkState.CLOSED;
+            _netWorkState = NetWorkState.Closed;
         }
 
         public void Connect(string host, int port)
         {
-            string url = "ws://" + host + ":" + port.ToString();
+            var url = "ws://" + host + ":" + port.ToString();
             Debug.Log("URL " + url);
             _socket = new WebSocket(url);
             _socket.OnOpen += OnOpen;
@@ -111,7 +111,7 @@ namespace Skynet.DotNetClient.Gate.WS
         {
             Debug.Log("isconectd" + _socket.IsConnected );
             _protocol = new Protocol(this);
-            NetWorkChanged(NetWorkState.CONNECTED);
+            NetWorkChanged(NetWorkState.Connected);
         }
         
         private void OnClose(object sender, CloseEventArgs e)
@@ -121,7 +121,7 @@ namespace Skynet.DotNetClient.Gate.WS
                 Debug.LogError("[ERROR] " + e.Reason + " " + e.Code);
             else
                 Debug.LogError( "[INFO] Closed");
-            NetWorkChanged(NetWorkState.ERROR);
+            NetWorkChanged(NetWorkState.Error);
         }
         
         private void OnMessage(object sender, MessageEventArgs e)
@@ -143,7 +143,7 @@ namespace Skynet.DotNetClient.Gate.WS
         private void OnError(object sender, ErrorEventArgs e)
         {
             Debug.LogError("WebSocket Has Errror" + e.Message);
-            NetWorkChanged(NetWorkState.ERROR);
+            NetWorkChanged(NetWorkState.Error);
         }
         
         private void NetWorkChanged(NetWorkState state)

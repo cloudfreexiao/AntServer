@@ -53,7 +53,7 @@ namespace Skynet.DotNetClient.LockStep
         private int _initialLockStepTurnLength = 200; //in Milliseconds
         private int _initialGameFrameTurnLength = 50; //in Milliseconds
         private int _lockStepTurnLength;
-        private int _gameFrameTurnLength;
+        private int _gameFrameTurnLength = 0;
         private int _gameFramesPerLockstepTurn;
         private int _lockStepPerSecond;
         private int _gameFramesPerSecond;

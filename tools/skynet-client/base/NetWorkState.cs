@@ -5,21 +5,21 @@ namespace Skynet.DotNetClient
     public enum NetWorkState
     {
         [Description("initial state")]
-        CLOSED,
+        Closed,
 
         [Description("connecting server")]
-        CONNECTING,
+        Connecting,
 
         [Description("server connected")]
-        CONNECTED,
+        Connected,
 
         [Description("disconnected with server")]
-        DISCONNECTED,
+        Disconnected,
 
         [Description("connect timeout")]
-        TIMEOUT,
+        Timeout,
 
         [Description("netwrok error")]
-        ERROR
+        Error
     }
 }

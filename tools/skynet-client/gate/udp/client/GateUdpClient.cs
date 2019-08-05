@@ -1,35 +1,41 @@
-namespace Skynet.DotNetClient.LockStep.UDP
+namespace Skynet.DotNetClient.Gate.UDP
 {
     using System;
     using System.Text;
     using MiniUDP;
     
-    public class UDPClient : IDisposable
+    
+    public class GateUdpClient : IDisposable
     {
         private bool _disposed;
         private int _session;
 
+        private UdpSession _udpSession;
+        
         private NetPeer _peer;
-        private UDPConnector _connector;
-        private readonly UDPClock _fastClock;
+        private UdpConnector _connector;
+//        private readonly UDPClock _fastClock;
         
         private bool _loop;
         
-        public UDPClient()
+        public GateUdpClient(UdpSession udpSession)
         {
-            _connector = new UDPConnector("UDPClient", false);
-            _fastClock = new UDPClock(0.01f);
-            _fastClock.OnFixedUpdate += SendPayload;
+//            _fastClock = new UDPClock(0.01f);
+//            _fastClock.OnFixedUpdate += SendPayload;
 
+            _udpSession = udpSession;
+            
             _loop = true;
             
             _session = 1;
             _disposed = false;
         }
 
-        public void Connect(string host, int port)
+        public void Connect()
         {
-            string endpoint = host + ":" + port.ToString();
+            _connector = new UdpConnector("UDPClient", false);
+
+            var endpoint = _udpSession.host + ":" + _udpSession.port.ToString();
             _peer = _connector.Connect(endpoint);
         }
 
