@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Skynet.DotNetClient.Login.TCP
 {
     using System;
@@ -8,14 +6,17 @@ namespace Skynet.DotNetClient.Login.TCP
     using System.Net;
     using System.Threading;
     
+    using Utils.Logger;
+    
+    
     //https://github.com/cloudwu/skynet/wiki/LoginServer
     
-    public class LoginClient :IDisposable
+    public sealed class LoginClient :IDisposable
     {
         public event Action<NetWorkState> OnNetWorkStateChangedEvent;
         
         private readonly ManualResetEvent _timeoutEvent;
-        private readonly int _timeoutMSec = 8000;    //connect timeout count in millisecond
+        private readonly int _timeoutMSec;    //connect timeout count in millisecond
         
         private NetWorkState _netWorkState;   //current network state
         private Socket _socket;
@@ -36,7 +37,7 @@ namespace Skynet.DotNetClient.Login.TCP
         {
             if (_netWorkState != NetWorkState.Closed)
             {
-                Debug.Log("LoginClient has connect action");
+                SkynetLogger.Info(Channel.NetDevice,"LoginClient has connect action");
                 return;
             }
             
@@ -57,7 +58,7 @@ namespace Skynet.DotNetClient.Login.TCP
                     break;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 NetWorkChanged(NetWorkState.Error);
                 return;
@@ -69,7 +70,7 @@ namespace Skynet.DotNetClient.Login.TCP
             }
 
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IPEndPoint ie = new IPEndPoint(ipAddress, port);
+            var ie = new IPEndPoint(ipAddress, port);
 
             _socket.BeginConnect(ie, new AsyncCallback((result) =>
             {
@@ -79,7 +80,7 @@ namespace Skynet.DotNetClient.Login.TCP
                     _protocol = new Protocol(this, this._socket);
                     NetWorkChanged(NetWorkState.Connected);
                 }
-                catch (SocketException e)
+                catch (SocketException)
                 {
                     if (_netWorkState != NetWorkState.Timeout)
                     {
@@ -128,7 +129,7 @@ namespace Skynet.DotNetClient.Login.TCP
         }
 
         // The bulk of the clean-up code
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed)
                 return;

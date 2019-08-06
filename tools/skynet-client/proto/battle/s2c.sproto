@@ -1,3 +1,11 @@
-.testsc{
-	
+.package {
+	type 0 : integer
+	session 1 : integer
+	ud 2 : integer
+}
+
+verify 1 {
+	request {
+		text 0 : string
+	}
 }

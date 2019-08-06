@@ -1,5 +1,6 @@
 using System.Text;
 using UnityEngine;
+using Skynet.DotNetClient.Utils.Logger;
 
 namespace Skynet.DotNetClient.LockStep
 {
@@ -78,7 +79,7 @@ namespace Skynet.DotNetClient.LockStep
 
         public void PrepGameStart()
         {
-            UnityEngine.Debug.Log("----------PrepGameStart------");
+            SkynetLogger.Info(Channel.LockStep,"----------PrepGameStart------");
             
             LockStepTurnId = FirstLockStepTurnID;
             NumberOfPlayers = _networkManager.NumberOfPlayers;
@@ -226,7 +227,7 @@ namespace Skynet.DotNetClient.LockStep
                     foreach(int i in _pendingCommnads.WhosNotReady ()) {
                         sb.Append (i + ", ");
                     }
-                    UnityEngine.Debug.Log(sb.ToString ());
+                    SkynetLogger.Info(Channel.LockStep, sb.ToString ());
                 }
             }
             else
@@ -236,7 +237,7 @@ namespace Skynet.DotNetClient.LockStep
                 foreach(int i in _pendingCommnads.WhosNotReady ()) {
                     sb.Append (i + ", ");
                 }
-                UnityEngine.Debug.Log(sb.ToString ());
+                SkynetLogger.Info(Channel.LockStep,sb.ToString ());
             }
             return false;
         }
@@ -264,7 +265,7 @@ namespace Skynet.DotNetClient.LockStep
             //send action to all other players
 //            nv.RPC("RecieveAction", RPCMode.Others, LockStepTurnId, _myPlayerId, BinarySerialization.SerializeObjectToByteArray(action));
 
-            UnityEngine.Debug.Log("Sent " + (command.GetType().Name) + " action for turn " + LockStepTurnId);
+            SkynetLogger.Info(Channel.LockStep,"Sent " + (command.GetType().Name) + " action for turn " + LockStepTurnId);
         }
 
         private void ProcessCommands()

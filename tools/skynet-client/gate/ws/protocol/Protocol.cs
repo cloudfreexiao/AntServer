@@ -2,22 +2,21 @@ namespace Skynet.DotNetClient.Gate.WS
 {
     using System.Text;
     using Sproto;
-    using UnityEngine;
+    using Utils.Logger;
 
     public class Protocol
     {
-        private SpStream _stream = new SpStream (1024);
-        private SpRpc _rpc;
+        private readonly SpStream _stream = new SpStream (1024);
+        private readonly SpRpc _rpc;
 
-        private IGateClient _client;
-        private ProtocolLoader _loader;
+        private readonly IGateClient _client;
 
         public Protocol(IGateClient sc)
         {
             _client = sc;
 
-            _loader = new ProtocolLoader();
-            _rpc = _loader.CreateProto();
+            var loader = new ProtocolLoader();
+            _rpc = loader.CreateRpcProto();
         }
         
         public SpStream Pack (string proto, int session, SpObject args)
@@ -26,7 +25,7 @@ namespace Skynet.DotNetClient.Gate.WS
 
             if (proto != "heartbeat")
             {
-                Debug.Log("Send Request : " + proto + ", session : " + session);
+                SkynetLogger.Info(Channel.NetDevice,"Send Request : " + proto + ", session : " + session);;
             }
 
             _rpc.Request (proto, args, session, _stream);
@@ -35,14 +34,14 @@ namespace Skynet.DotNetClient.Gate.WS
 
         public void ProcessMessage(string data)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            var bytes = Encoding.UTF8.GetBytes(data);
             ProcessMessage(bytes);
         }
         
         public void ProcessMessage(byte[] bytes)
         {
-            SpStream stream = new SpStream (bytes, 0, bytes.Length, bytes.Length);
-            SpRpcResult result = _rpc.Dispatch (stream);
+            var stream = new SpStream (bytes, 0, bytes.Length, bytes.Length);
+            var result = _rpc.Dispatch (stream);
             _client.ProcessMessage (result);
         }
         

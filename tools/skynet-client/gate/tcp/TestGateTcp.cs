@@ -1,8 +1,7 @@
 ﻿using Skynet.DotNetClient;
 using Skynet.DotNetClient.Gate.TCP;
 using Skynet.DotNetClient.Utils.Signals;
-
-using UnityEngine;
+using Skynet.DotNetClient.Utils.Logger;
 using Sproto;
 
 
@@ -23,7 +22,7 @@ public class TestGateTcp
 
 	private void NetWorkStateCallBack(NetWorkState state)
 	{
-		Debug.Log("Gate Tcp NetWorkStateCallBack:" + state);
+		SkynetLogger.Info( Channel.NetDevice,"Gate Tcp NetWorkStateCallBack:" + state);
 		if (state != NetWorkState.Connected) return;
 		//TODO:发送 与 gate 握手消息成功后 开启 心跳操作
 		SpObject handshakeRequset = new SpObject();
@@ -42,19 +41,19 @@ public class TestGateTcp
 				bornRequest.Insert("job", "1");
 				_client.Request("born", bornRequest, (SpObject bornObj) =>
 				{
-					Debug.LogError("born resp is ok");
+					SkynetLogger.Error( Channel.NetDevice, "born resp is ok");
 				} );
 			}
 			else
 			{
-				Debug.Log("is has role");
+				SkynetLogger.Info( Channel.NetDevice, "is has role");
 			}
 		});
 	}
 
 	void VerifySucess(SpObject sp)
 	{
-		Debug.Log("is OnVerifySucess");
+		SkynetLogger.Info( Channel.NetDevice, "is OnVerifySucess");
 		
 		_client.StartHeartBeatService();
 		

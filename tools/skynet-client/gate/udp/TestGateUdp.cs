@@ -1,7 +1,5 @@
 using Skynet.DotNetClient;
 using Skynet.DotNetClient.Gate.UDP;
-using UnityEngine;
-using Sproto;
 
 public class TestGateUdp
 {

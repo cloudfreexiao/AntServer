@@ -2,7 +2,6 @@ namespace Skynet.DotNetClient.Login.TCP
 {
     using System;
     using System.Net.Sockets;
-    using UnityEngine;
 
     public class Transporter
     {

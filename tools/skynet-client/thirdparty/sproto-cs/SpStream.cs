@@ -139,6 +139,7 @@
 
 		public void Write(int n)
 		{
+			//小端
 			if (CanWrite(2))
 			{
 				mBuffer[mPosition + 0] = (byte) (n & 0xff);

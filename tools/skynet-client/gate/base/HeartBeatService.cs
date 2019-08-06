@@ -3,17 +3,17 @@
 	using System;
 	using System.Timers;
 	using Sproto;
-	using UnityEngine;
+	using Utils.Logger;
 	
 	public class HeartBeatService
 	{
-		public int Timeout;
+		private int Timeout;
 
-		int _interval;
-		Timer _timer;
+		readonly int _interval;
+		private Timer _timer;
 		DateTime _lastTime;
 
-		IGateClient _client;
+		readonly IGateClient _client;
 
 		public HeartBeatService(int interval, IGateClient sc)
 		{
@@ -29,29 +29,29 @@
 			//start hearbeat
 			_timer = new Timer();
 			_timer.Interval = _interval;
-			_timer.Elapsed += new ElapsedEventHandler(sendHeartBeat);
+			_timer.Elapsed += new ElapsedEventHandler(SendHeartBeat);
 			_timer.Enabled = true;
 
 			Timeout = 0;
 			_lastTime = DateTime.Now;
 		}
 
-		public void sendHeartBeat(object source, ElapsedEventArgs e)
+		private void SendHeartBeat(object source, ElapsedEventArgs e)
 		{
 			TimeSpan span = DateTime.Now - _lastTime;
 			Timeout = (int)span.TotalMilliseconds;
 			if (Timeout > _interval * 2)
 			{
-				Debug.Log ("timeout disconnect");
+				SkynetLogger.Info( Channel.NetDevice, "timeout disconnect");
 				_client.Disconnect();
 			}
 			else
 			{
-				_client.Request ("heartbeat", (SpObject obj) => { resetTimeout(); });
+				_client.Request ("heartbeat", (SpObject obj) => { ResetTimeout(); });
 			}
 		}
 
-		internal void resetTimeout()
+		private void ResetTimeout()
 		{
 			Timeout = 0;
 			_lastTime = DateTime.Now;
@@ -59,11 +59,9 @@
 		
 		public void Stop()
 		{
-			if (_timer != null)
-			{
-				_timer.Enabled = false;
-				_timer.Dispose();
-			}
+			if (_timer == null) return;
+			_timer.Enabled = false;
+			_timer.Dispose();
 		}
 	}
 }

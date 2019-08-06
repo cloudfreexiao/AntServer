@@ -14,12 +14,9 @@ public class TestLoginTcp
 	public void Run (Action<int, AuthPackageResp> loginCallBack) {
 		_client = new LoginClient ();
 
-        AuthPackageReq req = new AuthPackageReq();
-        req.openId = "test_cloudfreexiao_001";
-        req.sdk = "2";
-        req.protocol = _protocol;
-        
-        _client.Connect ("47.110.245.229", 15111, req, loginCallBack);
+		var req = new AuthPackageReq {openId = "test_cloudfreexiao_001", sdk = "2", protocol = _protocol};
+
+		_client.Connect ("47.110.245.229", 15111, req, loginCallBack);
 	}
 
 	public void DisConnect()

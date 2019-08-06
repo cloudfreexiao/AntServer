@@ -18,11 +18,11 @@ local _conf = {}
 local CMD = {}
 
 
-local function timesync(session, localtime, from)
-	-- return globaltime .. localtime .. eventtime .. session , eventtime = 0xffffffff
-	local now = skynet.now()
-	socket.sendto(U, from, string.pack(">IIII", now, localtime, 0xffffffff, session))
-end
+-- local function timesync(session, localtime, from)
+-- 	-- return globaltime .. localtime .. eventtime .. session , eventtime = 0xffffffff
+-- 	local now = skynet.now()
+-- 	socket.sendto(U, from, string.pack(">IIII", now, localtime, 0xffffffff, session))
+-- end
 
 --[[
 	4 bytes session
@@ -32,7 +32,7 @@ end
 
 local function udpdispatch(str, from)
     DEBUG("from:", socket.udp_address(from), " data:", str)
-	local session = string.unpack(">I", str)
+	local session = string.unpack("<I", str)
     local s = S[session]
     if s then
 		if s.ip ~= from then

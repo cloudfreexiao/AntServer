@@ -6,14 +6,14 @@ using Sproto;
 
 public class TestGateWS 
 {
-    private GateWSClient _client;
+    private GateWsClient _client;
     private AuthPackageResp _req;
 	
     public void Run (AuthPackageResp req)
     {
         _req = req;
 		
-        _client = new GateWSClient (NetWorkStateCallBack);
+        _client = new GateWsClient (NetWorkStateCallBack);
         //服务器验证成功标识
         _client.On("verify", OnVerifySucess);
         _client.Connect(_req.gate, _req.port);

@@ -1,11 +1,12 @@
 ﻿
 using System;
-using UnityEngine;
 using CI.HttpClient;
 using LitJson;
 
 namespace Skynet.DotNetClient.Login.HTTP
 {
+    using Utils.Logger;
+    
     public delegate void LoginAuthRespCallBack(AuthPackageResp resp);
 
     public class LoginAuthHttp
@@ -32,13 +33,13 @@ namespace Skynet.DotNetClient.Login.HTTP
                 if (r.IsSuccessStatusCode)
                 {
                     string str = r.ReadAsString();
-                    Debug.Log("responstr:" + str);
-                    Debug.Log("+++++Test responstr+++++++++" + str);
+                    SkynetLogger.Info(Channel.NetDevice,"responstr:" + str);
+                    SkynetLogger.Info(Channel.NetDevice,"+++++Test responstr+++++++++" + str);
                 }
                 else
                 {
-                    Debug.Log("statuscode:" + r.StatusCode.ToString());
-                    Debug.Log("+++++Test statuscode+++++++++" + r.StatusCode.ToString());
+                    SkynetLogger.Info(Channel.NetDevice,"statuscode:" + r.StatusCode.ToString());
+                    SkynetLogger.Info(Channel.NetDevice,"+++++Test statuscode+++++++++" + r.StatusCode.ToString());
                 }
             });
 
@@ -81,7 +82,7 @@ namespace Skynet.DotNetClient.Login.HTTP
                     }
                     catch(Exception e)
                     {
-                        Debug.LogError("Json Deserialize err:" + e.Message.ToString());
+                        SkynetLogger.Error(Channel.NetDevice,"Json Deserialize err:" + e.Message.ToString());
                     }
                 }
             });

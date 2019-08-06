@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using Skynet.DotNetClient;
+﻿using Skynet.DotNetClient;
 using Skynet.DotNetClient.Utils.Signals;
-
+using Skynet.DotNetClient.Utils.Logger;
+using UnityEngine;
 
 public class TestSkynetClient : MonoBehaviour 
 {
@@ -11,9 +11,11 @@ public class TestSkynetClient : MonoBehaviour
 	private TestGateTcp _gateTcp;
 	private TestGateWS _gateWs;
 	private TestGateUdp _gateUdp;
-	
-	void Start () 
+
+	public void Start () 
 	{
+		SkynetLogger.Error(Channel.NetDevice, "++++++SkynetClient Start++++");
+
 		_login = new TestLoginTcp (protocol);
 		_login.Run(ProcessLoginResp);
 	}
@@ -73,6 +75,6 @@ public class TestSkynetClient : MonoBehaviour
 			_gateUdp = null;
 		}
 		
-		Debug.LogError("++++++SkynetClient Destroy++++");
+		SkynetLogger.Error(Channel.NetDevice, "++++++SkynetClient Destroy++++");
 	}
 }

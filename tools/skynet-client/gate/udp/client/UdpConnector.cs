@@ -11,8 +11,8 @@ namespace Skynet.DotNetClient.Gate.UDP
         public UdpConnector(string version, bool allowConnections)
         {
             _netCore = new NetCore(version, allowConnections);
-            _netCore.PeerConnected += OnPeerConnected;
-            _netCore.PeerClosed += OnPeerClosed;
+            _netCore.PeerConnected += PeerConnected;
+            _netCore.PeerClosed += PeerClosed;
         }
         
         public void Update()
@@ -20,7 +20,7 @@ namespace Skynet.DotNetClient.Gate.UDP
             _netCore.PollEvents();
         }
 
-        private void OnPeerConnected(NetPeer peer, string token)
+        private void PeerConnected(NetPeer peer, string token)
         {
             Console.WriteLine(peer.EndPoint + " peer connected: " + token);
 
@@ -28,7 +28,7 @@ namespace Skynet.DotNetClient.Gate.UDP
             peer.NotificationReceived += PeerNotificationReceived;
         }
 
-        private void OnPeerClosed(NetPeer peer, NetCloseReason reason, byte userKickReason, SocketError error)
+        private void PeerClosed(NetPeer peer, NetCloseReason reason, byte userKickReason, SocketError error)
         {
             
         }
@@ -56,7 +56,7 @@ namespace Skynet.DotNetClient.Gate.UDP
         
         public NetPeer Connect(string address, string token = "")
         {
-            NetPeer host = _netCore.Connect(NetUtil.StringToEndPoint(address), token);
+            var host = _netCore.Connect(NetUtil.StringToEndPoint(address), token);
 
             host.PayloadReceived += PeerPayloadReceived;
             host.NotificationReceived += PeerNotificationReceived;

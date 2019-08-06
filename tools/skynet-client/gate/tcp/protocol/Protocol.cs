@@ -1,9 +1,9 @@
 ﻿
 namespace Skynet.DotNetClient.Gate.TCP
 {
-	using UnityEngine;
 	using System.Net.Sockets;
 	using Sproto;
+	using Utils.Logger;
 	
 	public class Protocol {
 		private readonly SpStream _stream = new SpStream (1024);
@@ -11,17 +11,15 @@ namespace Skynet.DotNetClient.Gate.TCP
 
 		private readonly IGateClient _client;
 		private readonly Transporter _transporter;
-		private readonly ProtocolLoader _loader;
 
 		public Protocol(IGateClient sc, Socket socket)
 		{
 			_client = sc;
-			_transporter = new Transporter(socket, this);
-			_transporter.onDisconnect = Disconnect;
+			_transporter = new Transporter(socket, this) {onDisconnect = Disconnect};
 			_transporter.Start ();
 
-			_loader = new ProtocolLoader();
-			_rpc = _loader.CreateProto();
+			var loader = new ProtocolLoader();
+			_rpc = loader.CreateRpcProto();
 		}
 		
 		internal void ProcessMessage(byte[] bytes)
@@ -36,7 +34,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 
 			if (proto != "heartbeat")
 			{
-				Debug.Log("Send Request : " + proto + ", session : " + session);
+				SkynetLogger.Info( Channel.NetDevice, "Send Request : " + proto + ", session : " + session);
 			}
 
 			_stream.Write ((short)0);

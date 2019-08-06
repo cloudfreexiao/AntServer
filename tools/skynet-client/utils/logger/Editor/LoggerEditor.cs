@@ -1,56 +1,62 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-public class LoggerEditor : EditorWindow
+namespace Skynet.DotNetClient.Utils.Logger
 {
-    [MenuItem("Logger/LoggerWindow")]
-    public static void ShowWindow()
-    {
-        GetWindow(typeof(LoggerEditor));
-    }
 
-    [SerializeField]
-    private Channel loggerChannels = Logger.kAllChannels;
-
-    private void OnGUI()
+    public class LoggerEditor : EditorWindow
     {
-        EditorGUI.BeginChangeCheck();
- 
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Clear all"))
+        [MenuItem("SkynetLogger/LoggerWindow")]
+        public static void ShowWindow()
         {
-            loggerChannels = 0;
-        }
-        if (GUILayout.Button("Select all"))
-        {
-            loggerChannels = Logger.kAllChannels;
+            GetWindow(typeof(LoggerEditor));
         }
 
-        EditorGUILayout.EndHorizontal();
+        [SerializeField] private Channel loggerChannels = SkynetLogger.kAllChannels;
 
-        GUILayout.Label("Click to toggle logging channels", EditorStyles.boldLabel);
-        
-        foreach (Channel channel in System.Enum.GetValues(typeof(Channel)))
+        private void OnGUI()
         {
+            EditorGUI.BeginChangeCheck();
+
             EditorGUILayout.BeginHorizontal();
-            GUILayout.Toggle((loggerChannels & channel) == channel, "", GUILayout.ExpandWidth(false));
-            if (GUILayout.Button(channel.ToString()))
+            if (GUILayout.Button("Clear all"))
             {
-                loggerChannels ^= channel;
+                loggerChannels = 0;
             }
+
+            if (GUILayout.Button("Select all"))
+            {
+                loggerChannels = SkynetLogger.kAllChannels;
+            }
+
             EditorGUILayout.EndHorizontal();
+
+            GUILayout.Label("Click to toggle logging channels", EditorStyles.boldLabel);
+
+            foreach (Channel channel in System.Enum.GetValues(typeof(Channel)))
+            {
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Toggle((loggerChannels & channel) == channel, "", GUILayout.ExpandWidth(false));
+                if (GUILayout.Button(channel.ToString()))
+                {
+                    loggerChannels ^= channel;
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+
+            // If the game is playing then update it live when changes are made
+            if (EditorApplication.isPlaying && EditorGUI.EndChangeCheck())
+            {
+                SkynetLogger.SetChannels(loggerChannels);
+            }
         }
 
-        // If the game is playing then update it live when changes are made
-        if (EditorApplication.isPlaying && EditorGUI.EndChangeCheck())
+        // When the game starts update the logger instance with the users selections
+        private void OnEnable()
         {
-            Logger.SetChannels(loggerChannels);
+            SkynetLogger.SetChannels(loggerChannels);
         }
     }
-    
-    // When the game starts update the logger instance with the users selections
-    private void OnEnable()
-    {
-        Logger.SetChannels(loggerChannels);
-    }
+
 }

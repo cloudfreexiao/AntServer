@@ -4,13 +4,12 @@ namespace Skynet.DotNetClient.Gate.TCP
 	using System;
 	using System.Net;
 	using System.Net.Sockets;
-	using UnityEngine;
-	using Utils;
+	using Utils.Logger;
 	using Sproto;
 	
-	public class GateTcpClient : IGateClient,  IDisposable 
+	public sealed class GateTcpClient : IGateClient,  IDisposable 
 	{
-		public event Action<NetWorkState> _networkStateCallBack;
+		public event Action<NetWorkState> OnNetworkStateCallBack;
 
 		private NetWorkState _netWorkState = NetWorkState.Closed;   //current network state
 
@@ -26,7 +25,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 
 		public GateTcpClient(Action<NetWorkState> networkCallBack)
 		{
-			_networkStateCallBack = networkCallBack;
+			OnNetworkStateCallBack = networkCallBack;
 			_eventManager = new EventManager();
 
 			_session = 1;
@@ -40,7 +39,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 
 			try
 			{
-				IPAddress[] addresses = Dns.GetHostEntry(host).AddressList;
+				var addresses = Dns.GetHostEntry(host).AddressList;
 				foreach (var item in addresses)
 				{
 					if (item.AddressFamily != AddressFamily.InterNetwork) continue;
@@ -48,7 +47,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 					break;
 				}
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				NetWorkChanged(NetWorkState.Error);
 				return;
@@ -62,13 +61,13 @@ namespace Skynet.DotNetClient.Gate.TCP
 			try
 			{
 				_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-				IPEndPoint ie = new IPEndPoint(ipAddress, port);
+				var ie = new IPEndPoint(ipAddress, port);
 
 				_socket.BeginConnect(ie, new AsyncCallback(Connect), null);
 			}
 			catch (Exception e)
 			{
-				Debug.LogError(string.Format("连接服务器失败:{0}", e.Message.ToString()));
+				SkynetLogger.Error(Channel.NetDevice, $"连接服务器失败:{e.Message.ToString()}");
 			}
 		}
 
@@ -82,7 +81,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 			}
 			catch (Exception e)
 			{
-				Debug.LogError(string.Format("连接服务器异步结果错误:{0}", e.Message.ToString()));
+				SkynetLogger.Error(Channel.NetDevice, $"连接服务器异步结果错误:{e.Message.ToString()}");
 
 				NetWorkChanged(NetWorkState.Error);
 				Dispose();
@@ -117,33 +116,30 @@ namespace Skynet.DotNetClient.Gate.TCP
 		{
 			_netWorkState = state;
 
-			if (_networkStateCallBack != null)
-			{
-				_networkStateCallBack(state);
-			}
+			OnNetworkStateCallBack?.Invoke(state);
 		}
 
 		public void ProcessMessage(SpRpcResult msg)
 		{
 			if (msg.ud != 0)
 			{
-				Debug.LogError("resp error code is: " + msg.ud);
+				SkynetLogger.Error(Channel.NetDevice,"resp error code is: " + msg.ud);
 				_eventManager.RemoveCallBack(msg.Session);
 				return;
 			}
 			
 			switch (msg.Op) {
 			case SpRpcOp.Request:
-				Util.Log ("Recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
-				Util.DumpObject (msg.Data);
+				SkynetLogger.Info(Channel.NetDevice, "Recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
+				Utils.Util.DumpObject (msg.Data);
 				
 				_eventManager.InvokeOnEvent(msg.Protocol.Name, msg.Data);
 				break;
 			case SpRpcOp.Response:
 				if (msg.Protocol.Name != "heartbeat")
 				{
-					Util.Log ("Recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
-					Util.DumpObject (msg.Data);
+					SkynetLogger.Info(Channel.NetDevice,"Recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
+					Utils.Util.DumpObject (msg.Data);
 				}
 
 				_eventManager.InvokeCallBack(msg.Session, msg.Data);
@@ -166,33 +162,31 @@ namespace Skynet.DotNetClient.Gate.TCP
 			GC.SuppressFinalize (this);
 		}
 
-		protected virtual void Dispose(bool disposing)
+		private void Dispose(bool disposing)
 		{
 			if (_disposed)
 				return;
 
-			if (disposing)
+			if (!disposing) return;
+			// free managed resources
+			_protocol?.Close();
+
+			_heartBeatService?.Stop ();
+
+			_eventManager?.Dispose();
+
+			try
 			{
-				// free managed resources
-				_protocol?.Close();
-
-				_heartBeatService?.Stop ();
-
-				_eventManager?.Dispose();
-
-				try
-				{
-					_socket.Shutdown(SocketShutdown.Both);
-					_socket.Close();
-					_socket = null;
-				}
-				catch (Exception)
-				{
-					//todo : 有待确定这里是否会出现异常，这里是参考之前官方github上pull request。emptyMsg
-				}
-
-				_disposed = true;
+				_socket.Shutdown(SocketShutdown.Both);
+				_socket.Close();
+				_socket = null;
 			}
+			catch (Exception)
+			{
+				//todo : 有待确定这里是否会出现异常，这里是参考之前官方github上pull request。emptyMsg
+			}
+
+			_disposed = true;
 		}
 	}
 }

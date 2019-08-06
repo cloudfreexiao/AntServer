@@ -1,12 +1,12 @@
 namespace Skynet.DotNetClient.LockStep
 {
-    using UnityEngine;
+    using Utils.Logger;
     
     public class Receiver
     {
         public void Action()
         {
-            Debug.Log("Called Receiver.Action()");
+            SkynetLogger.Info(Channel.LockStep,"Called Receiver.Action()");
         }
     }
 }

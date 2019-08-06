@@ -1,3 +1,5 @@
+using Sproto;
+
 namespace Skynet.DotNetClient.Gate.UDP
 {
     using System;
@@ -5,7 +7,7 @@ namespace Skynet.DotNetClient.Gate.UDP
     using MiniUDP;
     
     
-    public class GateUdpClient : IDisposable
+    public class GateUdpClient : IGateClient, IDisposable
     {
         private bool _disposed;
         private int _session;
@@ -50,15 +52,25 @@ namespace Skynet.DotNetClient.Gate.UDP
 //        
         private void SendPayload()
         {
-            byte[] data = Encoding.UTF8.GetBytes("Payload " + 1);
+            var data = Encoding.UTF8.GetBytes("Payload " + 1);
             _peer.SendPayload(data, (ushort)data.Length);
+        }
+
+        public void Request(string proto, Action<SpObject> action)
+        {
+            throw new NotImplementedException();
         }
 
         public void Disconnect()
         {
             Dispose();
         }
-        
+
+        public void ProcessMessage(SpRpcResult msg)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Dispose() {
             Dispose (true);
             GC.SuppressFinalize (this);

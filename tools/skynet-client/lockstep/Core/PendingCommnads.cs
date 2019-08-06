@@ -1,5 +1,7 @@
 namespace Skynet.DotNetClient.LockStep
 {
+    using Utils.Logger;
+    
     public class PendingCommnads
     {
         public Command[] CurrentCommands;
@@ -67,7 +69,7 @@ namespace Skynet.DotNetClient.LockStep
                 if(_nextNextNextCommands[playerId] != null) 
                 {
                     //TODO: Error Handling
-                    UnityEngine.Debug.LogError ("Recieved multiple actions for player " + playerId + " for turn "  + cmdsLockStepTurn);
+                    SkynetLogger.Error(Channel.LockStep,"Recieved multiple actions for player " + playerId + " for turn "  + cmdsLockStepTurn);
                 }
                 _nextNextNextCommands[playerId] = cmd;
                 _nextNextNextCommandsCount++;
@@ -79,7 +81,7 @@ namespace Skynet.DotNetClient.LockStep
                 if(_nextNextCommands[playerId] != null) 
                 {
                     //TODO: Error Handling
-                    UnityEngine.Debug.LogError("Recieved multiple actions for player " + playerId + " for turn "  + cmdsLockStepTurn);
+                    SkynetLogger.Error(Channel.LockStep,"Recieved multiple actions for player " + playerId + " for turn "  + cmdsLockStepTurn);
                 }
                 _nextNextCommands[playerId] = cmd;
                 _nextNextCommandsCount++;
@@ -90,7 +92,7 @@ namespace Skynet.DotNetClient.LockStep
                 //add for processing 1 turn away
                 if(_nextCommands[playerId] != null) {
                     //TODO: Error Handling
-                    UnityEngine.Debug.LogError("Recieved multiple actions for player " + playerId + " for turn "  + cmdsLockStepTurn);
+                    SkynetLogger.Error(Channel.LockStep,"Recieved multiple actions for player " + playerId + " for turn "  + cmdsLockStepTurn);
                 }
                 _nextCommands[playerId] = cmd;
                 _nextCommandsCount++;
@@ -98,7 +100,7 @@ namespace Skynet.DotNetClient.LockStep
             else 
             {
                 //TODO: Error Handling
-                UnityEngine.Debug.LogError (" Unexpected lockstepID recieved : " + cmdsLockStepTurn);
+                SkynetLogger.Error(Channel.LockStep," Unexpected lockstepID recieved : " + cmdsLockStepTurn);
             }
         }
         

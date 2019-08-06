@@ -1,7 +1,8 @@
 namespace Skynet.DotNetClient.LockStep
 {
     using System.Diagnostics;
-    
+    using Utils.Logger;
+
     public class ConfirmedCommands
     {
         private bool[] _confirmedCurrent;
@@ -87,7 +88,7 @@ namespace Skynet.DotNetClient.LockStep
             }
             else
             {
-                UnityEngine.Debug.LogError("Unexpected lockstepID Confirmed : " + confirmedCommandLockStepTurn + " from player: " + confirmingPlayerId);
+                SkynetLogger.Error(Channel.LockStep,"Unexpected lockstepID Confirmed : " + confirmedCommandLockStepTurn + " from player: " + confirmingPlayerId);
             }
         }
 
