@@ -4,6 +4,6 @@
 
 [redis/pika](https://github.com/cloudfreexiao/AntServer/tree/master/tools/pika-compose)
 
-##客户端例子 暂时只支持 tcp/ws
+##客户端例子 暂时只支持 tcp/ws/udp
 
 [unity skynet-client](https://github.com/cloudfreexiao/AntServer/tree/master/tools/skynet-client)
