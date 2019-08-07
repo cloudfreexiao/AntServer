@@ -25,7 +25,7 @@ namespace MiniUDP
   /// </summary>
   public enum NetCloseReason : byte
   {
-    INVALID = 0,
+    Invalid = 0,
 
     RejectNotHost,  // Rejected because host is not accepting connections
     RejectFull,     // Rejected because host is full
@@ -43,7 +43,7 @@ namespace MiniUDP
 
   internal enum NetPacketType : byte
   {
-    INVALID = 0,
+    Invalid = 0,
 
     Connect,
     Accept,
@@ -57,7 +57,7 @@ namespace MiniUDP
 
   internal enum NetEventType : byte
   {
-    INVALID = 0,
+    Invalid = 0,
 
     Notification,
     Payload,
@@ -66,13 +66,15 @@ namespace MiniUDP
     PeerClosed,    // Peer closed due to some reason (remote or local)
   }
 
-  public class NetConfig
+  public static class NetConfig
   {
     #region Timing
-    public static int ShortTickRate = 250;
-    public static int LongTickRate = 1000;
-    public static int SleepTime = 1;
-    public static long ConnectionTimeOut = 15000;
+
+    public const int ShortTickRate = 250;
+    public const int LongTickRate = 1000;
+    public const int SleepTime = 1;
+    public const long ConnectionTimeOut = 15000;
+
     #endregion
 
     #region Counts
@@ -83,12 +85,13 @@ namespace MiniUDP
 #if DEBUG
     #region Latency Simulation
     // Note that these are applied twice, both incoming and outgoing
-    public static bool LatencySimulation = false;
-    public static int MinimumLatency = 80;
-    public static int MaximumLatency = 120;
-    public static float LatencyTurbulence = 0.5f;
-    public static float LossChance = 0.10f;
-    public static float LossTurbulence = 2.0f;
+    public const bool LatencySimulation = false;
+    public const int MinimumLatency = 80;
+    public const int MaximumLatency = 120;
+    public const float LatencyTurbulence = 0.5f;
+    public const float LossChance = 0.10f;
+    public const float LossTurbulence = 2.0f;
+
     #endregion
 #endif
 
@@ -96,20 +99,20 @@ namespace MiniUDP
     /// <summary>
     /// Size of the window used for smoothing ping averages.
     /// </summary>
-    public const int PING_SMOOTHING_WINDOW = 5;
+    public const int PingSmoothingWindow = 5;
 
     #region Packet
-    internal const int SOCKET_BUFFER_SIZE = 2048;
-    public const int DATA_MAXIMUM = 1200; // Max size for a data container
-    public const int DATA_INITIAL = 128; // Starting size for a new container
-    public const int DATA_PADDING = 8; // Bytes to add when resizing container
+    internal const int SocketBufferSize = 2048;
+    public const int DataMaximum = 1200; // Max size for a data container
+    public const int DataInitial = 128; // Starting size for a new container
+    public const int DataPadding = 8; // Bytes to add when resizing container
 
-    public const int MAX_VERSION_BYTES = (1 << (8 * sizeof(byte))) - 1;
-    public const int MAX_TOKEN_BYTES = (1 << (8 * sizeof(byte))) - 1;
+    public const int MaxVersionBytes = (1 << (8 * sizeof(byte))) - 1;
+    public const int MaxTokenBytes = (1 << (8 * sizeof(byte))) - 1;
     #endregion
 
-    internal const byte DONT_NOTIFY_PEER = 0;
-    internal const byte DEFAULT_USER_REASON = 255;
+    internal const byte DontNotifyPeer = 0;
+    internal const byte DefaultUserReason = 255;
     #endregion
   }
 }

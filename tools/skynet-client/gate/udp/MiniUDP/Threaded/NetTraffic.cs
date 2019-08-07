@@ -27,35 +27,35 @@ namespace MiniUDP
   /// </summary>
   public class NetTraffic
   {
-    internal const int LOSS_BITS = 224;
-    internal const int PING_HISTORY = 64;
+    private const int LossBits = 224;
+    private const int PingHistory = 64;
 
     /// <summary>
     /// Sliding bit array keeping a history of received sequence numbers.
     /// </summary>
-    internal class SequenceCounter
+    private class SequenceCounter
     {
-      private readonly int numChunks;
-      internal readonly uint[] data;
+      private readonly int _numChunks;
+      private readonly uint[] _data;
 
-      private ushort latestSequence;
+      private ushort _latestSequence;
 
       public SequenceCounter(bool startFilled = true)
       {
-        this.numChunks = NetTraffic.LOSS_BITS / 32;
-        this.data = new uint[this.numChunks];
-        this.latestSequence = 0;
+        _numChunks = LossBits / 32;
+        _data = new uint[_numChunks];
+        _latestSequence = 0;
 
-        if (startFilled)
-          for (int i = 0; i < this.data.Length; i++)
-            this.data[i] = 0xFFFFFFFF;
+        if (!startFilled) return;
+        for (var i = 0; i < _data.Length; i++)
+          _data[i] = 0xFFFFFFFF;
       }
 
       public int ComputeCount()
       {
         uint sum = 0;
-        for (int i = 0; i < this.numChunks; i++)
-          sum += this.HammingWeight(this.data[i]);
+        for (var i = 0; i < _numChunks; i++)
+          sum += HammingWeight(_data[i]);
         return (int)sum;
       }
 
@@ -64,22 +64,22 @@ namespace MiniUDP
       /// </summary>
       public void Store(ushort sequence)
       {
-        int difference =
-          NetUtil.UShortSeqDiff(this.latestSequence, sequence);
+        var difference =
+          NetUtil.UShortSeqDiff(_latestSequence, sequence);
 
         if (difference == 0)
           return;
-        if (difference >= NetTraffic.LOSS_BITS)
+        if (difference >= LossBits)
           return;
         if (difference > 0)
         {
-          this.SetBit(difference);
+          SetBit(difference);
           return;
         }
 
-        this.Shift(-difference);
-        this.latestSequence = sequence;
-        this.data[0] |= 1;
+        Shift(-difference);
+        _latestSequence = sequence;
+        _data[0] |= 1;
       }
 
       /// <summary>
@@ -87,13 +87,11 @@ namespace MiniUDP
       /// </summary>
       public void Advance(ushort sequence)
       {
-        int difference =
-          NetUtil.UShortSeqDiff(this.latestSequence, sequence);
-        if (difference < 0)
-        {
-          this.Shift(-difference);
-          this.latestSequence = sequence;
-        }
+        var difference =
+          NetUtil.UShortSeqDiff(_latestSequence, sequence);
+        if (difference >= 0) return;
+        Shift(-difference);
+        _latestSequence = sequence;
       }
 
       /// <summary>
@@ -104,27 +102,27 @@ namespace MiniUDP
         if (count < 0)
           throw new ArgumentOutOfRangeException("count");
 
-        int chunks = count / 32;
-        int bits = count % 32;
+        var chunks = count / 32;
+        var bits = count % 32;
 
-        int i = this.numChunks - 1;
-        int min = chunks;
+        var i = _numChunks - 1;
+        var min = chunks;
 
         for (; i >= min; i--)
         {
-          int sourceChunk = i - chunks;
-          int sourceNext = i - (chunks + 1);
+          var sourceChunk = i - chunks;
+          var sourceNext = i - (chunks + 1);
 
-          ulong dataHigh = this.data[sourceChunk];
+          ulong dataHigh = _data[sourceChunk];
           ulong dataLow = 
-            (sourceNext >= 0) ? this.data[sourceNext] : 0;
-          this.data[i] = 
+            (sourceNext >= 0) ? _data[sourceNext] : 0;
+          _data[i] = 
             (uint)((((dataHigh << 32) | dataLow) << bits) >> 32);
         }
 
         for (; i >= 0; i--)
         {
-          this.data[i] = 0;
+          _data[i] = 0;
         }
       }
 
@@ -133,26 +131,26 @@ namespace MiniUDP
       /// </summary>
       private bool SetBit(int index)
       {
-        if ((index < 0) || (index >= NetTraffic.LOSS_BITS))
+        if ((index < 0) || (index >= NetTraffic.LossBits))
           throw new ArgumentOutOfRangeException("index");
 
-        int chunkIdx = index / 32;
-        int chunkBit = index % 32;
+        var chunkIdx = index / 32;
+        var chunkBit = index % 32;
 
-        uint bit = 1U << chunkBit;
-        uint chunk = this.data[chunkIdx];
+        var bit = 1U << chunkBit;
+        var chunk = this._data[chunkIdx];
 
         if ((bit & chunk) != 0)
           return true;
 
         chunk |= bit;
-        this.data[chunkIdx] = chunk;
+        _data[chunkIdx] = chunk;
         return false;
       }
 
       private uint HammingWeight(uint chunk)
       {
-        chunk = chunk - ((chunk >> 1) & 0x55555555);
+        chunk -= ((chunk >> 1) & 0x55555555);
         chunk = (chunk & 0x33333333) + ((chunk >> 2) & 0x33333333);
         return (((chunk + (chunk >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
       }
@@ -170,8 +168,8 @@ namespace MiniUDP
 
       public PingCounter()
       {
-        this.pingTimes = new long[NetTraffic.PING_HISTORY];
-        this.pingSequences = new byte[NetTraffic.PING_HISTORY];
+        this.pingTimes = new long[NetTraffic.PingHistory];
+        this.pingSequences = new byte[NetTraffic.PingHistory];
         for (int i = 0; i < this.pingTimes.Length; i++)
           this.pingTimes[i] = -1;
       }
@@ -183,7 +181,7 @@ namespace MiniUDP
       public byte CreatePing(long curTime)
       {
         this.currentPingSeq++;
-        int index = this.currentPingSeq % NetTraffic.PING_HISTORY;
+        int index = this.currentPingSeq % NetTraffic.PingHistory;
         this.pingTimes[index] = curTime;
         this.pingSequences[index] = this.currentPingSeq;
         return this.currentPingSeq;
@@ -195,7 +193,7 @@ namespace MiniUDP
       /// </summary>
       public long ConsumePong(byte pongSeq)
       {
-        int index = pongSeq % NetTraffic.PING_HISTORY;
+        int index = pongSeq % NetTraffic.PingHistory;
         if (this.pingSequences[index] != pongSeq)
           return -1;
 
@@ -260,7 +258,7 @@ namespace MiniUDP
       this.payloadLoss = new SequenceCounter(true);
       this.payloadDrop = new SequenceCounter(false);
       this.outgoingPing = new PingCounter();
-      this.pingWindow = new int[NetConfig.PING_SMOOTHING_WINDOW];
+      this.pingWindow = new int[NetConfig.PingSmoothingWindow];
       this.creationTime = creationTime;
 
       this.lastPayloadSeq = ushort.MaxValue; // "-1"
@@ -305,7 +303,7 @@ namespace MiniUDP
     internal byte GenerateLoss()
     {
       int count = this.payloadLoss.ComputeCount();
-      int missing = NetTraffic.LOSS_BITS - count;
+      int missing = NetTraffic.LossBits - count;
       return (byte)missing;
     }
 
@@ -322,7 +320,7 @@ namespace MiniUDP
       this.lastPacketRecvTime = curTime;
 
       // Recompute since it may be read on the main thread
-      this.RemoteLoss = loss / (float)NetTraffic.LOSS_BITS;
+      this.RemoteLoss = loss / (float)NetTraffic.LossBits;
     }
 
     /// <summary>
@@ -347,7 +345,7 @@ namespace MiniUDP
 
       // Recompute since it may be read on the main thread
       this.Ping = NetTraffic.PingAverage(this.pingWindow);
-      this.RemoteDrop = drop / (float)NetTraffic.LOSS_BITS;
+      this.RemoteDrop = drop / (float)NetTraffic.LossBits;
     }
 
     /// <summary>
@@ -372,8 +370,8 @@ namespace MiniUDP
       }
 
       // Recompute since it may be read on the main thread
-      this.LocalLoss = this.GenerateLoss() / (float)NetTraffic.LOSS_BITS;
-      this.LocalDrop = this.GenerateDrop() / (float)NetTraffic.LOSS_BITS;
+      this.LocalLoss = this.GenerateLoss() / (float)NetTraffic.LossBits;
+      this.LocalDrop = this.GenerateDrop() / (float)NetTraffic.LossBits;
       return isNew;
     }
 

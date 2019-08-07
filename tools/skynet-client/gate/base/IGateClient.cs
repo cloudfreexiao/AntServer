@@ -8,5 +8,7 @@ namespace Skynet.DotNetClient.Gate
         void Request(string proto, Action<SpObject> action);
         void Disconnect();
         void ProcessMessage(SpRpcResult msg);
+
+        void NetWorkChanged(NetWorkState state);
     }
 }

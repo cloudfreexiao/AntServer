@@ -35,7 +35,7 @@ namespace MiniUDP
     internal NetReceiver(NetSocket socket)
     {
       this.socket = socket;
-      this.receiveBuffer = new byte[NetConfig.SOCKET_BUFFER_SIZE];
+      this.receiveBuffer = new byte[NetConfig.SocketBufferSize];
 
 #if DEBUG
       this.inQueue = new NetDelay();

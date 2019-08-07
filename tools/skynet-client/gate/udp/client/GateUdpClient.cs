@@ -1,100 +1,108 @@
-using Sproto;
-
 namespace Skynet.DotNetClient.Gate.UDP
 {
     using System;
-    using System.Text;
+    using Sproto;
+    using Utils.Logger;
     using MiniUDP;
     
-    
-    public class GateUdpClient : IGateClient, IDisposable
+    public sealed class GateUdpClient : IGateClient, IDisposable
     {
+        public event Action<NetWorkState> OnNetworkStateCallBack;
         private bool _disposed;
-        private int _session;
 
-        private UdpSession _udpSession;
-        
-        private NetPeer _peer;
         private UdpConnector _connector;
-//        private readonly UDPClock _fastClock;
         
-        private bool _loop;
-        
-        public GateUdpClient(UdpSession udpSession)
+        public GateUdpClient(Action<NetWorkState> networkCallBack)
         {
-//            _fastClock = new UDPClock(0.01f);
-//            _fastClock.OnFixedUpdate += SendPayload;
-
-            _udpSession = udpSession;
-            
-            _loop = true;
-            
-            _session = 1;
+            OnNetworkStateCallBack = networkCallBack;
             _disposed = false;
         }
 
-        public void Connect()
+        public void Connect(UdpSession udpSession)
         {
-            _connector = new UdpConnector("UDPClient", false);
+            SprotoEncoding.Init(udpSession.session, udpSession.secret);
 
-            var endpoint = _udpSession.host + ":" + _udpSession.port.ToString();
-            _peer = _connector.Connect(endpoint);
+            _connector = new UdpConnector( this,"UdpClient", false);
+            
+            var endpoint = udpSession.host + ":" + udpSession.port;
+            SkynetLogger.Info(Channel.NetDevice,"Udp Client URL " + endpoint);
+            _connector.Connect(endpoint);
         }
 
-//        public void Start()
-//        {
-//            while (_loop)
-//            {
-//                _fastClock.Tick();
-//                _connector.Update();
-//            }
-//        }
-//        
-        private void SendPayload()
+        public void Update()
         {
-            var data = Encoding.UTF8.GetBytes("Payload " + 1);
-            _peer.SendPayload(data, (ushort)data.Length);
+            _connector?.Update();
         }
-
+        
+        public void NetWorkChanged(NetWorkState state)
+        {
+            OnNetworkStateCallBack?.Invoke(state);
+        }
+        
         public void Request(string proto, Action<SpObject> action)
         {
-            throw new NotImplementedException();
+            Request(proto, null, action);
         }
 
+        public void Request(string proto, SpObject msg, Action<SpObject> action)
+        {
+            _connector.SendPayload(proto, msg);
+        }
+
+        public void ProcessMessage(SpRpcResult msg)
+        {
+            if (msg.ud != 0)
+            {
+                SkynetLogger.Error(Channel.NetDevice,"udp client resp error code is: " + msg.ud);
+                return;
+            }
+			
+            switch (msg.Op) 
+            {
+                case SpRpcOp.Request:
+                    SkynetLogger.Info(Channel.NetDevice, "udp client recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
+                    Utils.Util.DumpObject (msg.Data);
+                    break;
+                case SpRpcOp.Response:
+                    if (msg.Protocol.Name != "heartbeat")
+                    {
+                        SkynetLogger.Info(Channel.NetDevice,"udp client recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
+                        Utils.Util.DumpObject (msg.Data);
+                    }
+                    break;
+                case SpRpcOp.Unknown:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+        
         public void Disconnect()
         {
             Dispose();
         }
 
-        public void ProcessMessage(SpRpcResult msg)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Dispose() {
             Dispose (true);
-            GC.SuppressFinalize (this);
+            GC.SuppressFinalize ((object)this);
         }
-        
-        protected virtual void Dispose(bool disposing)
+
+        private void Dispose(bool disposing)
         {
             if (_disposed)
                 return;
 
-            if (disposing)
+            if (!disposing) return;
+            try
             {
-                try
-                {
-                    _loop = false;
-                    _connector.Stop();
-                }
-                catch (Exception)
-                {
-                    //todo : 有待确定这里是否会出现异常，这里是参考之前官方github上pull request。emptyMsg
-                }
-
-                _disposed = true;
+                _connector.Stop();
             }
+            catch (Exception)
+            {
+                //todo : 有待确定这里是否会出现异常，这里是参考之前官方github上pull request。emptyMsg
+            }
+
+            _disposed = true;
         }
     }
 }

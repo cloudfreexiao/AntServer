@@ -43,29 +43,29 @@ namespace MiniUDP
     // We don't need a lock for writing, but we do for reading because polling
     // and receiving are two different non-atomic actions. In practice we
     // should only ever be reading from the socket on one thread anyway.
-    private object readLock;
-    private Socket rawSocket;
+    private readonly object _readLock;
+    private readonly Socket _rawSocket;
 
     internal NetSocket()
     {
-      this.readLock = new object();
-      this.rawSocket =
+      _readLock = new object();
+      _rawSocket =
         new Socket(
           AddressFamily.InterNetwork,
           SocketType.Dgram,
-          ProtocolType.Udp);
+          ProtocolType.Udp)
+        {
+          ReceiveBufferSize = NetConfig.SocketBufferSize, SendBufferSize = NetConfig.SocketBufferSize, Blocking = false
+        };
 
-      this.rawSocket.ReceiveBufferSize = NetConfig.SOCKET_BUFFER_SIZE;
-      this.rawSocket.SendBufferSize = NetConfig.SOCKET_BUFFER_SIZE;
-      this.rawSocket.Blocking = false;
 
       try
       {
         // Ignore port unreachable (connection reset by remote host)
-        const uint IOC_IN = 0x80000000;
-        const uint IOC_VENDOR = 0x18000000;
-        uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-        this.rawSocket.IOControl(
+        const uint iocIn = 0x80000000;
+        const uint iocVendor = 0x18000000;
+        uint SIO_UDP_CONNRESET = iocIn | iocVendor | 12;
+        _rawSocket.IOControl(
           (int)SIO_UDP_CONNRESET, 
           new byte[] { 0 }, 
           null);
@@ -82,7 +82,7 @@ namespace MiniUDP
     {
       try
       {
-        this.rawSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+        _rawSocket.Bind(new IPEndPoint(IPAddress.Any, port));
       }
       catch (SocketException exception)
       {
@@ -93,7 +93,7 @@ namespace MiniUDP
 
     internal void Close()
     {
-      this.rawSocket.Close();
+      _rawSocket.Close();
     }
 
     /// <summary> 
@@ -107,15 +107,14 @@ namespace MiniUDP
     {
       try
       {
-        int bytesSent =
-          this.rawSocket.SendTo(
+        NetDebug.LogMessage("Udp SendTo msg len:" + length);
+        var bytesSent =
+          _rawSocket.SendTo(
             buffer,
             length,
             SocketFlags.None,
             destination);
-        if (bytesSent == length)
-          return SocketError.Success;
-        return SocketError.MessageSize;
+        return bytesSent == length ? SocketError.Success : SocketError.MessageSize;
       }
       catch (SocketException exception)
       {
@@ -137,9 +136,9 @@ namespace MiniUDP
       source = null;
       length = 0;
 
-      lock (this.readLock)
+      lock (_readLock)
       {
-        if (this.rawSocket.Poll(0, SelectMode.SelectRead) == false)
+        if (_rawSocket.Poll(0, SelectMode.SelectRead) == false)
           return SocketError.NoData;
 
         try
@@ -147,19 +146,16 @@ namespace MiniUDP
           EndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
 
           length =
-            this.rawSocket.ReceiveFrom(
+            _rawSocket.ReceiveFrom(
               destBuffer,
               destBuffer.Length,
               SocketFlags.None,
               ref endPoint);
 
-          if (length > 0)
-          {
-            source = endPoint as IPEndPoint;
-            return SocketError.Success;
-          }
+          if (length <= 0) return SocketError.NoData;
+          source = endPoint as IPEndPoint;
+          return SocketError.Success;
 
-          return SocketError.NoData;
         }
         catch (SocketException exception)
         {

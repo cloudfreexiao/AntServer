@@ -26,8 +26,8 @@ namespace MiniUDP.Util
 {
   internal class Noise
   {
-    private const int HASH_MASK = 255;
-    private int[] Hash = 
+    private const int HashMask = 255;
+    private int[] _hash = 
     {
       151,160,137, 91, 90, 15,131, 13,201, 95, 96, 53,194,233,  7,225,
       140, 36,103, 30, 69,142,  8, 99, 37,240, 21, 10, 23,190,  6,148,
@@ -59,22 +59,22 @@ namespace MiniUDP.Util
 
     public float GetValue(long milliseconds, float speed)
     {
-      float scaled = ((int)milliseconds / 1000.0f) * speed;
-      int floor = (int)Math.Floor(scaled);
-      float t = scaled - floor;
-      float smoothT = t * t * (3 - 2 * t);
+      var scaled = ((int)milliseconds / 1000.0f) * speed;
+      var floor = (int)Math.Floor(scaled);
+      var t = scaled - floor;
+      var smoothT = t * t * (3 - 2 * t);
 
-      int min = floor & Noise.HASH_MASK;
-      int max = (min + 1) & Noise.HASH_MASK;
+      var min = floor & HashMask;
+      var max = (min + 1) & HashMask;
 
-      float smoothed = Noise.Lerp(this.Hash[min], this.Hash[max], smoothT);
-      return (smoothed / Noise.HASH_MASK);
+      var smoothed = Lerp(_hash[min], _hash[max], smoothT);
+      return (smoothed / HashMask);
     }
 
     private void Shuffle()
     {
-      Random random = new Random();
-      this.Hash = this.Hash.OrderBy(x => random.Next()).ToArray();
+      var random = new Random();
+      _hash = this._hash.OrderBy(x => random.Next()).ToArray();
     }
   }
 }

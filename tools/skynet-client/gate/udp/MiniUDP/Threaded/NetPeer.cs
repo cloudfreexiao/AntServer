@@ -67,26 +67,25 @@ namespace MiniUDP
     #region Main Thread
     // This region should only be accessed by the MAIN thread
 
-    public IPEndPoint EndPoint { get { return this.endPoint; } }
+    public IPEndPoint EndPoint { get; }
     internal bool ClosedByUser { get; private set; }
 
-    private ushort payloadSeqOut;
+    private ushort _payloadSeqOut;
 
     /// <summary>
     /// Closes the peer's network connection for a given reason byte.
     /// </summary>
     public void Close(
-      byte userReason = NetConfig.DEFAULT_USER_REASON)
+      byte userReason = NetConfig.DefaultUserReason)
     {
-      NetDebug.Assert(this.core != null);
+      NetDebug.Assert(core != null);
 
-      if (this.IsOpen)
-      {
-        this.ClosedByUser = true;
-        this.Disconnected();
-        if (userReason != NetConfig.DONT_NOTIFY_PEER)
-          this.core.SendKick(this, userReason);
-      }
+      if (!IsOpen) return;
+      
+      ClosedByUser = true;
+      Disconnected();
+      if (userReason != NetConfig.DontNotifyPeer)
+        core.SendKick(this, userReason);
     }
 
     /// <summary>
@@ -94,19 +93,26 @@ namespace MiniUDP
     /// </summary>
     public SocketError SendPayload(byte[] data, ushort length)
     {
-      if ((length < 0) || (length > NetConfig.DATA_MAXIMUM))
+      if (length > NetConfig.DataMaximum)
         throw new ArgumentOutOfRangeException("length");
 
-      this.payloadSeqOut++;
-      return this.core.SendPayload(this, this.payloadSeqOut, data, length);
+      _payloadSeqOut++;
+      return core.SendPayload(this, this._payloadSeqOut, data, length);
     }
 
+    public SocketError SendPayload(string proto, Sproto.SpObject msg)
+    {
+      _payloadSeqOut++;
+      return core.SendPayload(this, _payloadSeqOut, proto, msg);
+    }
+
+    
     /// <summary>
     /// Queues a reliable ordered notification for delivery.
     /// </summary>
     public bool QueueNotification(byte[] data, ushort length)
     {
-      if ((length < 0) || (length > NetConfig.DATA_MAXIMUM))
+      if ((length < 0) || (length > NetConfig.DataMaximum))
         throw new ArgumentOutOfRangeException("length");
 
       this.core.QueueNotification(this, data, length);
@@ -154,7 +160,6 @@ namespace MiniUDP
 
     private readonly NetTraffic traffic;
     private readonly Queue<NetEvent> outgoing;
-    private readonly IPEndPoint endPoint;
     private readonly bool isClient; // True iff the *remote* peer is a client
     private readonly string token;
 
@@ -171,13 +176,13 @@ namespace MiniUDP
       // to them after closing and they aren't created all that often anyway
 
       this.ClosedByUser = false;
-      this.payloadSeqOut = 0;
+      this._payloadSeqOut = 0;
 
       this.AckRequested = false;
 
       this.traffic = new NetTraffic(creationTick);
       this.outgoing = new Queue<NetEvent>();
-      this.endPoint = endPoint;
+      this.EndPoint = endPoint;
       this.isClient = isClient;
       this.token = token;
 

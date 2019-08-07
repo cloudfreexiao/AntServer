@@ -3,37 +3,43 @@ using Skynet.DotNetClient.Utils.Signals;
 using Skynet.DotNetClient.Utils.Logger;
 using UnityEngine;
 
+
 public class TestSkynetClient : MonoBehaviour 
 {
 	private TestLoginTcp _login;
-	private readonly string protocol = "tcp"; // "ws"; //"tcp";
+	private string _protocol = "tcp"; // "ws"; //"tcp";
 
 	private TestGateTcp _gateTcp;
-	private TestGateWS _gateWs;
+	private TestGateWs _gateWs;
 	private TestGateUdp _gateUdp;
 
 	public void Start () 
 	{
-		SkynetLogger.Error(Channel.NetDevice, "++++++SkynetClient Start++++");
+		SkynetLogger.Error(Channel.NetDevice, "++++++Skynet Client Start++++");
 
-		_login = new TestLoginTcp (protocol);
+		_login = new TestLoginTcp (_protocol);
 		_login.Run(ProcessLoginResp);
 	}
-	
+
+	public void Update()
+	{
+		_gateUdp?.Update();
+	}
+
 	private void ProcessLoginResp(int code, AuthPackageResp resp)
 	{
 		_login.DisConnect();
 
 		if(code == 200)
 		{
-			if (protocol == "tcp")
+			if (_protocol == "tcp")
 			{
 				_gateTcp = new TestGateTcp();
 				_gateTcp.Run(resp);
 			}
 			else
 			{
-				_gateWs = new TestGateWS();
+				_gateWs = new TestGateWs();
 				_gateWs.Run(resp);
 			}
 			
@@ -75,6 +81,6 @@ public class TestSkynetClient : MonoBehaviour
 			_gateUdp = null;
 		}
 		
-		SkynetLogger.Error(Channel.NetDevice, "++++++SkynetClient Destroy++++");
+		SkynetLogger.Error(Channel.NetDevice, "++++++Skynet Client Destroy++++");
 	}
 }

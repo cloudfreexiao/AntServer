@@ -37,20 +37,20 @@ namespace MiniUDP
   internal class NetPool<T> : INetPool<T>
     where T : INetPoolable<T>, new()
   {
-    private readonly Stack<T> freeList;
+    private readonly Stack<T> _freeList;
 
     public NetPool()
     {
-      this.freeList = new Stack<T>();
+      _freeList = new Stack<T>();
     }
 
     public T Allocate()
     {
-      lock(this.freeList)
-        if (this.freeList.Count > 0)
-          return this.freeList.Pop();
+      lock(_freeList)
+        if (_freeList.Count > 0)
+          return _freeList.Pop();
 
-      T obj = new T();
+      var obj = new T();
       obj.Reset();
       return obj;
     }
@@ -58,8 +58,8 @@ namespace MiniUDP
     public void Deallocate(T obj)
     {
       obj.Reset();
-      lock(this.freeList)
-        this.freeList.Push(obj);
+      lock(_freeList)
+        _freeList.Push(obj);
     }
   }
 }

@@ -31,7 +31,7 @@ namespace Skynet.DotNetClient.Gate.WS
         public void Connect(string host, int port)
         {
             var url = "ws://" + host + ":" + port.ToString();
-            SkynetLogger.Info(Channel.NetDevice,"URL " + url);
+            SkynetLogger.Info(Channel.NetDevice,"Ws Client URL " + url);
             _socket = new WebSocket(url);
             _socket.OnOpen += Open;
             _socket.OnClose += Close;
@@ -79,14 +79,14 @@ namespace Skynet.DotNetClient.Gate.WS
         {
             if (msg.ud != 0)
             {
-                SkynetLogger.Error(Channel.NetDevice,"resp error code is: " + msg.ud);
+                SkynetLogger.Error(Channel.NetDevice,"ws client resp error code is: " + msg.ud);
                 _eventManager.RemoveCallBack(msg.Session);
                 return;
             }
 			
             switch (msg.Op) {
                 case SpRpcOp.Request:
-                    SkynetLogger.Info(Channel.NetDevice, "Recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
+                    SkynetLogger.Info(Channel.NetDevice, "ws client Recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
                     Utils.Util.DumpObject (msg.Data);
 				
                     _eventManager.InvokeOnEvent(msg.Protocol.Name, msg.Data);
@@ -94,7 +94,7 @@ namespace Skynet.DotNetClient.Gate.WS
                 case SpRpcOp.Response:
                     if (msg.Protocol.Name != "heartbeat")
                     {
-                        SkynetLogger.Info(Channel.NetDevice,"Recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
+                        SkynetLogger.Info(Channel.NetDevice,"ws client Recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
                         Utils.Util.DumpObject (msg.Data);
                     }
 
@@ -109,7 +109,7 @@ namespace Skynet.DotNetClient.Gate.WS
         
         private void Open(object sender, EventArgs e)
         {
-            SkynetLogger.Info(Channel.NetDevice,"is connected" + _socket.IsConnected );
+            SkynetLogger.Info(Channel.NetDevice,"ws client is connected" + _socket.IsConnected );
             _protocol = new Protocol(this);
             NetWorkChanged(NetWorkState.Connected);
         }
@@ -148,20 +148,20 @@ namespace Skynet.DotNetClient.Gate.WS
             }
         }
         
+        public void NetWorkChanged(NetWorkState state)
+        {
+            OnNetworkStateCallBack?.Invoke(state);
+        }
+        
         private void Error(object sender, ErrorEventArgs e)
         {
             SkynetLogger.Error(Channel.NetDevice,"WebSocket Has Error" + e.Message);
             NetWorkChanged(NetWorkState.Error);
         }
-        
-        private void NetWorkChanged(NetWorkState state)
-        {
-            OnNetworkStateCallBack?.Invoke(state);
-        }
 
         public void Dispose() {
             Dispose (true);
-            GC.SuppressFinalize (this);
+            GC.SuppressFinalize ((object)this);
         }
 
         private void Dispose(bool disposing)

@@ -74,9 +74,11 @@ namespace Skynet.DotNetClient.Utils.Logger
         /// </summary>
         Analytics       = 1 << 13,
         /// <summary>
-        /// Animation logs
+        /// LockStep logs
         /// </summary>
         LockStep       = 1 << 14,
+        
+        MiniUdp        = 1 << 15,
     }
 
     /// <summary>

@@ -34,7 +34,7 @@ namespace MiniUDP
     /// </summary>
     internal void RecycleEvent(NetEvent evnt)
     {
-      this.eventPool.Deallocate(evnt);
+      this._eventPool.Deallocate(evnt);
     }
 
     #region Main Thread
@@ -53,7 +53,7 @@ namespace MiniUDP
 
       if (notification.ReadData(buffer, 0, length) == false)
         throw new OverflowException("Data too long for notification");
-      this.notificationIn.Enqueue(notification);
+      this._notificationIn.Enqueue(notification);
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ namespace MiniUDP
     /// </summary>
     internal bool TryReceiveEvent(out NetEvent received)
     {
-      return this.eventOut.TryDequeue(out received);
+      return this._eventOut.TryDequeue(out received);
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ namespace MiniUDP
     internal NetPeer BeginConnect(IPEndPoint endpoint, string token)
     {
       NetPeer peer = new NetPeer(endpoint, token, false, 0);
-      this.connectIn.Enqueue(peer);
+      this._connectIn.Enqueue(peer);
       return peer;
     }
 
@@ -80,7 +80,7 @@ namespace MiniUDP
     /// </summary>
     internal void Bind(int port)
     {
-      this.socket.Bind(port);
+      this._socket.Bind(port);
     }
 
     /// <summary>
@@ -88,12 +88,12 @@ namespace MiniUDP
     /// </summary>
     internal void Start()
     {
-      if (this.isStarted)
+      if (this._isStarted)
         throw new InvalidOperationException(
           "Controller has already been started");
 
-      this.isStarted = true;
-      this.isRunning = true;
+      this._isStarted = true;
+      this._isRunning = true;
 
       this.Run();
     }
@@ -103,7 +103,7 @@ namespace MiniUDP
     /// </summary>
     internal void Stop()
     {
-      this.isRunning = false;
+      this._isRunning = false;
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ namespace MiniUDP
     /// </summary>
     internal void Close()
     {
-      this.socket.Close();
+      this._socket.Close();
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ namespace MiniUDP
     /// </summary>
     internal void SendKick(NetPeer peer, byte reason)
     {
-      this.sender.SendKick(peer, NetCloseReason.KickUserReason, reason);
+      _sender.SendKick(peer, NetCloseReason.KickUserReason, reason);
     }
 
     /// <summary>
@@ -133,65 +133,78 @@ namespace MiniUDP
       byte[] data,
       ushort length)
     {
-      return this.sender.SendPayload(peer, sequence, data, length);
+      return _sender.SendPayload(peer, sequence, data, length);
     }
+    
+    internal SocketError SendPayload(
+      NetPeer peer,
+      ushort sequence,
+      string proto, 
+      Sproto.SpObject msg)
+    {
+      return _sender.SendPayload(peer, sequence, proto, msg);
+    }
+    
     #endregion
 
     #region Background Thread
     // This region should only be accessed by the BACKGROUND thread
 
-    private bool IsFull { get { return false; } } // TODO: Keep a count
-    private long Time { get { return this.timer.ElapsedMilliseconds; } }
+    private static bool IsFull // TODO: Keep a count
+      =>
+        false;
 
-    private readonly NetPipeline<NetPeer> connectIn;
-    private readonly NetPipeline<NetEvent> notificationIn;
-    private readonly NetPipeline<NetEvent> eventOut;
+    private long Time => _timer.ElapsedMilliseconds;
 
-    private readonly NetPool<NetEvent> eventPool;
-    private readonly Dictionary<IPEndPoint, NetPeer> peers;
-    private readonly Stopwatch timer;
+    private readonly NetPipeline<NetPeer> _connectIn;
+    private readonly NetPipeline<NetEvent> _notificationIn;
+    private readonly NetPipeline<NetEvent> _eventOut;
 
-    private readonly NetSocket socket;
-    private readonly NetSender sender;
-    private readonly NetReceiver receiver;
-    private readonly string version;
+    private readonly NetPool<NetEvent> _eventPool;
+    private readonly Dictionary<IPEndPoint, NetPeer> _peers;
+    private readonly Stopwatch _timer;
 
-    private readonly Queue<NetEvent> reusableQueue;
-    private readonly List<NetPeer> reusableList;
-    private readonly byte[] reusableBuffer;
+    private readonly NetSocket _socket;
+    private readonly NetSender _sender;
+    private readonly NetReceiver _receiver;
+    private readonly string _version;
 
-    private long nextTick;
-    private long nextLongTick;
-    private bool isStarted;
-    private bool isRunning;
-    private bool acceptConnections;
+    private readonly Queue<NetEvent> _reusableQueue;
+    private readonly List<NetPeer> _reusableList;
+    private readonly byte[] _reusableBuffer;
+
+    private long _nextTick;
+    private long _nextLongTick;
+    private bool _isStarted;
+    private bool _isRunning;
+    private readonly bool _acceptConnections;
 
     internal NetController(
-      string version,
+      string ver,
       bool acceptConnections)
     {
-      this.connectIn = new NetPipeline<NetPeer>();
-      this.notificationIn = new NetPipeline<NetEvent>();
-      this.eventOut = new NetPipeline<NetEvent>();
+      _connectIn = new NetPipeline<NetPeer>();
+      _notificationIn = new NetPipeline<NetEvent>();
+      _eventOut = new NetPipeline<NetEvent>();
 
-      this.eventPool = new NetPool<NetEvent>();
-      this.peers = new Dictionary<IPEndPoint, NetPeer>();
-      this.timer = new Stopwatch();
-      this.socket = new NetSocket();
-      this.sender = new NetSender(this.socket);
-      this.receiver = new NetReceiver(this.socket);
+      _eventPool = new NetPool<NetEvent>();
+      _peers = new Dictionary<IPEndPoint, NetPeer>();
+      _timer = new Stopwatch();
+      _socket = new NetSocket();
+      _sender = new NetSender(this._socket);
+      _receiver = new NetReceiver(this._socket);
 
-      this.reusableQueue = new Queue<NetEvent>();
-      this.reusableList = new List<NetPeer>();
-      this.reusableBuffer = new byte[NetConfig.SOCKET_BUFFER_SIZE];
+      _reusableQueue = new Queue<NetEvent>();
+      _reusableList = new List<NetPeer>();
+      _reusableBuffer = new byte[NetConfig.SocketBufferSize];
 
-      this.nextTick = 0;
-      this.nextLongTick = 0;
-      this.isStarted = false;
-      this.isRunning = false;
-      this.acceptConnections = acceptConnections;
+      _nextTick = 0;
+      _nextLongTick = 0;
+      _isStarted = false;
+      _isRunning = false;
+      _acceptConnections = acceptConnections;
 
-      this.version = version;
+      _version = ver;
     }
 
     /// <summary>
@@ -199,22 +212,22 @@ namespace MiniUDP
     /// </summary>
     private void Run()
     {
-      this.timer.Start();
-      while (this.isRunning)
+      _timer.Start();
+      while (_isRunning)
       {
-        this.Update();
+        Update();
         Thread.Sleep(NetConfig.SleepTime);
       }
 
       // Cleanup all peers since the loop was broken
-      foreach (NetPeer peer in this.GetPeers())
+      foreach (var peer in this.GetPeers())
       {
-        bool sendEvent = peer.IsOpen;
-        this.ClosePeer(peer, NetCloseReason.KickShutdown);
+        var sendEvent = peer.IsOpen;
+        ClosePeer(peer, NetCloseReason.KickShutdown);
 
         if (sendEvent)
-          this.eventOut.Enqueue(
-            this.CreateClosedEvent(peer, NetCloseReason.LocalShutdown));
+          _eventOut.Enqueue(
+            CreateClosedEvent(peer, NetCloseReason.LocalShutdown));
       }
     }
 
@@ -225,7 +238,7 @@ namespace MiniUDP
     private void Update()
     {
 #if DEBUG
-      this.receiver.Update();
+      this._receiver.Update();
 #endif
 
       this.ReadPackets();
@@ -256,7 +269,7 @@ namespace MiniUDP
       }
 
 #if DEBUG
-      this.sender.Update();
+      this._sender.Update();
 #endif
     }
 
@@ -267,13 +280,13 @@ namespace MiniUDP
     {
       longTick = false;
       long currentTime = this.Time;
-      if (currentTime >= this.nextTick)
+      if (currentTime >= this._nextTick)
       {
-        this.nextTick = currentTime + NetConfig.ShortTickRate;
-        if (currentTime >= this.nextLongTick)
+        this._nextTick = currentTime + NetConfig.ShortTickRate;
+        if (currentTime >= this._nextLongTick)
         {
           longTick = true;
-          this.nextLongTick = currentTime + NetConfig.LongTickRate;
+          this._nextLongTick = currentTime + NetConfig.LongTickRate;
         }
         return true;
       }
@@ -287,7 +300,7 @@ namespace MiniUDP
     private void ReadNotifications()
     {
       NetEvent notification = null;
-      while (this.notificationIn.TryDequeue(out notification))
+      while (this._notificationIn.TryDequeue(out notification))
         if (notification.Peer.IsOpen)
           notification.Peer.QueueNotification(notification);
     }
@@ -298,14 +311,14 @@ namespace MiniUDP
     private void ReadConnectRequests()
     {
       NetPeer pending;
-      while (this.connectIn.TryDequeue(out pending))
+      while (this._connectIn.TryDequeue(out pending))
       {
-        if (this.peers.ContainsKey(pending.EndPoint))
+        if (this._peers.ContainsKey(pending.EndPoint))
           throw new ApplicationException("Connecting to existing peer");
         if (pending.IsClosed) // User closed peer before we could connect
           continue;
 
-        this.peers.Add(pending.EndPoint, pending);
+        this._peers.Add(pending.EndPoint, pending);
         pending.OnReceiveOther(this.Time);
       }
     }
@@ -318,12 +331,12 @@ namespace MiniUDP
       if (peer.GetTimeSinceRecv(this.Time) > NetConfig.ConnectionTimeOut)
       {
         this.ClosePeerSilent(peer);
-        this.eventOut.Enqueue(
+        this._eventOut.Enqueue(
           this.CreateClosedEvent(peer, NetCloseReason.LocalTimeout));
         return;
       }
 
-      this.sender.SendConnect(peer, this.version);
+      this._sender.SendConnect(peer, this._version);
     }
 
     /// <summary>
@@ -334,7 +347,7 @@ namespace MiniUDP
       if (peer.GetTimeSinceRecv(this.Time) > NetConfig.ConnectionTimeOut)
       {
         this.ClosePeer(peer, NetCloseReason.KickTimeout);
-        this.eventOut.Enqueue(
+        this._eventOut.Enqueue(
           this.CreateClosedEvent(peer, NetCloseReason.LocalTimeout));
         return;
       }
@@ -342,12 +355,12 @@ namespace MiniUDP
       long time = this.Time;
       if (peer.HasNotifications || peer.AckRequested)
       {
-        this.sender.SendNotifications(peer);
+        this._sender.SendNotifications(peer);
         peer.AckRequested = false;
       }
       if (longTick)
       {
-        this.sender.SendPing(peer, this.Time);
+        this._sender.SendPing(peer, this.Time);
       }
     }
 
@@ -359,7 +372,7 @@ namespace MiniUDP
       // The peer must have been closed by the main thread, because if
       // we closed it on this thread it would have been removed immediately
       NetDebug.Assert(peer.ClosedByUser);
-      this.peers.Remove(peer.EndPoint);
+      this._peers.Remove(peer.EndPoint);
     }
 
     /// <summary>
@@ -371,7 +384,7 @@ namespace MiniUDP
       NetCloseReason reason)
     {
       if (peer.IsOpen)
-        this.sender.SendKick(peer, reason);
+        this._sender.SendKick(peer, reason);
       this.ClosePeerSilent(peer);
     }
 
@@ -383,7 +396,7 @@ namespace MiniUDP
       if (peer.IsOpen)
       {
         peer.Disconnected();
-        this.peers.Remove(peer.EndPoint);
+        this._peers.Remove(peer.EndPoint);
       }
     }
     #endregion
@@ -394,51 +407,47 @@ namespace MiniUDP
     /// </summary>
     private void ReadPackets()
     {
-      for (int i = 0; i < NetConfig.MaxPacketReads; i++)
+      for (var i = 0; i < NetConfig.MaxPacketReads; i++)
       {
-        IPEndPoint source;
-        byte[] buffer;
-        int length;
-        SocketError result = 
-          this.receiver.TryReceive(out source, out buffer, out length);
+        var result = 
+          _receiver.TryReceive(out var source, out var buffer, out var length);
         if (NetSocket.Succeeded(result) == false)
           return;
 
-        NetPacketType type = NetEncoding.GetType(buffer);
+        var type = NetEncoding.GetType(buffer);
         if (type == NetPacketType.Connect)
         {
           // We don't have a peer yet -- special case
-          this.HandleConnectRequest(source, buffer, length);
+          HandleConnectRequest(source, buffer, length);
         }
         else
         {
-          NetPeer peer;
-          if (this.peers.TryGetValue(source, out peer))
+          if (_peers.TryGetValue(source, out var peer))
           {
             switch (type)
             {
               case NetPacketType.Accept:
-                this.HandleConnectAccept(peer, buffer, length);
+                HandleConnectAccept(peer, buffer, length);
                 break;
 
               case NetPacketType.Kick:
-                this.HandleKick(peer, buffer, length);
+                HandleKick(peer, buffer, length);
                 break;
 
               case NetPacketType.Ping:
-                this.HandlePing(peer, buffer, length);
+                HandlePing(peer, buffer, length);
                 break;
 
               case NetPacketType.Pong:
-                this.HandlePong(peer, buffer, length);
+                HandlePong(peer, buffer, length);
                 break;
 
               case NetPacketType.Carrier:
-                this.HandleCarrier(peer, buffer, length);
+                HandleCarrier(peer, buffer, length);
                 break;
 
               case NetPacketType.Payload:
-                this.HandlePayload(peer, buffer, length);
+                HandlePayload(peer, buffer, length);
                 break;
             }
           }
@@ -456,13 +465,11 @@ namespace MiniUDP
       byte[] buffer, 
       int length)
     {
-      string version;
-      string token;
-      bool success = 
+      var success = 
         NetEncoding.ReadConnectRequest(
           buffer,
-          out version,
-          out token);
+          out var ver,
+          out var token);
 
       // Validate
       if (success == false)
@@ -471,21 +478,19 @@ namespace MiniUDP
         return;
       }
 
-      if (this.ShouldCreatePeer(source, version))
-      {
-        long curTime = this.Time;
-        // Create and add the new peer as a client
-        NetPeer peer = new NetPeer(source, token, true, curTime);
-        this.peers.Add(source, peer);
-        peer.OnReceiveOther(curTime);
+      if (!ShouldCreatePeer(source, ver)) return;
+      var curTime = Time;
+      // Create and add the new peer as a client
+      var peer = new NetPeer(source, token, true, curTime);
+      _peers.Add(source, peer);
+      peer.OnReceiveOther(curTime);
 
-        // Accept the connection over the network
-        this.sender.SendAccept(peer);
+      // Accept the connection over the network
+      _sender.SendAccept(peer);
 
-        // Queue the event out to the main thread to receive the connection
-        this.eventOut.Enqueue(
-          this.CreateEvent(NetEventType.PeerConnected, peer));
-      }
+      // Queue the event out to the main thread to receive the connection
+      _eventOut.Enqueue(
+        CreateEvent(NetEventType.PeerConnected, peer));
     }
 
     private void HandleConnectAccept(
@@ -497,11 +502,11 @@ namespace MiniUDP
       if (peer.IsConnected || peer.IsClient)
         return;
 
-      peer.OnReceiveOther(this.Time);
+      peer.OnReceiveOther(Time);
       peer.Connected();
 
-      this.eventOut.Enqueue(
-        this.CreateEvent(NetEventType.PeerConnected, peer));
+      _eventOut.Enqueue(
+        CreateEvent(NetEventType.PeerConnected, peer));
     }
 
     private void HandleKick(
@@ -512,14 +517,12 @@ namespace MiniUDP
       if (peer.IsClosed)
         return;
 
-      byte rawReason;
-      byte userReason;
-      bool success = 
+      var success = 
         NetEncoding.ReadProtocol(
           buffer,
           length,
-          out rawReason,
-          out userReason);
+          out var rawReason,
+          out var userReason);
 
       // Validate
       if (success == false)
@@ -528,15 +531,15 @@ namespace MiniUDP
         return;
       }
 
-      NetCloseReason closeReason = (NetCloseReason)rawReason;
+      var closeReason = (NetCloseReason)rawReason;
       // Skip the packet if it's a bad reason (this will cause error output)
-      if (NetUtil.ValidateKickReason(closeReason) == NetCloseReason.INVALID)
+      if (NetUtil.ValidateKickReason(closeReason) == NetCloseReason.Invalid)
         return;
 
-      peer.OnReceiveOther(this.Time);
-      this.ClosePeerSilent(peer);
-      this.eventOut.Enqueue(
-        this.CreateClosedEvent(peer, closeReason, userReason));
+      peer.OnReceiveOther(Time);
+      ClosePeerSilent(peer);
+      _eventOut.Enqueue(
+        CreateClosedEvent(peer, closeReason, userReason));
     }
 
     private void HandlePing(
@@ -547,14 +550,12 @@ namespace MiniUDP
       if (peer.IsConnected == false)
         return;
 
-      byte pingSeq;
-      byte loss;
-      bool success =
+      var success =
         NetEncoding.ReadProtocol(
           buffer, 
           length, 
-          out pingSeq, 
-          out loss);
+          out var pingSeq, 
+          out var loss);
 
       // Validate
       if (success == false)
@@ -563,8 +564,8 @@ namespace MiniUDP
         return;
       }
 
-      peer.OnReceivePing(this.Time, loss);
-      this.sender.SendPong(peer, pingSeq, peer.GenerateDrop());
+      peer.OnReceivePing(Time, loss);
+      _sender.SendPong(peer, pingSeq, peer.GenerateDrop());
     }
 
     private void HandlePong(
@@ -575,14 +576,12 @@ namespace MiniUDP
       if (peer.IsConnected == false)
         return;
 
-      byte pongSeq;
-      byte drop;
-      bool success =
+      var success =
         NetEncoding.ReadProtocol(
           buffer, 
           length,
-          out pongSeq, 
-          out drop);
+          out var pongSeq, 
+          out var drop);
 
       // Validate
       if (success == false)
@@ -603,18 +602,16 @@ namespace MiniUDP
         return;
 
       // Read the carrier and notifications
-      ushort notificationAck;
-      ushort notificationSeq;
-      this.reusableQueue.Clear();
-      bool success = 
+      _reusableQueue.Clear();
+      var success = 
         NetEncoding.ReadCarrier(
-          this.CreateEvent,
+          CreateEvent,
           peer, 
           buffer,
           length,
-          out notificationAck,
-          out notificationSeq,
-          this.reusableQueue);
+          out var notificationAck,
+          out var notificationSeq,
+          _reusableQueue);
 
       // Validate
       if (success == false)
@@ -623,14 +620,14 @@ namespace MiniUDP
         return;
       }
 
-      long curTime = this.Time;
-      peer.OnReceiveCarrier(curTime, notificationAck, this.RecycleEvent);
+      var curTime = Time;
+      peer.OnReceiveCarrier(curTime, notificationAck, RecycleEvent);
 
       // The packet contains the first sequence number. All subsequent
       // notifications have sequence numbers in order, so we just increment.
-      foreach (NetEvent notification in this.reusableQueue)
+      foreach (var notification in _reusableQueue)
         if (peer.OnReceiveNotification(curTime, notificationSeq++))
-          this.eventOut.Enqueue(notification);
+          _eventOut.Enqueue(notification);
     }
 
     private void HandlePayload(
@@ -642,16 +639,14 @@ namespace MiniUDP
         return;
 
       // Read the payload
-      ushort payloadSeq;
-      NetEvent evnt;
-      bool success = 
-        NetEncoding.ReadPayload(
-          this.CreateEvent,
+      var success = 
+        SprotoEncoding.ReadPayload(
+          CreateEvent,
           peer,
           buffer,
           length,
-          out payloadSeq,
-          out evnt);
+          out var payloadSeq,
+          out var et);
 
       // Validate
       if (success == false)
@@ -661,8 +656,8 @@ namespace MiniUDP
       }
 
       // Enqueue the event for processing if the peer can receive it
-      if (peer.OnReceivePayload(this.Time, payloadSeq))
-        this.eventOut.Enqueue(evnt);
+      if (peer.OnReceivePayload(Time, payloadSeq))
+        _eventOut.Enqueue(et);
     }
     #endregion
 
@@ -671,11 +666,11 @@ namespace MiniUDP
       NetEventType type,
       NetPeer target)
     {
-      NetEvent evnt = this.eventPool.Allocate();
-      evnt.Initialize(
+      var et = _eventPool.Allocate();
+      et.Initialize(
         type,
         target);
-      return evnt;
+      return et;
     }
 
     private NetEvent CreateClosedEvent(
@@ -684,11 +679,11 @@ namespace MiniUDP
       byte userKickReason = 0,
       SocketError socketError = SocketError.SocketError)
     {
-      NetEvent evnt = this.CreateEvent(NetEventType.PeerClosed, target);
-      evnt.CloseReason = closeReason;
-      evnt.UserKickReason = userKickReason;
-      evnt.SocketError = socketError;
-      return evnt;
+      var et = CreateEvent(NetEventType.PeerClosed, target);
+      et.CloseReason = closeReason;
+      et.UserKickReason = userKickReason;
+      et.SocketError = socketError;
+      return et;
     }
     #endregion
 
@@ -703,41 +698,36 @@ namespace MiniUDP
     /// </summary>
     private bool ShouldCreatePeer(
       IPEndPoint source,
-      string version)
+      string ver)
     {
-      NetPeer peer;
-      if (this.peers.TryGetValue(source, out peer))
+      if (_peers.TryGetValue(source, out var peer))
       {
-        this.sender.SendAccept(peer);
+        _sender.SendAccept(peer);
         return false;
       }
 
-      if (this.acceptConnections == false)
+      if (_acceptConnections == false)
       {
-        this.sender.SendReject(source, NetCloseReason.RejectNotHost);
+        _sender.SendReject(source, NetCloseReason.RejectNotHost);
         return false;
       }
 
-      if (this.IsFull)
+      if (IsFull)
       {
-        this.sender.SendReject(source, NetCloseReason.RejectFull);
+        _sender.SendReject(source, NetCloseReason.RejectFull);
         return false;
       }
 
-      if (this.version != version)
-      {
-        this.sender.SendReject(source, NetCloseReason.RejectVersion);
-        return false;
-      }
-
-      return true;
+      if (_version == ver) return true;
+      _sender.SendReject(source, NetCloseReason.RejectVersion);
+      return false;
     }
 
     private IEnumerable<NetPeer> GetPeers()
     {
-      this.reusableList.Clear();
-      this.reusableList.AddRange(this.peers.Values);
-      return this.reusableList;
+      _reusableList.Clear();
+      _reusableList.AddRange(this._peers.Values);
+      return _reusableList;
     }
     #endregion
 

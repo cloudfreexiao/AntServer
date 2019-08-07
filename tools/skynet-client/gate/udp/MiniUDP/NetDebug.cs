@@ -18,8 +18,12 @@
  *  3. This notice may not be removed or altered from any source distribution.
 */
 
-using System;
 using System.Diagnostics;
+
+#if UNITY_EDITOR
+using Skynet.DotNetClient.Utils.Logger;
+#endif
+
 
 namespace MiniUDP
 {
@@ -29,6 +33,28 @@ namespace MiniUDP
     void LogWarning(object message);
     void LogError(object message);
   }
+
+  #if UNITY_EDITOR 
+
+  internal class UnityLogger : INetDebugLogger
+  {
+    public void LogError(object message)
+    {
+      SkynetLogger.Error(Channel.MiniUdp, (string)message);
+    }
+
+    public void LogWarning(object message)
+    {
+      SkynetLogger.Warning(Channel.MiniUdp, (string)message);
+    }
+
+    public void LogMessage(object message)
+    {
+      SkynetLogger.Info(Channel.MiniUdp, (string)message);
+    }
+  }
+  
+  #else
 
   internal class NetConsoleLogger : INetDebugLogger
   {
@@ -55,47 +81,52 @@ namespace MiniUDP
       Console.ForegroundColor = current;
     }
   }
-
+#endif
+  
   public static class NetDebug
   {
-    public static INetDebugLogger Logger = new NetConsoleLogger();
+#if UNITY_EDITOR 
+    private static readonly INetDebugLogger _logger = new UnityLogger();
+#else
+    private static readonly INetDebugLogger _logger = new NetConsoleLogger();
+#endif
 
     [Conditional("DEBUG")]
     public static void LogMessage(object message)
     {
-      if (NetDebug.Logger != null)
-        lock (NetDebug.Logger)
-          NetDebug.Logger.LogMessage(message);
+      if (_logger == null) return;
+      lock (_logger)
+        _logger.LogMessage(message);
     }
 
     [Conditional("DEBUG")]
     public static void LogWarning(object message)
     {
-      if (NetDebug.Logger != null)
-        lock (NetDebug.Logger)
-          NetDebug.Logger.LogWarning(message);
+      if (_logger == null) return;
+      lock (_logger)
+        _logger.LogWarning(message);
     }
 
     [Conditional("DEBUG")]
     public static void LogError(object message)
     {
-      if (NetDebug.Logger != null)
-        lock (NetDebug.Logger)
-          NetDebug.Logger.LogError(message);
+      if (_logger == null) return;
+      lock (_logger)
+        _logger.LogError(message);
     }
 
     [Conditional("DEBUG")]
     public static void Assert(bool condition)
     {
       if (condition == false)
-        NetDebug.LogError("Assert Failed!");
+        LogError("Assert Failed!");
     }
 
     [Conditional("DEBUG")]
     public static void Assert(bool condition, object message)
     {
       if (condition == false)
-        NetDebug.LogError("Assert Failed: " + message);
+        LogError("Assert Failed: " + message);
     }
   }
 }

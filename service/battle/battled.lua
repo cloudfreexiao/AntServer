@@ -26,19 +26,19 @@ local CMD = {}
 
 --[[
 	4 bytes session
-	8 bytes hmac   crypt.hmac_hash(secret, session .. data)
+	16 bytes hmac   crypt.hmac_hash(secret, session .. data)
 	padding data
 ]]
 
-local function udpdispatch(str, from)
-    DEBUG("from:", socket.udp_address(from), " data:", str)
-	local session = string.unpack("<I", str)
+local function udpdispatch(msg, from)
+	-- DEBUG("from:", socket.udp_address(from), " str:", crypt.hexencode(msg:sub(1, 4)))
+	local session = string.unpack("<i4", msg)
     local s = S[session]
-    if s then
+	if s then
 		if s.ip ~= from then
-			local secret = str:sub(5, 12)
-			if crypt.hmac_hash(s.secret) ~= secret then
-				DEBUG("Invalid signature of session %d from %s", session, socket.udp_address(from))
+			local secret = msg:sub(5, 20)
+			if s.secret ~= secret then
+				DEBUG(string.format("Invalid signature of session %d from %s", session, socket.udp_address(from)) )
 				return
 			end
             -- if eventtime == 0xffffffff then
@@ -57,7 +57,7 @@ local function udpdispatch(str, from)
             -- end
 
             -- s.lastevent = eventtime
-            skynet_send(s.arena_addr, "dispatch", s, str:sub(13))
+            skynet_send(s.arena_addr, "dispatch", {fd = U, from = from, }, msg:sub(21))
 		end
     else
         DEBUG("Invalid session:", session, " from:", socket.udp_address(from))
@@ -77,8 +77,8 @@ local function keepalive()
 				i = 1
 			end
 			if ti > s.time + timeout then
-				DEBUG("S timeout > timeout:", ti)
-				-- S[session] = nil
+				DEBUG("S > timeout:", ti)
+				S[session] = nil
 			end
 		end
 		skynet.sleep(6000)	-- 1 min
@@ -90,7 +90,7 @@ function CMD.register(data)
 	local arena_addr = nil
 
 	if session == 0 then
-		arena_addr = skynet_call(".arena_mgr", "find", data) -- arena service addr watch
+		arena_addr = skynet_call(".arena_mgr", "find", U, data) -- arena service addr watch
 		SESSION = (SESSION + 1) & 0xffffffff
 		S[SESSION] = {
 			secret = data.secret,

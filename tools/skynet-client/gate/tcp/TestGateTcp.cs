@@ -25,7 +25,7 @@ public class TestGateTcp
 		SkynetLogger.Info( Channel.NetDevice,"Gate Tcp NetWorkStateCallBack:" + state);
 		if (state != NetWorkState.Connected) return;
 		//TODO:发送 与 gate 握手消息成功后 开启 心跳操作
-		SpObject handshakeRequset = new SpObject();
+		var handshakeRequset = new SpObject();
 		handshakeRequset.Insert("uid", _req.uid);
 		handshakeRequset.Insert("secret", _req.secret);
 		handshakeRequset.Insert("subid", _req.subid);
@@ -65,18 +65,20 @@ public class TestGateTcp
 	
 	void Join()
 	{
-		SpObject joinRequest = new SpObject();
+		var joinRequest = new SpObject();
 		joinRequest.Insert("session", 0);
 		joinRequest.Insert("model", "fight");
 		
 		_client.Request("join", joinRequest, (SpObject obj) =>
 		{
-			UdpSession udpSession = new UdpSession();
-			udpSession.session = obj["session"].AsInt();
-			udpSession.host = obj["host"].AsString();
-			udpSession.port = obj["port"].AsInt();
-			udpSession.secret = obj["secret"].AsString();
-			
+			var udpSession = new UdpSession
+			{
+				session = obj["session"].AsInt(),
+				host = obj["host"].AsString(),
+				port = obj["port"].AsInt(),
+				secret = obj["secret"].AsString()
+			};
+
 			Signals.Get<UdpSignal>().Dispatch(udpSession);
 			
 		} );

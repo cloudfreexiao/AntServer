@@ -37,7 +37,7 @@ function CMD.recycle(agent)
 end
 
 -- model 玩家进入模式 fight watch
-function CMD.find(data)
+function CMD.find(U, data)
 	if not free then
 		free = CMD.get()
 	else
@@ -46,7 +46,6 @@ function CMD.find(data)
 			free = CMD.get()
 		end
 	end
-
 	return free
 end
 

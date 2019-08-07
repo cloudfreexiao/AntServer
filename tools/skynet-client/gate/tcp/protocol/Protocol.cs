@@ -43,6 +43,12 @@ namespace Skynet.DotNetClient.Gate.TCP
 			_stream.Buffer[0] = (byte)((len >> 8) & 0xff);
 			_stream.Buffer[1] = (byte)(len & 0xff);
 			
+//			var mBuffer = new byte[2];
+//			mBuffer[0] = (byte)((len >> 8) & 0xff);
+//			mBuffer[1] = (byte)(len & 0xff);
+//			
+//			SkynetLogger.Error(Channel.NetDevice,"xxxxxxxx  " + len + "hex:" + Utils.Crypt.Crypt.HexEncode(mBuffer));
+
 			_transporter.Send (_stream.Buffer, _stream.Length);
 		}
 		

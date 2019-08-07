@@ -9,8 +9,6 @@ local handler = {}
 
 local _host = nil
 local _sender = nil
-local _udp_handler = nil
-
 
 function client.handler()
 	return handler
@@ -22,12 +20,12 @@ end
 
 -- resp message to client
 function client.resp_package(U, pack, ud, response)
-    socket.sendto(_udp_handler, U.from, U.secret .. response(pack, ud))
+    socket.sendto(U.fd, U.from, response(pack, ud))
 end
 
 -- push message to client
 function client.push_package(U, proto_name, data)
-    socket.sendto(_udp_handler, U.from, U.secret .. _sender(proto_name, data, 0, skynet.now()))
+    socket.sendto(U.fd, U.from, _sender(proto_name, data, 0, skynet.now()))
 end
 
 
@@ -42,12 +40,12 @@ local function do_request(U, name, request, response)
                 pack = pack or {}
                 client.resp_package(U, pack, errcode, response)
             else
-                ERROR("do agent udp rpc command[", name, "] error:", errcode)
+                ERROR("do  arena udp rpc command[", name, "] error:", errcode)
             end
 		end)
 	else
 		-- unsupported command, disconnected
-		error ("agent invalid client handler " .. name)
+		error ("arena invalid client handler " .. name)
 	end
 end
 
@@ -65,8 +63,6 @@ function client.dispatch(U, msg)
 end
 
 function client.init(udp_handler)
-    _udp_handler = udp_handler
-
 	local protoloader = skynet.uniqueservice "protoloader"
 	local battle = settings.sproto.battle
 	local slot1 = skynet.call(protoloader, "lua", "index", battle[1])

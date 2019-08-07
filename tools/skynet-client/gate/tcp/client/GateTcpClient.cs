@@ -112,7 +112,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 			_eventManager.AddOnEvent(eventName, action);
 		}
 
-		private void NetWorkChanged(NetWorkState state)
+		public void NetWorkChanged(NetWorkState state)
 		{
 			_netWorkState = state;
 

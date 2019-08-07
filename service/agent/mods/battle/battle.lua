@@ -17,7 +17,7 @@ local arena = nil
 
 function M.join(args)
     for _, v in pairs(settings.battles) do
-        local addr = assert(sessions.get_proxy(v.battled_name))
+        local addr = assert(sessions.get_proxy("battle1d")) --v.battled_name))
         local ok, session, arena = skynet_timeout_call(10, addr,  "register", sessions.fill_arena_data(args))
         if ok then
             cluster.call(arena.battle_node, arena.arena_addr, "ping")

@@ -46,10 +46,20 @@ namespace MiniUDP
           return reason;
         case NetCloseReason.KickUserReason:
           return reason;
+        case NetCloseReason.Invalid:
+          break;
+        case NetCloseReason.LocalTimeout:
+          break;
+        case NetCloseReason.LocalShutdown:
+          break;
+        case NetCloseReason.LocalError:
+          break;
+        default:
+          throw new ArgumentOutOfRangeException(nameof(reason), reason, null);
       }
 
       NetDebug.LogError("Bad kick reason: " + reason);
-      return NetCloseReason.INVALID;
+      return NetCloseReason.Invalid;
     }
 
     /// <summary>
@@ -75,13 +85,13 @@ namespace MiniUDP
     /// </summary>
     public static IPEndPoint StringToEndPoint(string address)
     {
-      string[] split = address.Split(':');
-      string stringAddress = split[0];
-      string stringPort = split[1];
+      var split = address.Split(':');
+      var stringAddress = split[0];
+      var stringPort = split[1];
 
-      int port = int.Parse(stringPort);
-      IPAddress ipaddress = IPAddress.Parse(stringAddress);
-      IPEndPoint endpoint = new IPEndPoint(ipaddress, port);
+      var port = int.Parse(stringPort);
+      var ip = IPAddress.Parse(stringAddress);
+      var endpoint = new IPEndPoint(ip, port);
 
       if (endpoint == null)
         throw new ArgumentException("Failed to parse address: " + address);

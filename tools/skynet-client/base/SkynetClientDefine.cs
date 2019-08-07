@@ -45,8 +45,6 @@ namespace Skynet.DotNetClient
         LoginFinished,
     }
 
-
-    [System.Serializable]
     public class UdpSession
     {
         public int session;

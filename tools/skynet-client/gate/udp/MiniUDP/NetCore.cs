@@ -48,103 +48,103 @@ namespace MiniUDP
 
   public class NetCore
   {
-    public event NetPeerConnectEvent PeerConnected;
-    public event NetPeerCloseEvent PeerClosed;
-    public event NetPeerPayloadEvent PeerPayload;
-    public event NetPeerNotificationEvent PeerNotification;
+    public event NetPeerConnectEvent OnPeerConnected;
+    public event NetPeerCloseEvent OnPeerClosed;
+    public event NetPeerPayloadEvent OnPeerPayload;
+    public event NetPeerNotificationEvent OnPeerNotification;
     
-    private readonly NetController controller;
-    private Thread controllerThread;
+    private readonly NetController _controller;
+    private Thread _controllerThread;
 
     public NetCore(string version, bool allowConnections)
     {
       if (version == null)
         version = "";
-      if (Encoding.UTF8.GetByteCount(version) > NetConfig.MAX_VERSION_BYTES)
+      if (Encoding.UTF8.GetByteCount(version) > NetConfig.MaxVersionBytes)
         throw new ApplicationException("Version string too long");
 
-      this.controller = new NetController(version, allowConnections);
+      _controller = new NetController(version, allowConnections);
     }
 
     public NetPeer Connect(IPEndPoint endpoint, string token)
     {
-      NetPeer peer = this.AddConnection(endpoint, token);
-      this.Start();
+      var peer = AddConnection(endpoint, token);
+      Start();
       return peer;
     }
 
     public void Host(int port)
     {
-      this.controller.Bind(port);
-      this.Start();
+      _controller.Bind(port);
+      Start();
     }
 
     private void Start()
     {
-      this.controllerThread = 
-        new Thread(new ThreadStart(this.controller.Start));
-      this.controllerThread.IsBackground = true;
-      this.controllerThread.Start();
+      _controllerThread =
+        new Thread(_controller.Start) {IsBackground = true};
+      _controllerThread.Start();
     }
 
-    public NetPeer AddConnection(IPEndPoint endpoint, string token)
+    private NetPeer AddConnection(IPEndPoint endpoint, string token)
     {
       if (token == null)
         token = "";
-      if (Encoding.UTF8.GetByteCount(token) > NetConfig.MAX_TOKEN_BYTES)
+      if (Encoding.UTF8.GetByteCount(token) > NetConfig.MaxTokenBytes)
         throw new ApplicationException("Token string too long");
 
-      NetPeer pending = this.controller.BeginConnect(endpoint, token);
+      var pending = _controller.BeginConnect(endpoint, token);
       pending.SetCore(this);
       return pending;
     }
 
     public void Stop(int timeout = 1000)
     {
-      this.controller.Stop();
-      this.controllerThread.Join(timeout);
-      this.controller.Close();
+      _controller.Stop();
+      _controllerThread.Join(timeout);
+      _controller.Close();
     }
 
     public void PollEvents()
     {
-      NetEvent evnt;
-      while (this.controller.TryReceiveEvent(out evnt))
+      while (_controller.TryReceiveEvent(out var et))
       {
-        NetPeer peer = evnt.Peer;
+        var peer = et.Peer;
 
         // No events should fire if the user closed the peer
         if (peer.ClosedByUser == false)
         {
-          switch (evnt.EventType)
+          switch (et.EventType)
           {
             case NetEventType.PeerConnected:
               peer.SetCore(this);
               peer.OnPeerConnected();
-              this.PeerConnected?.Invoke(peer, peer.Token);
+              OnPeerConnected?.Invoke(peer, peer.Token);
               break;
 
             case NetEventType.PeerClosed:
-              peer.OnPeerClosed(evnt.CloseReason, evnt.UserKickReason, evnt.SocketError);
-              this.PeerClosed?.Invoke(peer, evnt.CloseReason, evnt.UserKickReason, evnt.SocketError);
+              peer.OnPeerClosed(et.CloseReason, et.UserKickReason, et.SocketError);
+              OnPeerClosed?.Invoke(peer, et.CloseReason, et.UserKickReason, et.SocketError);
               break;
 
             case NetEventType.Payload:
-              peer.OnPayloadReceived(evnt.EncodedData, evnt.EncodedLength);
-              this.PeerPayload?.Invoke(peer, evnt.EncodedData, evnt.EncodedLength);
+              peer.OnPayloadReceived(et.EncodedData, et.EncodedLength);
+              OnPeerPayload?.Invoke(peer, et.EncodedData, et.EncodedLength);
               break;
 
             case NetEventType.Notification:
-              peer.OnNotificationReceived(evnt.EncodedData, evnt.EncodedLength);
-              this.PeerNotification?.Invoke(peer, evnt.EncodedData, evnt.EncodedLength);
+              peer.OnNotificationReceived(et.EncodedData, et.EncodedLength);
+              OnPeerNotification?.Invoke(peer, et.EncodedData, et.EncodedLength);
               break;
-            
+
+            case NetEventType.Invalid:
+              break;
             default:
               throw new NotImplementedException();
           }
         }
 
-        this.controller.RecycleEvent(evnt);
+        _controller.RecycleEvent(et);
       }
     }
 
@@ -153,7 +153,7 @@ namespace MiniUDP
     /// </summary>
     internal void SendKick(NetPeer peer, byte reason)
     {
-      this.controller.SendKick(peer, reason);
+      _controller.SendKick(peer, reason);
     }
 
     /// <summary>
@@ -165,8 +165,18 @@ namespace MiniUDP
       byte[] data,
       ushort length)
     {
-      return this.controller.SendPayload(peer, sequence, data, length);
+      return _controller.SendPayload(peer, sequence, data, length);
     }
+    
+    internal SocketError SendPayload(
+      NetPeer peer,
+      ushort sequence,
+      string proto, 
+      Sproto.SpObject msg)
+    {
+      return _controller.SendPayload(peer, sequence, proto, msg);
+    }
+    
 
     /// <summary>
     /// Adds an outgoing notification to the controller processing queue.
@@ -176,7 +186,7 @@ namespace MiniUDP
       byte[] buffer,
       ushort length)
     {
-      this.controller.QueueNotification(peer, buffer, length);
+      _controller.QueueNotification(peer, buffer, length);
     }
   }
 }

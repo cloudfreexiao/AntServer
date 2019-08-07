@@ -31,14 +31,13 @@ namespace MiniUDP
   /// </summary>
   internal class NetEvent : INetPoolable<NetEvent>
   {
-    void INetPoolable<NetEvent>.Reset() { this.Reset(); }
+    void INetPoolable<NetEvent>.Reset() { Reset(); }
 
-    internal byte[] EncodedData { get { return this.buffer; } }
-    internal ushort EncodedLength { get { return this.length; } }
+    internal byte[] EncodedData { get; private set; }
+
+    internal ushort EncodedLength { get; private set; }
 
     // Buffer for encoded user data
-    private byte[] buffer;
-    private ushort length;
 
     // Additional data for passing events around internally, not synchronized
     internal NetEventType EventType { get; private set; }
@@ -52,48 +51,48 @@ namespace MiniUDP
 
     public NetEvent()
     {
-      this.buffer = new byte[NetConfig.DATA_INITIAL];
-      this.Reset();
+      EncodedData = new byte[NetConfig.DataInitial];
+      Reset();
     }
 
     private void Reset()
     {
-      this.length = 0;
-      this.EventType = NetEventType.INVALID;
-      this.Peer = null;
+      EncodedLength = 0;
+      EventType = NetEventType.Invalid;
+      Peer = null;
 
-      this.CloseReason = NetCloseReason.INVALID;
-      this.SocketError = SocketError.SocketError;
-      this.UserKickReason = 0;
-      this.Sequence = 0;
+      CloseReason = NetCloseReason.Invalid;
+      SocketError = SocketError.SocketError;
+      UserKickReason = 0;
+      Sequence = 0;
     }
 
     internal void Initialize(
       NetEventType type, 
       NetPeer peer)
     {
-      this.Reset();
-      this.length = 0;
-      this.EventType = type;
-      this.Peer = peer;
+      Reset();
+      EncodedLength = 0;
+      EventType = type;
+      Peer = peer;
     }
 
     internal bool ReadData(byte[] sourceBuffer, int position, ushort length)
     {
-      if (length > NetConfig.DATA_MAXIMUM)
+      if (length > NetConfig.DataMaximum)
       {
         NetDebug.LogError("Data too long for NetEvent");
         return false;
       }
 
       // Resize if necessary
-      int paddedLength = length + NetConfig.DATA_PADDING;
-      if (this.buffer.Length < paddedLength)
-        this.buffer = new byte[paddedLength];
+      var paddedLength = length + NetConfig.DataPadding;
+      if (EncodedData.Length < paddedLength)
+        EncodedData = new byte[paddedLength];
 
       // Copy the contents
-      Array.Copy(sourceBuffer, position, this.buffer, 0, length);
-      this.length = length;
+      Array.Copy(sourceBuffer, position, this.EncodedData, 0, length);
+      EncodedLength = length;
       return true;
     }
   }

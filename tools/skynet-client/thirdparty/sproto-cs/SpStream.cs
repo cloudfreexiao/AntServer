@@ -22,7 +22,7 @@
 		{
 		}
 
-		public SpStream(byte[] b)
+		private SpStream(byte[] b)
 			: this(b, 0, b.Length)
 		{
 		}
@@ -58,7 +58,7 @@
 
 		public byte ReadByte()
 		{
-			int pos = mPosition;
+			var pos = mPosition;
 			mPosition += 1;
 			return mBuffer[pos];
 		}
@@ -70,36 +70,36 @@
 
 		public short ReadInt16()
 		{
-			int pos = mPosition;
+			var pos = mPosition;
 			mPosition += 2;
 			return BitConverter.ToInt16(mBuffer, pos);
 		}
 
 		public ushort ReadUInt16()
 		{
-			int pos = mPosition;
+			var pos = mPosition;
 			mPosition += 2;
 			return BitConverter.ToUInt16(mBuffer, pos);
 		}
 
 		public int ReadInt32()
 		{
-			int pos = mPosition;
+			var pos = mPosition;
 			mPosition += 4;
 			return BitConverter.ToInt32(mBuffer, pos);
 		}
 
 		public long ReadInt64()
 		{
-			int pos = mPosition;
+			var pos = mPosition;
 			mPosition += 8;
 			return BitConverter.ToInt64(mBuffer, pos);
 		}
 
 		public byte[] ReadBytes(int len)
 		{
-			byte[] bytes = new byte[len];
-			for (int i = 0; i < len; i++)
+			var bytes = new byte[len];
+			for (var i = 0; i < len; i++)
 			{
 				bytes[i] = mBuffer[mPosition + i];
 			}
@@ -115,7 +115,7 @@
 
 		public int Read(byte[] bytes, int offset, int length)
 		{
-			for (int i = 0; i < length; i++)
+			for (var i = 0; i < length; i++)
 			{
 				if (mPosition >= mTail)
 					return i;
@@ -140,7 +140,7 @@
 		public void Write(int n)
 		{
 			//小端
-			if (CanWrite(2))
+			if (CanWrite(4))
 			{
 				mBuffer[mPosition + 0] = (byte) (n & 0xff);
 				mBuffer[mPosition + 1] = (byte) ((n >> 8) & 0xff);
@@ -153,7 +153,7 @@
 
 		public void Write(long n)
 		{
-			if (CanWrite(2))
+			if (CanWrite(8))
 			{
 				mBuffer[mPosition + 0] = (byte) (n & 0xff);
 				mBuffer[mPosition + 1] = (byte) ((n >> 8) & 0xff);
