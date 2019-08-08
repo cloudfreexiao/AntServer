@@ -78,7 +78,7 @@ namespace Skynet.DotNetClient.Utils.Logger
         /// </summary>
         LockStep       = 1 << 14,
         
-        MiniUdp        = 1 << 15,
+        Udp        = 1 << 15,
     }
 
     /// <summary>
@@ -315,7 +315,8 @@ namespace Skynet.DotNetClient.Utils.Logger
             {Channel.Platform, "red"},
             {Channel.Assert, "red"},
             {Channel.Build, "navy"},
-            {Channel.Analytics, "maroon"}
+            {Channel.Analytics, "maroon"},
+            {Channel.Udp, "yellow"},
         };
 
         /// <summary>

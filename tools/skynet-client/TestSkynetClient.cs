@@ -49,7 +49,7 @@ public class TestSkynetClient : MonoBehaviour
 		_login = null;
 	}
 
-	private void SignalUdp(UdpSession session)
+	private void SignalUdp(BattleSession session)
 	{
 		_gateUdp = new TestGateUdp();
 		_gateUdp.Run(session);

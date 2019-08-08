@@ -8,10 +8,10 @@ namespace Skynet.DotNetClient
     {
         private GateUdpClient _client;
 	
-        public void Run (UdpSession udpSession)
+        public void Run (BattleSession battleSession)
         {
             _client = new GateUdpClient(NetWorkStateCallBack);
-            _client.Connect(udpSession);
+            _client.Connect(battleSession);
         }
     
         public void Update()

@@ -71,7 +71,7 @@ public class TestGateTcp
 		
 		_client.Request("join", joinRequest, (SpObject obj) =>
 		{
-			var udpSession = new UdpSession
+			var udpSession = new BattleSession
 			{
 				session = obj["session"].AsInt(),
 				host = obj["host"].AsString(),

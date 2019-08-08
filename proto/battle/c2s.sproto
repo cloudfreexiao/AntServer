@@ -19,5 +19,6 @@ handshake 2 {
 	}
 
 	response {
+		ti 0 : integer
 	}
 }

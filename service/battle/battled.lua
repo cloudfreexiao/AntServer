@@ -32,6 +32,11 @@ local CMD = {}
 
 local function udpdispatch(msg, from)
 	-- DEBUG("from:", socket.udp_address(from), " str:", crypt.hexencode(msg:sub(1, 4)))
+	if string.len(msg) < 20 then
+		DEBUG("Invalid msg data:", string.len(msg), " from:", socket.udp_address(from))
+		return
+	end
+
 	local session = string.unpack("<i4", msg)
     local s = S[session]
 	if s then
@@ -41,6 +46,8 @@ local function udpdispatch(msg, from)
 				DEBUG(string.format("Invalid signature of session %d from %s", session, socket.udp_address(from)) )
 				return
 			end
+
+			s.time = skynet.now()
             -- if eventtime == 0xffffffff then
             --     return timesync(session, localtime, from)
             -- end

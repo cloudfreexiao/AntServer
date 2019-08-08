@@ -45,7 +45,7 @@ namespace Skynet.DotNetClient
         LoginFinished,
     }
 
-    public class UdpSession
+    public class BattleSession
     {
         public int session;
         public string host;

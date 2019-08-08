@@ -3,14 +3,14 @@ namespace Skynet.DotNetClient.Gate.UDP
     using System;
     using Sproto;
     using Utils.Logger;
-    using MiniUDP;
     
     public sealed class GateUdpClient : IGateClient, IDisposable
     {
         public event Action<NetWorkState> OnNetworkStateCallBack;
         private bool _disposed;
 
-        private UdpConnector _connector;
+        private Transporter _connector;
+        private int _session = 1;
         
         public GateUdpClient(Action<NetWorkState> networkCallBack)
         {
@@ -18,15 +18,15 @@ namespace Skynet.DotNetClient.Gate.UDP
             _disposed = false;
         }
 
-        public void Connect(UdpSession udpSession)
+        public void Connect(BattleSession battleSession)
         {
-            SprotoEncoding.Init(udpSession.session, udpSession.secret);
+            Protocol.Init(battleSession.session, battleSession.secret);
 
-            _connector = new UdpConnector( this,"UdpClient", false);
+            _connector = new Transporter(this);
             
-            var endpoint = udpSession.host + ":" + udpSession.port;
-            SkynetLogger.Info(Channel.NetDevice,"Udp Client URL " + endpoint);
-            _connector.Connect(endpoint);
+            var endpoint = battleSession.host + ":" + battleSession.port;
+            SkynetLogger.Info(Channel.Udp,"Udp Client URL " + endpoint);
+            _connector.Connect(battleSession.host, battleSession.port);
         }
 
         public void Update()
@@ -46,27 +46,29 @@ namespace Skynet.DotNetClient.Gate.UDP
 
         public void Request(string proto, SpObject msg, Action<SpObject> action)
         {
-            _connector.SendPayload(proto, msg);
+            var spRes = Protocol.Pack(proto, _session, msg);
+            _connector.RawSend(spRes.Buffer, spRes.Length);
+            _session++;
         }
 
         public void ProcessMessage(SpRpcResult msg)
         {
             if (msg.ud != 0)
             {
-                SkynetLogger.Error(Channel.NetDevice,"udp client resp error code is: " + msg.ud);
+                SkynetLogger.Error(Channel.Udp,"udp client resp error code is: " + msg.ud);
                 return;
             }
 			
             switch (msg.Op) 
             {
                 case SpRpcOp.Request:
-                    SkynetLogger.Info(Channel.NetDevice, "udp client recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
+                    SkynetLogger.Info(Channel.Udp, "udp client recv Request : " + msg.Protocol.Name + ", session : " + msg.Session);
                     Utils.Util.DumpObject (msg.Data);
                     break;
                 case SpRpcOp.Response:
                     if (msg.Protocol.Name != "heartbeat")
                     {
-                        SkynetLogger.Info(Channel.NetDevice,"udp client recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
+                        SkynetLogger.Info(Channel.Udp,"udp client recv Response : " + msg.Protocol.Name + ", session : " + msg.Session);
                         Utils.Util.DumpObject (msg.Data);
                     }
                     break;
@@ -95,7 +97,7 @@ namespace Skynet.DotNetClient.Gate.UDP
             if (!disposing) return;
             try
             {
-                _connector.Stop();
+                _connector?.Close();
             }
             catch (Exception)
             {
