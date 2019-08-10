@@ -63,7 +63,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 				_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 				var ie = new IPEndPoint(ipAddress, port);
 
-				_socket.BeginConnect(ie, new AsyncCallback(Connect), null);
+				_socket.BeginConnect(ie, Connect, null);
 			}
 			catch (Exception e)
 			{
@@ -159,7 +159,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 
 		public void Dispose() {
 			Dispose (true);
-			GC.SuppressFinalize (this);
+			GC.SuppressFinalize ((object)this);
 		}
 
 		private void Dispose(bool disposing)

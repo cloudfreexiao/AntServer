@@ -1,6 +1,6 @@
 namespace Skynet.DotNetClient
 {
-    class StateObject
+    internal class StateObject
     {
         private const int BufferSize = 1024;
         public readonly byte[] buffer = new byte[BufferSize];
@@ -8,7 +8,7 @@ namespace Skynet.DotNetClient
         
         public void WriteBytes(byte[] bytes, int start, int length)
         {
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
                 buffer[offset] = bytes[start + i];
                 offset++;

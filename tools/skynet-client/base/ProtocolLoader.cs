@@ -19,21 +19,21 @@ namespace Skynet.DotNetClient
         
         private SpRpc CreateProto(string subDir)
         {
-            SpTypeManager _c2s;
-            SpTypeManager _s2c;
+            SpTypeManager c2SMgr;
+            SpTypeManager s2CMgr;
 
             var c2S = _path + subDir +  "/c2s.sproto";
             using (var stream = new FileStream (c2S, FileMode.Open)) {
-                _c2s = SpTypeManager.Import (stream);
+                c2SMgr = SpTypeManager.Import (stream);
             }
 
             var s2C = _path + subDir + "/s2c.sproto";
             using (var stream = new FileStream (s2C, FileMode.Open)) {
-                _s2c = SpTypeManager.Import (stream);
+                s2CMgr = SpTypeManager.Import (stream);
             }
 
-            var rpc = SpRpc.Create (_s2c, "package");
-            rpc.Attach (_c2s);
+            var rpc = SpRpc.Create (s2CMgr, "package");
+            rpc.Attach (c2SMgr);
             return rpc;
         }
     }

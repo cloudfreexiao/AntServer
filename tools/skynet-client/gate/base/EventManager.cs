@@ -37,15 +37,13 @@ namespace Skynet.DotNetClient.Gate
         
         public void AddOnEvent(string eventName, Action<SpObject> callback)
         {
-            List<Action<SpObject>> list = null;
-            if (_eventMap.TryGetValue(eventName, out list))
+            if (_eventMap.TryGetValue(eventName, out var list))
             {
                 list.Add(callback);
             }
             else
             {
-                list = new List<Action<SpObject>>();
-                list.Add(callback);
+                list = new List<Action<SpObject>> {callback};
                 _eventMap.Add(eventName, list);
             }
         }
@@ -54,8 +52,8 @@ namespace Skynet.DotNetClient.Gate
         {
             if (!_eventMap.ContainsKey(route)) return;
 
-            List<Action<SpObject>> list = _eventMap[route];
-            foreach (Action<SpObject> action in list) action.Invoke(msg);
+            var list = _eventMap[route];
+            foreach (var action in list) action.Invoke(msg);
         }
 
         public void Dispose()

@@ -8,7 +8,7 @@ namespace Skynet.DotNetClient.Login.TCP
     public class EventManager : IDisposable
     { 
         private event Action<int, AuthPackageResp> OnLoginCallBack;
-        private Login_Auth_State _state;
+        private LoginAuthState _state;
         private readonly AuthPackageReq _req;
         private readonly LoginClient _client;
         private readonly AuthChallenge _challenge;
@@ -17,7 +17,7 @@ namespace Skynet.DotNetClient.Login.TCP
         {
             _challenge = new AuthChallenge();
 
-            _state = Login_Auth_State.GetChallenge;
+            _state = LoginAuthState.GetChallenge;
             _req = req;
             _client = c;
             OnLoginCallBack = loginCallBack;
@@ -28,20 +28,20 @@ namespace Skynet.DotNetClient.Login.TCP
             var msg = Encoding.UTF8.GetString(bytes);
             switch (_state)
             {
-                case Login_Auth_State.GetChallenge:
+                case LoginAuthState.GetChallenge:
                     GetChallenge(msg);
                     break;
-                case Login_Auth_State.GetSecret:
+                case LoginAuthState.GetSecret:
                     GetSecret(msg);
                     break;
-                case Login_Auth_State.LoginResult:
+                case LoginAuthState.LoginResult:
                     LoginResult(msg);
                     break;
-                case Login_Auth_State.Nil:
+                case LoginAuthState.Nil:
                     break;
-                case Login_Auth_State.SendLogin:
+                case LoginAuthState.SendLogin:
                     break;
-                case Login_Auth_State.LoginFinished:
+                case LoginAuthState.LoginFinished:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -57,7 +57,7 @@ namespace Skynet.DotNetClient.Login.TCP
             _challenge.clientkey = Crypt.DHExchange(dhkey);
             Request(_challenge.clientkey);
 
-            _state = Login_Auth_State.GetSecret;
+            _state = LoginAuthState.GetSecret;
         }
         
         private void GetSecret(string socketstr)
@@ -75,7 +75,7 @@ namespace Skynet.DotNetClient.Login.TCP
 
             Request(hmackey);
                 
-            _state = Login_Auth_State.SendLogin;
+            _state = LoginAuthState.SendLogin;
                 
             DoLoginAction();
         }
@@ -85,7 +85,7 @@ namespace Skynet.DotNetClient.Login.TCP
             var token = EncodeToken(_req);
             var etoken = Crypt.DesEncode(_challenge.secret, Encoding.UTF8.GetBytes(token));
             Request(etoken);
-            _state = Login_Auth_State.LoginResult;
+            _state = LoginAuthState.LoginResult;
         }
         
         private void LoginResult(string socketstr)
@@ -110,7 +110,7 @@ namespace Skynet.DotNetClient.Login.TCP
 //            Debug.Log("login result uid:" + resp.uid);
 //            Debug.Log("login result subid:" + resp.subid);
 //            Debug.Log("login result secret:" + resp.secret);
-            _state = Login_Auth_State.LoginFinished;
+            _state = LoginAuthState.LoginFinished;
             OnLoginCallBack?.Invoke(code, resp);
         }
         

@@ -14,11 +14,6 @@ namespace Skynet.DotNetClient
             _client.Connect(battleSession);
         }
     
-        public void Update()
-        {
-            _client.Update();
-        }
-        
         public void DisConnect()
         {
             _client.Disconnect();
@@ -26,7 +21,7 @@ namespace Skynet.DotNetClient
 
         private void NetWorkStateCallBack(NetWorkState state)
         {
-            SkynetLogger.Info(Channel.NetDevice,"Gate Udp NetWorkStateCallBack:" + state);
+            SkynetLogger.Info(Channel.Udp,"Gate Udp NetWorkStateCallBack:" + state);
             if (state != NetWorkState.Connected) return;
         
             //TODO:发送 与 gate 握手消息成功后 开启 心跳操作
@@ -34,7 +29,7 @@ namespace Skynet.DotNetClient
             handshakeRequset.Insert("uid", "ddddddddddd");
             _client.Request("handshake", handshakeRequset, (SpObject obj) =>
             { 
-                SkynetLogger.Info(Channel.NetDevice,"udp handshake resp");
+                SkynetLogger.Info(Channel.Udp,"udp handshake resp");
             });
         }
     }   

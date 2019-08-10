@@ -42,7 +42,7 @@ namespace Skynet.DotNetClient.Gate.TCP
         {
             if (_transportState != TransportState.Closed)
             {
-				_socket.BeginSend(buffer, 0, length, SocketFlags.None, new AsyncCallback(SendCallback), null);
+				_socket.BeginSend(buffer, 0, length, SocketFlags.None, SendCallback, null);
             }
         }
 
@@ -55,7 +55,7 @@ namespace Skynet.DotNetClient.Gate.TCP
 
         private void Receive()
         {
-           _socket.BeginReceive(_stateObject.buffer, 0, _stateObject.buffer.Length, SocketFlags.None, new AsyncCallback(EndReceive), _stateObject);
+           _socket.BeginReceive(_stateObject.buffer, 0, _stateObject.buffer.Length, SocketFlags.None, EndReceive, _stateObject);
         }
 
         internal void Close()
@@ -88,12 +88,8 @@ namespace Skynet.DotNetClient.Gate.TCP
             {
                 onDisconnect?.Invoke();
 
-                SkynetLogger.Error(Channel.NetDevice,"Socket Exception连接断开:" + e.Message.ToString());
+                SkynetLogger.Error(Channel.NetDevice,"Socket Exception连接断开:" + e.Message);
             }
-//            catch (Exception e)
-//            {
-//                Debug.Log("Exception" + e.Message.ToString());
-//            }
         }
 
         private void ProcessBytes(byte[] bytes, int offset, int limit)
@@ -166,7 +162,7 @@ namespace Skynet.DotNetClient.Gate.TCP
             }
         }
 
-        private void WriteBytes(byte[] source, int start, int length, int offset, byte[] target)
+        private static void WriteBytes(byte[] source, int start, int length, int offset, byte[] target)
         {
             for (var i = 0; i < length; i++)
             {

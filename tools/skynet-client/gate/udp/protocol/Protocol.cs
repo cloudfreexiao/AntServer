@@ -26,7 +26,7 @@ namespace Skynet.DotNetClient.Gate.UDP
         {
             _stream.Reset ();
             
-            SkynetLogger.Info(Channel.NetDevice,"Send Request : " + proto + ", session : " + session);
+            SkynetLogger.Info(Channel.Udp,"Send Request : " + proto + ", session : " + session);
 
             _stream.Write(_session);
             _stream.Write(_secret);

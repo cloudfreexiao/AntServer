@@ -29,11 +29,6 @@ namespace Skynet.DotNetClient.Gate.UDP
             _connector.Connect(battleSession.host, battleSession.port);
         }
 
-        public void Update()
-        {
-            _connector?.Update();
-        }
-        
         public void NetWorkChanged(NetWorkState state)
         {
             OnNetworkStateCallBack?.Invoke(state);

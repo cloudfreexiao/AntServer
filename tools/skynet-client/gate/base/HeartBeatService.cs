@@ -7,13 +7,13 @@
 	
 	public class HeartBeatService
 	{
-		private int Timeout;
+		private int _timeout;
 
-		readonly int _interval;
+		private readonly int _interval;
 		private Timer _timer;
-		DateTime _lastTime;
+		private DateTime _lastTime;
 
-		readonly IGateClient _client;
+		private readonly IGateClient _client;
 
 		public HeartBeatService(int interval, IGateClient sc)
 		{
@@ -26,21 +26,20 @@
 			if (_interval < 1000) 
 				return;
 
-			//start hearbeat
-			_timer = new Timer();
-			_timer.Interval = _interval;
-			_timer.Elapsed += new ElapsedEventHandler(SendHeartBeat);
+			//start heartbeat
+			_timer = new Timer {Interval = _interval};
+			_timer.Elapsed += SendHeartBeat;
 			_timer.Enabled = true;
 
-			Timeout = 0;
+			_timeout = 0;
 			_lastTime = DateTime.Now;
 		}
 
 		private void SendHeartBeat(object source, ElapsedEventArgs e)
 		{
-			TimeSpan span = DateTime.Now - _lastTime;
-			Timeout = (int)span.TotalMilliseconds;
-			if (Timeout > _interval * 2)
+			var span = DateTime.Now - _lastTime;
+			_timeout = (int)span.TotalMilliseconds;
+			if (_timeout > _interval * 2)
 			{
 				SkynetLogger.Info( Channel.NetDevice, "timeout disconnect");
 				_client.Disconnect();
@@ -53,7 +52,7 @@
 
 		private void ResetTimeout()
 		{
-			Timeout = 0;
+			_timeout = 0;
 			_lastTime = DateTime.Now;
 		}
 		

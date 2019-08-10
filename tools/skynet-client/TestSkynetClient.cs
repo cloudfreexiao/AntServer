@@ -7,7 +7,7 @@ using UnityEngine;
 public class TestSkynetClient : MonoBehaviour 
 {
 	private TestLoginTcp _login;
-	private string _protocol = "tcp"; // "ws"; //"tcp";
+	private const string Protocol = "tcp"; // "ws"; //"tcp";
 
 	private TestGateTcp _gateTcp;
 	private TestGateWs _gateWs;
@@ -17,13 +17,8 @@ public class TestSkynetClient : MonoBehaviour
 	{
 		SkynetLogger.Error(Channel.NetDevice, "++++++Skynet Client Start++++");
 
-		_login = new TestLoginTcp (_protocol);
+		_login = new TestLoginTcp (Protocol);
 		_login.Run(ProcessLoginResp);
-	}
-
-	public void Update()
-	{
-		_gateUdp?.Update();
 	}
 
 	private void ProcessLoginResp(int code, AuthPackageResp resp)
@@ -32,7 +27,7 @@ public class TestSkynetClient : MonoBehaviour
 
 		if(code == 200)
 		{
-			if (_protocol == "tcp")
+			if (Protocol == "tcp")
 			{
 				_gateTcp = new TestGateTcp();
 				_gateTcp.Run(resp);

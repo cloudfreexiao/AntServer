@@ -35,7 +35,7 @@ namespace Skynet.DotNetClient
         public string secret = "";
     }
     
-    public enum Login_Auth_State : int
+    public enum LoginAuthState : int
     {
         Nil, //无效
         GetChallenge,
