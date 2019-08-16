@@ -1,0 +1,235 @@
+{
+  "version": "0.3.0",
+  "scope": "tree",
+  "id": "485d68f4-8ac5-4932-97cb-e19263bd46af",
+  "title": "testbt",
+  "description": "",
+  "root": "d39c14dd-a5ca-47e9-84d1-24e3bca4814d",
+  "properties": {},
+  "nodes": {
+    "f38376f4-f08b-4cd3-8dd6-b2d3855f05bd": {
+      "id": "f38376f4-f08b-4cd3-8dd6-b2d3855f05bd",
+      "name": "Sequence",
+      "category": "composite",
+      "title": "Sequence",
+      "description": "",
+      "properties": {},
+      "display": {
+        "x": -108,
+        "y": 144
+      },
+      "children": [
+        "8cd24fee-7d22-40ef-b822-2fe039d92d84",
+        "be66d461-0fa0-4cc9-8711-047c045c55fa"
+      ]
+    },
+    "196e0b02-04e3-40db-b3fa-0d27bfbe0375": {
+      "id": "196e0b02-04e3-40db-b3fa-0d27bfbe0375",
+      "name": "log",
+      "category": "action",
+      "title": "log(<info>)",
+      "description": "",
+      "properties": {
+        "info": "aaaa"
+      },
+      "display": {
+        "x": 300,
+        "y": 48
+      }
+    },
+    "be66d461-0fa0-4cc9-8711-047c045c55fa": {
+      "id": "be66d461-0fa0-4cc9-8711-047c045c55fa",
+      "name": "log",
+      "category": "action",
+      "title": "log(<info>)",
+      "description": "",
+      "properties": {
+        "info": "bbb"
+      },
+      "display": {
+        "x": 168,
+        "y": 156
+      }
+    },
+    "d39c14dd-a5ca-47e9-84d1-24e3bca4814d": {
+      "id": "d39c14dd-a5ca-47e9-84d1-24e3bca4814d",
+      "name": "Priority",
+      "category": "composite",
+      "title": "Priority",
+      "description": "",
+      "properties": {},
+      "display": {
+        "x": -276,
+        "y": 12
+      },
+      "children": [
+        "d67eb1d9-a3a1-4a8a-9406-24266e6abcfc",
+        "f38376f4-f08b-4cd3-8dd6-b2d3855f05bd"
+      ]
+    },
+    "d67eb1d9-a3a1-4a8a-9406-24266e6abcfc": {
+      "id": "d67eb1d9-a3a1-4a8a-9406-24266e6abcfc",
+      "name": "Sequence",
+      "category": "composite",
+      "title": "Sequence",
+      "description": "",
+      "properties": {},
+      "display": {
+        "x": -108,
+        "y": -108
+      },
+      "children": [
+        "9a3f1d74-4acd-4103-89f3-f5fa100178d6",
+        "c1bc3fa7-ec26-4f33-aca6-7beb0ba053ff"
+      ]
+    },
+    "9a3f1d74-4acd-4103-89f3-f5fa100178d6": {
+      "id": "9a3f1d74-4acd-4103-89f3-f5fa100178d6",
+      "name": "Failer",
+      "category": "action",
+      "title": "Failer",
+      "description": "",
+      "properties": {},
+      "display": {
+        "x": 84,
+        "y": -192
+      }
+    },
+    "c1bc3fa7-ec26-4f33-aca6-7beb0ba053ff": {
+      "id": "c1bc3fa7-ec26-4f33-aca6-7beb0ba053ff",
+      "name": "log",
+      "category": "action",
+      "title": "log(<info>)",
+      "description": "",
+      "properties": {
+        "info": "fff"
+      },
+      "display": {
+        "x": 84,
+        "y": -108
+      }
+    },
+    "8cd24fee-7d22-40ef-b822-2fe039d92d84": {
+      "id": "8cd24fee-7d22-40ef-b822-2fe039d92d84",
+      "name": "Repeater",
+      "category": "decorator",
+      "title": "Repeat <maxLoop>x",
+      "description": "",
+      "properties": {
+        "maxLoop": 3
+      },
+      "display": {
+        "x": 72,
+        "y": 60
+      },
+      "child": "196e0b02-04e3-40db-b3fa-0d27bfbe0375"
+    }
+  },
+  "display": {
+    "camera_x": 960,
+    "camera_y": 508.5,
+    "camera_z": 1,
+    "x": -492,
+    "y": 24
+  },
+  "custom_nodes": [
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "IsActive",
+      "category": "condition",
+      "title": "IsActive",
+      "description": null,
+      "properties": {}
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "Stay",
+      "category": "action",
+      "title": "Stay",
+      "description": null,
+      "properties": {}
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "IsSkillActive",
+      "category": "condition",
+      "title": "IsSkillActive",
+      "description": null,
+      "properties": {}
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "EnemyInAttackRange",
+      "category": "condition",
+      "title": "EnemyInAttackRange",
+      "description": null,
+      "properties": {}
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "SelfInAttackRange",
+      "category": "condition",
+      "title": "SelfInAttackRange",
+      "description": null,
+      "properties": {}
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "SelectTarget",
+      "category": "action",
+      "title": "SelectTarget <relation>",
+      "description": null,
+      "properties": {
+        "relation": 0
+      }
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "SelectSkill",
+      "category": "action",
+      "title": "SelectSkill <relation>",
+      "description": null,
+      "properties": {
+        "relation": 0
+      }
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "TakeAction",
+      "category": "action",
+      "title": "TakeAction",
+      "description": null,
+      "properties": {}
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "SelectPos",
+      "category": "action",
+      "title": "SelectPos <posType>",
+      "description": null,
+      "properties": {
+        "posType": 0
+      }
+    },
+    {
+      "version": "0.3.0",
+      "scope": "node",
+      "name": "log",
+      "category": "action",
+      "title": "log(<info>)",
+      "description": null,
+      "properties": {
+        "info": "info"
+      }
+    }
+  ]
+}
