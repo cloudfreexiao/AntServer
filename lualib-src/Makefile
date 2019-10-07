@@ -2,6 +2,8 @@ THIRD_LIB_ROOT ?= ../3rd/
 SKYNET_ROOT ?= ../skynet/
 include $(SKYNET_ROOT)platform.mk
 
+PLAT ?= linux
+
 #####################################################
 
 SKYNET_LUA_INC ?= $(SKYNET_ROOT)/3rd/lua
@@ -14,6 +16,7 @@ TLS_LIB ?=/usr/local/ssl/lib
 TLS_INC ?=/usr/local/include
 
 #####################################################
+LUA_CLIB_PATH ?= ../luaclib
 
 CRAB_INC ?= crab/
 CJSON_INC ?= lua-cjson/
@@ -21,8 +24,8 @@ LFS_INC ?= luafilesystem/src
 CAOI_INC ?= skynet_aoi/
 FFI_INC ?= luaffifb/
 R3_INC ?= lua-r3/
+NAVIGATOR_INC ?= lua-recastnavigation/
 
-LUA_CLIB_PATH ?= ../luaclib
 #####################################################
 
 CAOI_SO_NAME = caoi.so
@@ -45,6 +48,7 @@ FFI_SO_NAME = ffi.so
 R3_SO_NAME = libr3.so
 
 RUDP_SO_NAME = rudp.so
+NAVIGATOR_SO_NAME = navigator.so
 
 #####################################################
 
@@ -66,6 +70,7 @@ FFI_SO               	= $(LUA_CLIB_PATH)/$(FFI_SO_NAME)
 R3_SO               	= $(LUA_CLIB_PATH)/$(R3_SO_NAME)
 
 RUDP_SO               	= $(LUA_CLIB_PATH)/$(RUDP_SO_NAME)
+NAVIGATOR_SO            = $(LUA_CLIB_PATH)/$(NAVIGATOR_SO_NAME)
 
 
 #####################################################
@@ -73,7 +78,7 @@ all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
 	$(WEBSOCKETNETPACK_SO) $(CJSON_SO) $(CAOI_SO) \
 	$(AES_SO) $(CODEC_SO) $(CRYPTO_SO)  $(TBPACK_SO) \
 	$(RUDP_SO) $(FFI_SO) \
-	#$(R3_SO) \
+	$(NAVIGATOR_SO) \
 #####################################################
 
 # C Lib
@@ -107,6 +112,7 @@ $(TBPACK_SO): thrift/lua-bpack.c $<
 $(RUDP_SO): rudp/rudp.c rudp/lua-rudp.c  $<
 	$(CC) $(LFLAGS) $(CFLAGS) $^ -o $@
 
+
 #####################################################
 
 $(CJSON_SO) : | $(LUA_CLIB_PATH)
@@ -118,6 +124,9 @@ $(FFI_SO) : | $(LUA_CLIB_PATH)
 $(R3_SO) : | $(LUA_CLIB_PATH)
 	cd $(R3_INC) && $(MAKE)  && cp -f $(R3_SO_NAME) ../$(LUA_CLIB_PATH)
 
+$(NAVIGATOR_SO) : | $(LUA_CLIB_PATH)
+	cd $(NAVIGATOR_INC) && $(MAKE) PLAT=$(PLAT) TARGET=$(NAVIGATOR_SO_NAME) LUA_INCLUDE_DIR=../$(SKYNET_ROOT)/3rd/lua  && cp -f $(NAVIGATOR_SO_NAME) ../$(LUA_CLIB_PATH)
+
 #####################################################
 # C Service
 $(CAOI_SO):
@@ -128,6 +137,7 @@ $(CAOI_SO):
 clean:
 	rm -f $(LUA_CLIB_PATH)/*.so
 	cd $(R3_INC) && $(MAKE) clean
+	cd $(NAVIGATOR_INC) && $(MAKE) clean
 
 
 .PHONY: all clean

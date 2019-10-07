@@ -13,7 +13,6 @@ TLS_LIB ?= /usr/local/ssl/lib
 TLS_INC ?= /usr/local/include
 
 
-
 .PHONY: all 
 
 all : skynetruntime skynetdeps clientdeps 

@@ -39,7 +39,8 @@ local function start_gated()
   end
 end
 
-
+-- local navigator = require "navigator"
+-- DEBUG("navigator:", DUMP(navigator))
 
 -- local rudp = require "rudp"
 -- DEBUG("rudp", DUMP(rudp))
