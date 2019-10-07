@@ -5,22 +5,18 @@ TARGET ?= navigator.so
 CXX=g++
 
 ifeq ($(PLAT), macosx)
-	CXXFLAGS = -O3 -Wall -pedantic -bundle -undefined dynamic_lookup
+	CXXFLAGS = -g -O2 -pedantic -bundle -undefined dynamic_lookup
 else
 ifeq ($(PLAT), linux)
-	CXXFLAGS = -O3 -Wall -shared -fPIC
+	CXXFLAGS = -g -O2 -shared -fPIC
 endif
 endif
 
-LUA_INCLUDE_DIR ?= ../../skynet/3rd/lua/
+LUA_INC ?= ../../skynet/3rd/lua/
+LUA_LIB = $(LUA_INC)/liblua.a
 
-DETOUR_DIR ?= ./recastnavigation/Detour
-RECAST_DIR ?= ./recastnavigation/Recast
-
-DETOUR_INC = $(DETOUR_DIR)/Include
-RECAST_INC = $(RECAST_DIR)/Include
-
-BUILD_CXXFLAGS = $(CXXFLAGS) -I$(LUA_INCLUDE_DIR) -I$(RECAST_INC) -I$(DETOUR_INC)
+DETOUR_INC = recastnavigation/Detour/Include
+RECAST_INC = recastnavigation/Recast/Include
 
 DETOUR_SRC = DetourAlloc.cpp DetourCommon.cpp DetourNavMesh.cpp DetourNavMeshBuilder.cpp \
 							DetourNavMeshBuilder.cpp  DetourNavMeshQuery.cpp DetourNode.cpp\
@@ -37,7 +33,7 @@ all: $(TARGET)
 $(TARGET): $(foreach v, $(DETOUR_SRC), recastnavigation/Detour/Source/$(v)) \
 					$(foreach v, $(RECAST_SRC), recastnavigation/Recast/Source/$(v)) \
 					$(foreach v, $(UTIL_SRC), $(v))
-	$(CXX) $(BUILD_CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ -I$(LUA_INC) -I$(RECAST_INC) -I$(DETOUR_INC)
 
 clean:
 	rm -f *.o $(TARGET)

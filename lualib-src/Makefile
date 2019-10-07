@@ -125,7 +125,7 @@ $(R3_SO) : | $(LUA_CLIB_PATH)
 	cd $(R3_INC) && $(MAKE)  && cp -f $(R3_SO_NAME) ../$(LUA_CLIB_PATH)
 
 $(NAVIGATOR_SO) : | $(LUA_CLIB_PATH)
-	cd $(NAVIGATOR_INC) && $(MAKE) PLAT=$(PLAT) TARGET=$(NAVIGATOR_SO_NAME) LUA_INCLUDE_DIR=../$(SKYNET_ROOT)/3rd/lua  && cp -f $(NAVIGATOR_SO_NAME) ../$(LUA_CLIB_PATH)
+	cd $(NAVIGATOR_INC) && $(MAKE) PLAT=$(PLAT) LUA_INC=../$(SKYNET_ROOT)/3rd/lua  && cp -f $(NAVIGATOR_SO_NAME) ../$(LUA_CLIB_PATH)
 
 #####################################################
 # C Service

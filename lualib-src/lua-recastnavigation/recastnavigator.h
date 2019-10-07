@@ -1,5 +1,5 @@
-#ifndef __Recast__Navigator__
-#define __Recast__Navigator__
+#ifndef __CNavigator__
+#define __CNavigator__
 #include <stdlib.h>
 #include <stdio.h>
 #include "Recast.h"

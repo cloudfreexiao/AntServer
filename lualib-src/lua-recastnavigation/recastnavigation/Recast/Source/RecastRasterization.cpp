@@ -82,7 +82,7 @@ static void freeSpan(rcHeightfield& hf, rcSpan* ptr)
 	hf.freelist = ptr;
 }
 
-static bool addSpan(rcHeightfield& hf, const int x, const int y,
+static void addSpan(rcHeightfield& hf, const int x, const int y,
 					const unsigned short smin, const unsigned short smax,
 					const unsigned char area, const int flagMergeThr)
 {
@@ -90,8 +90,6 @@ static bool addSpan(rcHeightfield& hf, const int x, const int y,
 	int idx = x + y*hf.width;
 	
 	rcSpan* s = allocSpan(hf);
-	if (!s)
-		return false;
 	s->smin = smin;
 	s->smax = smax;
 	s->area = area;
@@ -101,7 +99,7 @@ static bool addSpan(rcHeightfield& hf, const int x, const int y,
 	if (!hf.spans[idx])
 	{
 		hf.spans[idx] = s;
-		return true;
+		return;
 	}
 	rcSpan* prev = 0;
 	rcSpan* cur = hf.spans[idx];
@@ -154,8 +152,6 @@ static bool addSpan(rcHeightfield& hf, const int x, const int y,
 		s->next = hf.spans[idx];
 		hf.spans[idx] = s;
 	}
-
-	return true;
 }
 
 /// @par
@@ -165,19 +161,12 @@ static bool addSpan(rcHeightfield& hf, const int x, const int y,
 /// from the existing span, the span flags are merged.
 ///
 /// @see rcHeightfield, rcSpan.
-bool rcAddSpan(rcContext* ctx, rcHeightfield& hf, const int x, const int y,
+void rcAddSpan(rcContext* /*ctx*/, rcHeightfield& hf, const int x, const int y,
 			   const unsigned short smin, const unsigned short smax,
 			   const unsigned char area, const int flagMergeThr)
 {
-	rcAssert(ctx);
-
-	if (!addSpan(hf, x, y, smin, smax, area, flagMergeThr))
-	{
-		ctx->log(RC_LOG_ERROR, "rcAddSpan: Out of memory.");
-		return false;
-	}
-
-	return true;
+//	rcAssert(ctx);
+	addSpan(hf, x,y, smin, smax, area, flagMergeThr);
 }
 
 // divides a convex polygons into two convex polygons on both sides of a line
@@ -238,7 +227,7 @@ static void dividePoly(const float* in, int nin,
 
 
 
-static bool rasterizeTri(const float* v0, const float* v1, const float* v2,
+static void rasterizeTri(const float* v0, const float* v1, const float* v2,
 						 const unsigned char area, rcHeightfield& hf,
 						 const float* bmin, const float* bmax,
 						 const float cs, const float ics, const float ich,
@@ -259,7 +248,7 @@ static bool rasterizeTri(const float* v0, const float* v1, const float* v2,
 	
 	// If the triangle does not touch the bbox of the heightfield, skip the triagle.
 	if (!overlapBounds(bmin, bmax, tmin, tmax))
-		return true;
+		return;
 	
 	// Calculate the footprint of the triangle on the grid's y-axis
 	int y0 = (int)((tmin[2] - bmin[2])*ics);
@@ -326,12 +315,9 @@ static bool rasterizeTri(const float* v0, const float* v1, const float* v2,
 			unsigned short ismin = (unsigned short)rcClamp((int)floorf(smin * ich), 0, RC_SPAN_MAX_HEIGHT);
 			unsigned short ismax = (unsigned short)rcClamp((int)ceilf(smax * ich), (int)ismin+1, RC_SPAN_MAX_HEIGHT);
 			
-			if (!addSpan(hf, x, y, ismin, ismax, area, flagMergeThr))
-				return false;
+			addSpan(hf, x, y, ismin, ismax, area, flagMergeThr);
 		}
 	}
-
-	return true;
 }
 
 /// @par
@@ -339,23 +325,19 @@ static bool rasterizeTri(const float* v0, const float* v1, const float* v2,
 /// No spans will be added if the triangle does not overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangle(rcContext* ctx, const float* v0, const float* v1, const float* v2,
+void rcRasterizeTriangle(rcContext* ctx, const float* v0, const float* v1, const float* v2,
 						 const unsigned char area, rcHeightfield& solid,
 						 const int flagMergeThr)
 {
 	rcAssert(ctx);
 
-	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
+	ctx->startTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 
 	const float ics = 1.0f/solid.cs;
 	const float ich = 1.0f/solid.ch;
-	if (!rasterizeTri(v0, v1, v2, area, solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
-	{
-		ctx->log(RC_LOG_ERROR, "rcRasterizeTriangle: Out of memory.");
-		return false;
-	}
+	rasterizeTri(v0, v1, v2, area, solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr);
 
-	return true;
+	ctx->stopTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 }
 
 /// @par
@@ -363,13 +345,13 @@ bool rcRasterizeTriangle(rcContext* ctx, const float* v0, const float* v1, const
 /// Spans will only be added for triangles that overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
+void rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 						  const int* tris, const unsigned char* areas, const int nt,
 						  rcHeightfield& solid, const int flagMergeThr)
 {
 	rcAssert(ctx);
 
-	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
+	ctx->startTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 	
 	const float ics = 1.0f/solid.cs;
 	const float ich = 1.0f/solid.ch;
@@ -380,14 +362,10 @@ bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 		const float* v1 = &verts[tris[i*3+1]*3];
 		const float* v2 = &verts[tris[i*3+2]*3];
 		// Rasterize.
-		if (!rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
-		{
-			ctx->log(RC_LOG_ERROR, "rcRasterizeTriangles: Out of memory.");
-			return false;
-		}
+		rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr);
 	}
-
-	return true;
+	
+	ctx->stopTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 }
 
 /// @par
@@ -395,13 +373,13 @@ bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 /// Spans will only be added for triangles that overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
+void rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 						  const unsigned short* tris, const unsigned char* areas, const int nt,
 						  rcHeightfield& solid, const int flagMergeThr)
 {
 	rcAssert(ctx);
 
-	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
+	ctx->startTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 	
 	const float ics = 1.0f/solid.cs;
 	const float ich = 1.0f/solid.ch;
@@ -412,14 +390,10 @@ bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 		const float* v1 = &verts[tris[i*3+1]*3];
 		const float* v2 = &verts[tris[i*3+2]*3];
 		// Rasterize.
-		if (!rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
-		{
-			ctx->log(RC_LOG_ERROR, "rcRasterizeTriangles: Out of memory.");
-			return false;
-		}
+		rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr);
 	}
-
-	return true;
+	
+	ctx->stopTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 }
 
 /// @par
@@ -427,12 +401,12 @@ bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 /// Spans will only be added for triangles that overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const unsigned char* areas, const int nt,
+void rcRasterizeTriangles(rcContext* ctx, const float* verts, const unsigned char* areas, const int nt,
 						  rcHeightfield& solid, const int flagMergeThr)
 {
 	rcAssert(ctx);
 	
-	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
+	ctx->startTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 	
 	const float ics = 1.0f/solid.cs;
 	const float ich = 1.0f/solid.ch;
@@ -443,12 +417,8 @@ bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const unsigned cha
 		const float* v1 = &verts[(i*3+1)*3];
 		const float* v2 = &verts[(i*3+2)*3];
 		// Rasterize.
-		if (!rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
-		{
-			ctx->log(RC_LOG_ERROR, "rcRasterizeTriangles: Out of memory.");
-			return false;
-		}
+		rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr);
 	}
-
-	return true;
+	
+	ctx->stopTimer(RC_TIMER_RASTERIZE_TRIANGLES);
 }

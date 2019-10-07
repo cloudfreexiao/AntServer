@@ -25,17 +25,8 @@
 #include "Recast.h"
 #include "RecastAlloc.h"
 #include "RecastAssert.h"
+#include <new>
 
-namespace
-{
-struct LevelStackEntry
-{
-	LevelStackEntry(int x_, int y_, int index_) : x(x_), y(y_), index(index_) {}
-	int x;
-	int y;
-	int index;
-};
-}  // namespace
 
 static void calculateDistanceField(rcCompactHeightfield& chf, unsigned short* src, unsigned short& maxDist)
 {
@@ -254,15 +245,17 @@ static bool floodRegion(int x, int y, int i,
 						unsigned short level, unsigned short r,
 						rcCompactHeightfield& chf,
 						unsigned short* srcReg, unsigned short* srcDist,
-						rcTempVector<LevelStackEntry>& stack)
+						rcIntArray& stack)
 {
 	const int w = chf.width;
 	
 	const unsigned char area = chf.areas[i];
 	
 	// Flood fill mark region.
-	stack.clear();
-	stack.push_back(LevelStackEntry(x, y, i));
+	stack.resize(0);
+	stack.push((int)x);
+	stack.push((int)y);
+	stack.push((int)i);
 	srcReg[i] = r;
 	srcDist[i] = 0;
 	
@@ -271,11 +264,9 @@ static bool floodRegion(int x, int y, int i,
 	
 	while (stack.size() > 0)
 	{
-		LevelStackEntry& back = stack.back();
-		int cx = back.x;
-		int cy = back.y;
-		int ci = back.index;
-		stack.pop_back();
+		int ci = stack.pop();
+		int cy = stack.pop();
+		int cx = stack.pop();
 		
 		const rcCompactSpan& cs = chf.spans[ci];
 		
@@ -341,7 +332,9 @@ static bool floodRegion(int x, int y, int i,
 				{
 					srcReg[ai] = r;
 					srcDist[ai] = 0;
-					stack.push_back(LevelStackEntry(ax, ay, ai));
+					stack.push(ax);
+					stack.push(ay);
+					stack.push(ai);
 				}
 			}
 		}
@@ -350,20 +343,12 @@ static bool floodRegion(int x, int y, int i,
 	return count > 0;
 }
 
-// Struct to keep track of entries in the region table that have been changed.
-struct DirtyEntry
-{
-	DirtyEntry(int index_, unsigned short region_, unsigned short distance2_)
-		: index(index_), region(region_), distance2(distance2_) {}
-	int index;
-	unsigned short region;
-	unsigned short distance2;
-};
-static void expandRegions(int maxIter, unsigned short level,
-					      rcCompactHeightfield& chf,
-					      unsigned short* srcReg, unsigned short* srcDist,
-					      rcTempVector<LevelStackEntry>& stack,
-					      bool fillStack)
+static unsigned short* expandRegions(int maxIter, unsigned short level,
+									 rcCompactHeightfield& chf,
+									 unsigned short* srcReg, unsigned short* srcDist,
+									 unsigned short* dstReg, unsigned short* dstDist, 
+									 rcIntArray& stack,
+									 bool fillStack)
 {
 	const int w = chf.width;
 	const int h = chf.height;
@@ -371,7 +356,7 @@ static void expandRegions(int maxIter, unsigned short level,
 	if (fillStack)
 	{
 		// Find cells revealed by the raised level.
-		stack.clear();
+		stack.resize(0);
 		for (int y = 0; y < h; ++y)
 		{
 			for (int x = 0; x < w; ++x)
@@ -381,7 +366,9 @@ static void expandRegions(int maxIter, unsigned short level,
 				{
 					if (chf.dist[i] >= level && srcReg[i] == 0 && chf.areas[i] != RC_NULL_AREA)
 					{
-						stack.push_back(LevelStackEntry(x, y, i));
+						stack.push(x);
+						stack.push(y);
+						stack.push(i);
 					}
 				}
 			}
@@ -390,26 +377,27 @@ static void expandRegions(int maxIter, unsigned short level,
 	else // use cells in the input stack
 	{
 		// mark all cells which already have a region
-		for (int j=0; j<stack.size(); j++)
+		for (int j=0; j<stack.size(); j+=3)
 		{
-			int i = stack[j].index;
+			int i = stack[j+2];
 			if (srcReg[i] != 0)
-				stack[j].index = -1;
+				stack[j+2] = -1;
 		}
 	}
 
-	rcTempVector<DirtyEntry> dirtyEntries;
 	int iter = 0;
 	while (stack.size() > 0)
 	{
 		int failed = 0;
-		dirtyEntries.clear();
 		
-		for (int j = 0; j < stack.size(); j++)
+		memcpy(dstReg, srcReg, sizeof(unsigned short)*chf.spanCount);
+		memcpy(dstDist, srcDist, sizeof(unsigned short)*chf.spanCount);
+		
+		for (int j = 0; j < stack.size(); j += 3)
 		{
-			int x = stack[j].x;
-			int y = stack[j].y;
-			int i = stack[j].index;
+			int x = stack[j+0];
+			int y = stack[j+1];
+			int i = stack[j+2];
 			if (i < 0)
 			{
 				failed++;
@@ -438,8 +426,9 @@ static void expandRegions(int maxIter, unsigned short level,
 			}
 			if (r)
 			{
-				stack[j].index = -1; // mark as used
-				dirtyEntries.push_back(DirtyEntry(i, r, d2));
+				stack[j+2] = -1; // mark as used
+				dstReg[i] = r;
+				dstDist[i] = d2;
 			}
 			else
 			{
@@ -447,14 +436,11 @@ static void expandRegions(int maxIter, unsigned short level,
 			}
 		}
 		
-		// Copy entries that differ between src and dst to keep them in sync.
-		for (int i = 0; i < dirtyEntries.size(); i++) {
-			int idx = dirtyEntries[i].index;
-			srcReg[idx] = dirtyEntries[i].region;
-			srcDist[idx] = dirtyEntries[i].distance2;
-		}
+		// rcSwap source and dest.
+		rcSwap(srcReg, dstReg);
+		rcSwap(srcDist, dstDist);
 		
-		if (failed == stack.size())
+		if (failed*3 == stack.size())
 			break;
 		
 		if (level > 0)
@@ -464,14 +450,16 @@ static void expandRegions(int maxIter, unsigned short level,
 				break;
 		}
 	}
+	
+	return srcReg;
 }
 
 
 
 static void sortCellsByLevel(unsigned short startLevel,
 							  rcCompactHeightfield& chf,
-							  const unsigned short* srcReg,
-							  unsigned int nbStacks, rcTempVector<LevelStackEntry>* stacks,
+							  unsigned short* srcReg,
+							  unsigned int nbStacks, rcIntArray* stacks,
 							  unsigned short loglevelsPerStack) // the levels per stack (2 in our case) as a bit shift
 {
 	const int w = chf.width;
@@ -479,7 +467,7 @@ static void sortCellsByLevel(unsigned short startLevel,
 	startLevel = startLevel >> loglevelsPerStack;
 
 	for (unsigned int j=0; j<nbStacks; ++j)
-		stacks[j].clear();
+		stacks[j].resize(0);
 
 	// put all cells in the level range into the appropriate stacks
 	for (int y = 0; y < h; ++y)
@@ -499,23 +487,26 @@ static void sortCellsByLevel(unsigned short startLevel,
 				if (sId < 0)
 					sId = 0;
 
-				stacks[sId].push_back(LevelStackEntry(x, y, i));
+				stacks[sId].push(x);
+				stacks[sId].push(y);
+				stacks[sId].push(i);
 			}
 		}
 	}
 }
 
 
-static void appendStacks(const rcTempVector<LevelStackEntry>& srcStack,
-						 rcTempVector<LevelStackEntry>& dstStack,
-						 const unsigned short* srcReg)
+static void appendStacks(rcIntArray& srcStack, rcIntArray& dstStack,
+						 unsigned short* srcReg)
 {
-	for (int j=0; j<srcStack.size(); j++)
+	for (int j=0; j<srcStack.size(); j+=3)
 	{
-		int i = srcStack[j].index;
+		int i = srcStack[j+2];
 		if ((i < 0) || (srcReg[i] != 0))
 			continue;
-		dstStack.push_back(srcStack[j]);
+		dstStack.push(srcStack[j]);
+		dstStack.push(srcStack[j+1]);
+		dstStack.push(srcStack[j+2]);
 	}
 }
 
@@ -680,7 +671,7 @@ static bool isRegionConnectedToBorder(const rcRegion& reg)
 	return false;
 }
 
-static bool isSolidEdge(rcCompactHeightfield& chf, const unsigned short* srcReg,
+static bool isSolidEdge(rcCompactHeightfield& chf, unsigned short* srcReg,
 						int x, int y, int i, int dir)
 {
 	const rcCompactSpan& s = chf.spans[i];
@@ -699,7 +690,7 @@ static bool isSolidEdge(rcCompactHeightfield& chf, const unsigned short* srcReg,
 
 static void walkContour(int x, int y, int i, int dir,
 						rcCompactHeightfield& chf,
-						const unsigned short* srcReg,
+						unsigned short* srcReg,
 						rcIntArray& cont)
 {
 	int startDir = dir;
@@ -795,15 +786,16 @@ static bool mergeAndFilterRegions(rcContext* ctx, int minRegionArea, int mergeRe
 	const int h = chf.height;
 	
 	const int nreg = maxRegionId+1;
-	rcTempVector<rcRegion> regions;
-	if (!regions.reserve(nreg)) {
+	rcRegion* regions = (rcRegion*)rcAlloc(sizeof(rcRegion)*nreg, RC_ALLOC_TEMP);
+	if (!regions)
+	{
 		ctx->log(RC_LOG_ERROR, "mergeAndFilterRegions: Out of memory 'regions' (%d).", nreg);
 		return false;
 	}
 
 	// Construct regions
 	for (int i = 0; i < nreg; ++i)
-		regions.push_back(rcRegion((unsigned short) i));
+		new(&regions[i]) rcRegion((unsigned short)i);
 	
 	// Find edge of a region and find connections around the contour.
 	for (int y = 0; y < h; ++y)
@@ -1029,6 +1021,11 @@ static bool mergeAndFilterRegions(rcContext* ctx, int minRegionArea, int mergeRe
 		if (regions[i].overlap)
 			overlaps.push(regions[i].id);
 
+	for (int i = 0; i < nreg; ++i)
+		regions[i].~rcRegion();
+	rcFree(regions);
+	
+	
 	return true;
 }
 
@@ -1044,21 +1041,22 @@ static void addUniqueConnection(rcRegion& reg, int n)
 static bool mergeAndFilterLayerRegions(rcContext* ctx, int minRegionArea,
 									   unsigned short& maxRegionId,
 									   rcCompactHeightfield& chf,
-									   unsigned short* srcReg)
+									   unsigned short* srcReg, rcIntArray& overlaps)
 {
 	const int w = chf.width;
 	const int h = chf.height;
 	
 	const int nreg = maxRegionId+1;
-	rcTempVector<rcRegion> regions;
-	
-	// Construct regions
-	if (!regions.reserve(nreg)) {
+	rcRegion* regions = (rcRegion*)rcAlloc(sizeof(rcRegion)*nreg, RC_ALLOC_TEMP);
+	if (!regions)
+	{
 		ctx->log(RC_LOG_ERROR, "mergeAndFilterLayerRegions: Out of memory 'regions' (%d).", nreg);
 		return false;
 	}
+	
+	// Construct regions
 	for (int i = 0; i < nreg; ++i)
-		regions.push_back(rcRegion((unsigned short) i));
+		new(&regions[i]) rcRegion((unsigned short)i);
 	
 	// Find region neighbours and overlapping regions.
 	rcIntArray lregs(32);
@@ -1236,6 +1234,10 @@ static bool mergeAndFilterLayerRegions(rcContext* ctx, int minRegionArea,
 			srcReg[i] = regions[srcReg[i]].id;
 	}
 	
+	for (int i = 0; i < nreg; ++i)
+		regions[i].~rcRegion();
+	rcFree(regions);
+	
 	return true;
 }
 
@@ -1255,7 +1257,7 @@ bool rcBuildDistanceField(rcContext* ctx, rcCompactHeightfield& chf)
 {
 	rcAssert(ctx);
 	
-	rcScopedTimer timer(ctx, RC_TIMER_BUILD_DISTANCEFIELD);
+	ctx->startTimer(RC_TIMER_BUILD_DISTANCEFIELD);
 	
 	if (chf.dist)
 	{
@@ -1279,23 +1281,25 @@ bool rcBuildDistanceField(rcContext* ctx, rcCompactHeightfield& chf)
 	
 	unsigned short maxDist = 0;
 
-	{
-		rcScopedTimer timerDist(ctx, RC_TIMER_BUILD_DISTANCEFIELD_DIST);
+	ctx->startTimer(RC_TIMER_BUILD_DISTANCEFIELD_DIST);
+	
+	calculateDistanceField(chf, src, maxDist);
+	chf.maxDistance = maxDist;
+	
+	ctx->stopTimer(RC_TIMER_BUILD_DISTANCEFIELD_DIST);
+	
+	ctx->startTimer(RC_TIMER_BUILD_DISTANCEFIELD_BLUR);
+	
+	// Blur
+	if (boxBlur(chf, 1, src, dst) != src)
+		rcSwap(src, dst);
+	
+	// Store distance.
+	chf.dist = src;
+	
+	ctx->stopTimer(RC_TIMER_BUILD_DISTANCEFIELD_BLUR);
 
-		calculateDistanceField(chf, src, maxDist);
-		chf.maxDistance = maxDist;
-	}
-
-	{
-		rcScopedTimer timerBlur(ctx, RC_TIMER_BUILD_DISTANCEFIELD_BLUR);
-
-		// Blur
-		if (boxBlur(chf, 1, src, dst) != src)
-			rcSwap(src, dst);
-
-		// Store distance.
-		chf.dist = src;
-	}
+	ctx->stopTimer(RC_TIMER_BUILD_DISTANCEFIELD);
 	
 	rcFree(dst);
 	
@@ -1355,13 +1359,13 @@ bool rcBuildRegionsMonotone(rcContext* ctx, rcCompactHeightfield& chf,
 {
 	rcAssert(ctx);
 	
-	rcScopedTimer timer(ctx, RC_TIMER_BUILD_REGIONS);
+	ctx->startTimer(RC_TIMER_BUILD_REGIONS);
 	
 	const int w = chf.width;
 	const int h = chf.height;
 	unsigned short id = 1;
 	
-	rcScopedDelete<unsigned short> srcReg((unsigned short*)rcAlloc(sizeof(unsigned short)*chf.spanCount, RC_ALLOC_TEMP));
+	rcScopedDelete<unsigned short> srcReg = (unsigned short*)rcAlloc(sizeof(unsigned short)*chf.spanCount, RC_ALLOC_TEMP);
 	if (!srcReg)
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildRegionsMonotone: Out of memory 'src' (%d).", chf.spanCount);
@@ -1370,7 +1374,7 @@ bool rcBuildRegionsMonotone(rcContext* ctx, rcCompactHeightfield& chf,
 	memset(srcReg,0,sizeof(unsigned short)*chf.spanCount);
 
 	const int nsweeps = rcMax(chf.width,chf.height);
-	rcScopedDelete<rcSweepSpan> sweeps((rcSweepSpan*)rcAlloc(sizeof(rcSweepSpan)*nsweeps, RC_ALLOC_TEMP));
+	rcScopedDelete<rcSweepSpan> sweeps = (rcSweepSpan*)rcAlloc(sizeof(rcSweepSpan)*nsweeps, RC_ALLOC_TEMP);
 	if (!sweeps)
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildRegionsMonotone: Out of memory 'sweeps' (%d).", nsweeps);
@@ -1389,9 +1393,9 @@ bool rcBuildRegionsMonotone(rcContext* ctx, rcCompactHeightfield& chf,
 		paintRectRegion(w-bw, w, 0, h, id|RC_BORDER_REG, chf, srcReg); id++;
 		paintRectRegion(0, w, 0, bh, id|RC_BORDER_REG, chf, srcReg); id++;
 		paintRectRegion(0, w, h-bh, h, id|RC_BORDER_REG, chf, srcReg); id++;
+		
+		chf.borderSize = borderSize;
 	}
-
-	chf.borderSize = borderSize;
 	
 	rcIntArray prev(256);
 
@@ -1485,21 +1489,23 @@ bool rcBuildRegionsMonotone(rcContext* ctx, rcCompactHeightfield& chf,
 	}
 
 
-	{
-		rcScopedTimer timerFilter(ctx, RC_TIMER_BUILD_REGIONS_FILTER);
+	ctx->startTimer(RC_TIMER_BUILD_REGIONS_FILTER);
 
-		// Merge regions and filter out small regions.
-		rcIntArray overlaps;
-		chf.maxRegions = id;
-		if (!mergeAndFilterRegions(ctx, minRegionArea, mergeRegionArea, chf.maxRegions, chf, srcReg, overlaps))
-			return false;
+	// Merge regions and filter out small regions.
+	rcIntArray overlaps;
+	chf.maxRegions = id;
+	if (!mergeAndFilterRegions(ctx, minRegionArea, mergeRegionArea, chf.maxRegions, chf, srcReg, overlaps))
+		return false;
 
-		// Monotone partitioning does not generate overlapping regions.
-	}
+	// Monotone partitioning does not generate overlapping regions.
+	
+	ctx->stopTimer(RC_TIMER_BUILD_REGIONS_FILTER);
 	
 	// Store the result out.
 	for (int i = 0; i < chf.spanCount; ++i)
 		chf.spans[i].reg = srcReg[i];
+	
+	ctx->stopTimer(RC_TIMER_BUILD_REGIONS);
 
 	return true;
 }
@@ -1528,12 +1534,12 @@ bool rcBuildRegions(rcContext* ctx, rcCompactHeightfield& chf,
 {
 	rcAssert(ctx);
 	
-	rcScopedTimer timer(ctx, RC_TIMER_BUILD_REGIONS);
+	ctx->startTimer(RC_TIMER_BUILD_REGIONS);
 	
 	const int w = chf.width;
 	const int h = chf.height;
 	
-	rcScopedDelete<unsigned short> buf((unsigned short*)rcAlloc(sizeof(unsigned short)*chf.spanCount*2, RC_ALLOC_TEMP));
+	rcScopedDelete<unsigned short> buf = (unsigned short*)rcAlloc(sizeof(unsigned short)*chf.spanCount*4, RC_ALLOC_TEMP);
 	if (!buf)
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildRegions: Out of memory 'tmp' (%d).", chf.spanCount*4);
@@ -1544,15 +1550,17 @@ bool rcBuildRegions(rcContext* ctx, rcCompactHeightfield& chf,
 
 	const int LOG_NB_STACKS = 3;
 	const int NB_STACKS = 1 << LOG_NB_STACKS;
-	rcTempVector<LevelStackEntry> lvlStacks[NB_STACKS];
+	rcIntArray lvlStacks[NB_STACKS];
 	for (int i=0; i<NB_STACKS; ++i)
-		lvlStacks[i].reserve(256);
+		lvlStacks[i].resize(1024);
 
-	rcTempVector<LevelStackEntry> stack;
-	stack.reserve(256);
+	rcIntArray stack(1024);
+	rcIntArray visited(1024);
 	
 	unsigned short* srcReg = buf;
 	unsigned short* srcDist = buf+chf.spanCount;
+	unsigned short* dstReg = buf+chf.spanCount*2;
+	unsigned short* dstDist = buf+chf.spanCount*3;
 	
 	memset(srcReg, 0, sizeof(unsigned short)*chf.spanCount);
 	memset(srcDist, 0, sizeof(unsigned short)*chf.spanCount);
@@ -1571,15 +1579,14 @@ bool rcBuildRegions(rcContext* ctx, rcCompactHeightfield& chf,
 		// Make sure border will not overflow.
 		const int bw = rcMin(w, borderSize);
 		const int bh = rcMin(h, borderSize);
-		
 		// Paint regions
 		paintRectRegion(0, bw, 0, h, regionId|RC_BORDER_REG, chf, srcReg); regionId++;
 		paintRectRegion(w-bw, w, 0, h, regionId|RC_BORDER_REG, chf, srcReg); regionId++;
 		paintRectRegion(0, w, 0, bh, regionId|RC_BORDER_REG, chf, srcReg); regionId++;
 		paintRectRegion(0, w, h-bh, h, regionId|RC_BORDER_REG, chf, srcReg); regionId++;
-	}
 
-	chf.borderSize = borderSize;
+		chf.borderSize = borderSize;
+	}
 	
 	int sId = -1;
 	while (level > 0)
@@ -1596,64 +1603,65 @@ bool rcBuildRegions(rcContext* ctx, rcCompactHeightfield& chf,
 
 //		ctx->stopTimer(RC_TIMER_DIVIDE_TO_LEVELS);
 
+		ctx->startTimer(RC_TIMER_BUILD_REGIONS_EXPAND);
+		
+		// Expand current regions until no empty connected cells found.
+		if (expandRegions(expandIters, level, chf, srcReg, srcDist, dstReg, dstDist, lvlStacks[sId], false) != srcReg)
 		{
-			rcScopedTimer timerExpand(ctx, RC_TIMER_BUILD_REGIONS_EXPAND);
-
-			// Expand current regions until no empty connected cells found.
-			expandRegions(expandIters, level, chf, srcReg, srcDist, lvlStacks[sId], false);
+			rcSwap(srcReg, dstReg);
+			rcSwap(srcDist, dstDist);
 		}
 		
+		ctx->stopTimer(RC_TIMER_BUILD_REGIONS_EXPAND);
+		
+		ctx->startTimer(RC_TIMER_BUILD_REGIONS_FLOOD);
+		
+		// Mark new regions with IDs.
+		for (int j=0; j<lvlStacks[sId].size(); j+=3)
 		{
-			rcScopedTimer timerFloor(ctx, RC_TIMER_BUILD_REGIONS_FLOOD);
-
-			// Mark new regions with IDs.
-			for (int j = 0; j<lvlStacks[sId].size(); j++)
+			int x = lvlStacks[sId][j];
+			int y = lvlStacks[sId][j+1];
+			int i = lvlStacks[sId][j+2];
+			if (i >= 0 && srcReg[i] == 0)
 			{
-				LevelStackEntry current = lvlStacks[sId][j];
-				int x = current.x;
-				int y = current.y;
-				int i = current.index;
-				if (i >= 0 && srcReg[i] == 0)
-				{
-					if (floodRegion(x, y, i, level, regionId, chf, srcReg, srcDist, stack))
-					{
-						if (regionId == 0xFFFF)
-						{
-							ctx->log(RC_LOG_ERROR, "rcBuildRegions: Region ID overflow");
-							return false;
-						}
-						
-						regionId++;
-					}
-				}
+				if (floodRegion(x, y, i, level, regionId, chf, srcReg, srcDist, stack))
+					regionId++;
 			}
 		}
+		
+		ctx->stopTimer(RC_TIMER_BUILD_REGIONS_FLOOD);
 	}
 	
 	// Expand current regions until no empty connected cells found.
-	expandRegions(expandIters*8, 0, chf, srcReg, srcDist, stack, true);
+	if (expandRegions(expandIters*8, 0, chf, srcReg, srcDist, dstReg, dstDist, stack, true) != srcReg)
+	{
+		rcSwap(srcReg, dstReg);
+		rcSwap(srcDist, dstDist);
+	}
 	
 	ctx->stopTimer(RC_TIMER_BUILD_REGIONS_WATERSHED);
 	
+	ctx->startTimer(RC_TIMER_BUILD_REGIONS_FILTER);
+	
+	// Merge regions and filter out smalle regions.
+	rcIntArray overlaps;
+	chf.maxRegions = regionId;
+	if (!mergeAndFilterRegions(ctx, minRegionArea, mergeRegionArea, chf.maxRegions, chf, srcReg, overlaps))
+		return false;
+
+	// If overlapping regions were found during merging, split those regions.
+	if (overlaps.size() > 0)
 	{
-		rcScopedTimer timerFilter(ctx, RC_TIMER_BUILD_REGIONS_FILTER);
-
-		// Merge regions and filter out smalle regions.
-		rcIntArray overlaps;
-		chf.maxRegions = regionId;
-		if (!mergeAndFilterRegions(ctx, minRegionArea, mergeRegionArea, chf.maxRegions, chf, srcReg, overlaps))
-			return false;
-
-		// If overlapping regions were found during merging, split those regions.
-		if (overlaps.size() > 0)
-		{
-			ctx->log(RC_LOG_ERROR, "rcBuildRegions: %d overlapping regions.", overlaps.size());
-		}
+		ctx->log(RC_LOG_ERROR, "rcBuildRegions: %d overlapping regions.", overlaps.size());
 	}
+
+	ctx->stopTimer(RC_TIMER_BUILD_REGIONS_FILTER);
 		
 	// Write the result out.
 	for (int i = 0; i < chf.spanCount; ++i)
 		chf.spans[i].reg = srcReg[i];
+	
+	ctx->stopTimer(RC_TIMER_BUILD_REGIONS);
 	
 	return true;
 }
@@ -1664,25 +1672,25 @@ bool rcBuildLayerRegions(rcContext* ctx, rcCompactHeightfield& chf,
 {
 	rcAssert(ctx);
 	
-	rcScopedTimer timer(ctx, RC_TIMER_BUILD_REGIONS);
+	ctx->startTimer(RC_TIMER_BUILD_REGIONS);
 	
 	const int w = chf.width;
 	const int h = chf.height;
 	unsigned short id = 1;
 	
-	rcScopedDelete<unsigned short> srcReg((unsigned short*)rcAlloc(sizeof(unsigned short)*chf.spanCount, RC_ALLOC_TEMP));
+	rcScopedDelete<unsigned short> srcReg = (unsigned short*)rcAlloc(sizeof(unsigned short)*chf.spanCount, RC_ALLOC_TEMP);
 	if (!srcReg)
 	{
-		ctx->log(RC_LOG_ERROR, "rcBuildLayerRegions: Out of memory 'src' (%d).", chf.spanCount);
+		ctx->log(RC_LOG_ERROR, "rcBuildRegionsMonotone: Out of memory 'src' (%d).", chf.spanCount);
 		return false;
 	}
 	memset(srcReg,0,sizeof(unsigned short)*chf.spanCount);
 	
 	const int nsweeps = rcMax(chf.width,chf.height);
-	rcScopedDelete<rcSweepSpan> sweeps((rcSweepSpan*)rcAlloc(sizeof(rcSweepSpan)*nsweeps, RC_ALLOC_TEMP));
+	rcScopedDelete<rcSweepSpan> sweeps = (rcSweepSpan*)rcAlloc(sizeof(rcSweepSpan)*nsweeps, RC_ALLOC_TEMP);
 	if (!sweeps)
 	{
-		ctx->log(RC_LOG_ERROR, "rcBuildLayerRegions: Out of memory 'sweeps' (%d).", nsweeps);
+		ctx->log(RC_LOG_ERROR, "rcBuildRegionsMonotone: Out of memory 'sweeps' (%d).", nsweeps);
 		return false;
 	}
 	
@@ -1698,9 +1706,9 @@ bool rcBuildLayerRegions(rcContext* ctx, rcCompactHeightfield& chf,
 		paintRectRegion(w-bw, w, 0, h, id|RC_BORDER_REG, chf, srcReg); id++;
 		paintRectRegion(0, w, 0, bh, id|RC_BORDER_REG, chf, srcReg); id++;
 		paintRectRegion(0, w, h-bh, h, id|RC_BORDER_REG, chf, srcReg); id++;
+		
+		chf.borderSize = borderSize;
 	}
-
-	chf.borderSize = borderSize;
 	
 	rcIntArray prev(256);
 	
@@ -1794,19 +1802,22 @@ bool rcBuildLayerRegions(rcContext* ctx, rcCompactHeightfield& chf,
 	}
 	
 	
-	{
-		rcScopedTimer timerFilter(ctx, RC_TIMER_BUILD_REGIONS_FILTER);
-
-		// Merge monotone regions to layers and remove small regions.
-		chf.maxRegions = id;
-		if (!mergeAndFilterLayerRegions(ctx, minRegionArea, chf.maxRegions, chf, srcReg))
-			return false;
-	}
+	ctx->startTimer(RC_TIMER_BUILD_REGIONS_FILTER);
+	
+	// Merge monotone regions to layers and remove small regions.
+	rcIntArray overlaps;
+	chf.maxRegions = id;
+	if (!mergeAndFilterLayerRegions(ctx, minRegionArea, chf.maxRegions, chf, srcReg, overlaps))
+		return false;
+	
+	ctx->stopTimer(RC_TIMER_BUILD_REGIONS_FILTER);
 	
 	
 	// Store the result out.
 	for (int i = 0; i < chf.spanCount; ++i)
 		chf.spans[i].reg = srcReg[i];
+	
+	ctx->stopTimer(RC_TIMER_BUILD_REGIONS);
 	
 	return true;
 }
