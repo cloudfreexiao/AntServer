@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#macosx https://blog.bbzhh.com/index.php/archives/141.html
+
 CUR_DIR=$(dirname $(readlink -f $0))
 if [ ! -f "$CUR_DIR/server_dependency.sh" ]; then
   echo "Lack of file $CUR_DIR/server_dependency.sh" && exit -1
