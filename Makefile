@@ -8,6 +8,7 @@ SKYNET_DEPS ?= lualib-src/
 
 PLAT ?= linux
 
+#make PLAT=macosx TLS_LIB=/usr/local/Cellar/openssl@1.1/1.1.1d/lib TLS_INC=/usr/local/Cellar/openssl@1.1/1.1.1d/include
 TLS_MODULE ?= ltls 
 TLS_LIB ?= /usr/local/ssl/lib
 TLS_INC ?= /usr/local/include
