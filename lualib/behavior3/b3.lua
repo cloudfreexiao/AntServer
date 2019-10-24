@@ -1,6 +1,4 @@
-
--- _class = {}
-
+local json = require "cjson"
 b3 = {
 	VERSION = "0.2.0",
 
@@ -16,7 +14,7 @@ b3 = {
 	ACTION = "action",
 	CONDITION = "condition",
 
-	createUUID = function()
+	create_uuid = function()
 		local seed = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}
 		local tb = {}
 		for i =1,32 do
@@ -93,7 +91,7 @@ b3 = {
 	    return cls
 	end,
 
-	decodeJson = function(str)
+	decode_json = function(str)
 		return json.decode(str)
 	end
 }

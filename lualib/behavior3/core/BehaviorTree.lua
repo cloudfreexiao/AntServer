@@ -7,7 +7,7 @@ local behaviorTree = b3.Class("BehaviorTree")
 b3.BehaviorTree = behaviorTree
 
 function behaviorTree:ctor()
-	self.id 			= b3.createUUID()
+	self.id 			= b3.create_uuid()
 	self.title 			= "The behavior tree"
 	self.description 	= "Default description"
 	self.properties 	= {}
@@ -61,7 +61,7 @@ function behaviorTree:load(data, names)
 		end
 
 		if v.children then
-			for i = 1,table.getn(v.children) do
+			for i = 1, #v.children do
 				local cid = spec.children[i]
 				table.insert(node.children, nodes[cid])
 			end
@@ -72,7 +72,7 @@ function behaviorTree:load(data, names)
 	print(self.root.name)
 end
 function behaviorTree:loadjson(jsonData, names)
-	local data = json.decode(jsonData)
+	local data = b3.decode_json(jsonData)
 	self:load(data,names)
 end
 
@@ -129,14 +129,14 @@ function behaviorTree:tick(target, blackboard)
 
 	local start = 0
 	local i
-	for i = 0,math.min(table.getn(lastOpenNodes), table.getn(currOpenNodes)) do
+	for i = 0,math.min(#lastOpenNodes, #currOpenNodes ) do
 		start = i + 1
 		if lastOpenNodes[i] ~= currOpenNodes[i] then
 			break
 		end
 	end
 
-	for i = table.getn(lastOpenNodes),0,-1 do
+	for i = #lastOpenNodes, 0, -1 do
 		if lastOpenNodes[i] then
 			lastOpenNodes[i]:_close(tick)
 		end

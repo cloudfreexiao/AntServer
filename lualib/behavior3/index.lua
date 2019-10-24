@@ -1,5 +1,3 @@
-
-
 require 'behavior3.b3'
 require 'behavior3.core.Action'
 require 'behavior3.core.BaseNode'
@@ -30,3 +28,6 @@ require 'behavior3.decorators.Repeater'
 require 'behavior3.decorators.RepeatUntilFailure'
 require 'behavior3.decorators.RepeatUntilSuccess'
 require 'behavior3.core.SubTree'
+
+
+

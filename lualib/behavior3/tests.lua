@@ -20,7 +20,7 @@ TestLoader = {}
 --从导出树载入
 function TestLoader:testLoadTree()
 	print("testLoadTree...")
-	local file=io.open("GameCore/3Party/behavior3/testbt.json", 'r')
+	local file=io.open("lualib/behavior3/testbt.json", 'r')
 	local txt = file:read("*a")
 	local blackBoard = b3.Blackboard.new()
 
@@ -33,18 +33,18 @@ end
 --从导出工程载入，包含子树的示例
 function TestLoader:testSubtreeLoadFromProject()
 	print("testSubtreeLoadFromProject...")
-	local file=io.open("GameCore/3Party/behavior3/testsubtree.json", 'r')
+	local file=io.open("lualib/behavior3/testsubtree.json", 'r')
 	local txt = file:read("*a")
 	local blackBoard = b3.Blackboard.new()
 	local treeMap = {}
 	local treeMapByTitle = {}
 	local custom = {log=log}
-	SetSubTreeLoadFunc(function(id)
+	b3.SetSubTreeLoadFunc(function(id)
 		return treeMap[id]
 	end)
 
 
-	local projectConf = json.decode(txt)
+	local projectConf = b3.decode_json(txt)
 	for k, conf in pairs(projectConf.trees) do
 		if conf.title=="testsub" or conf.title=="testsubtree" then
 			print("load tree:",conf.title)
@@ -57,3 +57,5 @@ function TestLoader:testSubtreeLoadFromProject()
 
 	treeMapByTitle["testsubtree"]:tick(nil, blackBoard)
 end
+
+return TestLoader
