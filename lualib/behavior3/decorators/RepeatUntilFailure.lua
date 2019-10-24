@@ -1,5 +1,3 @@
-require "behavior3.core.Decorator"
-
 local repeatUntilFailure = b3.Class("RepeatUntilFailure", b3.Decorator)
 b3.RepeatUntilFailure = repeatUntilFailure
 
@@ -43,3 +41,5 @@ function repeatUntilFailure:tick(tick)
 	i = tick.blackboard.set("i", i, tick.tree.id, self.id)
 	return status
 end
+
+return repeatUntilFailure

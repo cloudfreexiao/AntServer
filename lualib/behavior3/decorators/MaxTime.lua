@@ -1,5 +1,3 @@
-require 'behavior3.core.Decorator'
-
 local maxTime = b3.Class("MaxTime", b3.Decorator)
 b3.MaxTime = maxTime
 
@@ -37,3 +35,5 @@ function maxTime:open(tick)
 
 	return status
 end
+
+return maxTime

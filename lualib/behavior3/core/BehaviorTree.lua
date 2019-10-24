@@ -1,5 +1,3 @@
-require 'behavior3.core.Tick'
-
 
 ---@class BehaviorTree
 local behaviorTree = b3.Class("BehaviorTree")
@@ -147,3 +145,5 @@ function behaviorTree:tick(target, blackboard)
 
 	return state
 end
+
+return behaviorTree

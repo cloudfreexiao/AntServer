@@ -1,5 +1,3 @@
-require 'behavior3.b3'
-
 local tick = b3.Class("Tick")
 b3.Tick = tick
 
@@ -29,3 +27,5 @@ end
 
 function tick:_exitNode(node)
 end
+
+return tick

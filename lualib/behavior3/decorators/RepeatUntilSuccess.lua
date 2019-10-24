@@ -1,5 +1,3 @@
-require "behavior3.core.Decorator"
-
 local repeatUntilSuccess = b3.Class("RepeatUntilSuccess", b3.Decorator)
 b3.RepeatUntilSuccess = repeatUntilSuccess
 
@@ -43,3 +41,5 @@ function repeatUntilSuccess:tick(tick)
 	i = tick.blackboard.set("i", i, tick.tree.id, self.id)
 	return status
 end
+
+return repeatUntilSuccess

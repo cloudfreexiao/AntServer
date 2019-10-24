@@ -1,5 +1,4 @@
-require 'behavior3.index'
-
+local b3 = require 'behavior3.index'
 
 local log = b3.Class("log", b3.Action)
 

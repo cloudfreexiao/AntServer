@@ -1,5 +1,3 @@
-require 'behavior3.core.BaseNode'
-
 local decorator = b3.Class("Decorator", b3.BaseNode)
 b3.Decorator = decorator
 
@@ -12,3 +10,5 @@ function decorator:ctor(params)
 
 	self.child = params.child or nil
 end
+
+return decorator

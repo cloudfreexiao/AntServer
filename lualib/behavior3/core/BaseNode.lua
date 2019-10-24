@@ -1,5 +1,3 @@
-require 'behavior3.b3'
-
 local baseNode = b3.Class("BaseNode")
 b3.BaseNode = baseNode
 
@@ -76,4 +74,6 @@ end
 
 function baseNode:exit(tick)
 end
+
+return baseNode
 

@@ -1,5 +1,3 @@
-require 'behavior3.core.Action'
-
 local succeeder = b3.Class("Succeeder", b3.Action)
 b3.Succeeder = succeeder
 
@@ -12,3 +10,5 @@ end
 function succeeder:tick(tick)
 	return b3.SUCCESS
 end
+
+return succeeder

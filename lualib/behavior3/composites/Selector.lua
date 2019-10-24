@@ -1,5 +1,3 @@
-require 'behavior3.core.Composite'
-
 local selector = b3.Class("Selector", b3.Composite)
 b3.Selector = selector
 
@@ -15,3 +13,5 @@ function selector:tick(tick)
 		local status = v:_execute(tick)
 	end
 end
+
+return selector

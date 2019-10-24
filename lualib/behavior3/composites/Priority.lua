@@ -1,5 +1,3 @@
-require 'behavior3.core.Composite'
-
 local priority = b3.Class("Priority", b3.Composite)
 b3.Priority = priority
 
@@ -22,4 +20,6 @@ function priority:tick(tick)
 	--print("priority all fail",self.title)
 	return b3.FAILURE
 end
+
+return priority
 

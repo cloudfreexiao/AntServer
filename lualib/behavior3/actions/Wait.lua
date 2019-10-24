@@ -1,5 +1,3 @@
-require 'behavior3.core.Action'
-
 local wait = b3.Class("Wait", b3.Action)
 b3.Wait = wait
 
@@ -28,3 +26,5 @@ function wait:tick(tick)
 
 	return b3.RUNNING
 end
+
+return wait

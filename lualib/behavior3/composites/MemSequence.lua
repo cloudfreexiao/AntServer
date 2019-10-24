@@ -1,5 +1,3 @@
-require 'behavior3.core.Composite'
-
 local memSequence = b3.Class("MemSequence", b3.Composite)
 b3.MemSequence = memSequence
 
@@ -29,3 +27,5 @@ function memSequence:tick(tick)
 
 	return b3.SUCCESS
 end
+
+return memSequence

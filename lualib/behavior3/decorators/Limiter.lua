@@ -1,5 +1,3 @@
-require 'behavior3.core.Composite'
-
 local limiter = b3.Class("Limiter", b3.Decorator)
 b3.Limiter = limiter
 
@@ -34,3 +32,5 @@ function limiter:tick(tick)
 
 	return b3.FAILURE
 end
+
+return limiter

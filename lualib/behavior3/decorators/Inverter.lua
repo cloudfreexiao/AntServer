@@ -1,5 +1,3 @@
-require 'behavior3.core.Decorator'
-
 local inverter = b3.Class("Inverter", b3.Decorator)
 b3.Inverter = inverter
 
@@ -24,3 +22,5 @@ function inverter:tick(tick)
 
 	return status
 end
+
+return inverter

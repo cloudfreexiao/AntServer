@@ -1,5 +1,3 @@
-require "behavior3.core.Decorator"
-
 local repeater = b3.Class("Repeater", b3.Decorator)
 b3.Repeater = repeater
 
@@ -46,3 +44,5 @@ function repeater:tick(tick)
 	i = tick.blackboard:set("i", i, tick.tree.id, self.id)
 	return status
 end
+
+return repeater

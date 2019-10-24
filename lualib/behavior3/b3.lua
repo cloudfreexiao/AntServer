@@ -1,5 +1,5 @@
 local json = require "cjson"
-b3 = {
+return {
 	VERSION = "0.2.0",
 
 	--Returning status

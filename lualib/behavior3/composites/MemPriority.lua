@@ -1,5 +1,3 @@
-require 'behavior3.core.Composite'
-
 local memPriority = b3.Class("MemPriority", b3.Composite)
 b3.MemPriority = memPriority
 
@@ -29,3 +27,5 @@ function memPriority:tick(tick)
 
 	return b3.FAILURE
 end
+
+return memPriority

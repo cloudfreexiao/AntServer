@@ -1,5 +1,3 @@
-require 'behavior3.core.Action'
-
 local error = b3.Class("Error", b3.Action)
 b3.Error = error
 
@@ -12,3 +10,5 @@ end
 function error:tick()
 	return b3.ERROR
 end
+
+return error

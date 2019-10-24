@@ -1,5 +1,3 @@
-require 'behavior3.b3'
-
 
 ---@class Blackboard
 local blackboard = b3.Class("Blackboard")
@@ -65,3 +63,5 @@ function blackboard:get(key, treeScope, nodeScope)
 	end
 	return {}
 end
+
+return blackboard
