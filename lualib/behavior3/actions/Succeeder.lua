@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Action'
+require 'behavior3.core.Action'
 
 local succeeder = b3.Class("Succeeder", b3.Action)
 b3.Succeeder = succeeder

@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.b3'
+require 'behavior3.b3'
 
 
 ---@class Blackboard

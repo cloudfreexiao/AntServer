@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Composite'
+require 'behavior3.core.Composite'
 
 local priority = b3.Class("Priority", b3.Composite)
 b3.Priority = priority

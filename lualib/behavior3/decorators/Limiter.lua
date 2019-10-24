@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Composite'
+require 'behavior3.core.Composite'
 
 local limiter = b3.Class("Limiter", b3.Decorator)
 b3.Limiter = limiter

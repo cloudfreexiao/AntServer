@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Composite'
+require 'behavior3.core.Composite'
 
 local memSequence = b3.Class("MemSequence", b3.Composite)
 b3.MemSequence = memSequence

@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Decorator'
+require 'behavior3.core.Decorator'
 
 local inverter = b3.Class("Inverter", b3.Decorator)
 b3.Inverter = inverter

@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.include'
+require 'behavior3.index'
 
 
 local log = b3.Class("log", b3.Action)

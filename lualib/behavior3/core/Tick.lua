@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.b3'
+require 'behavior3.b3'
 
 local tick = b3.Class("Tick")
 b3.Tick = tick

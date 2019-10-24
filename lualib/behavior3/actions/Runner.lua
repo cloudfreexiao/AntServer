@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Action'
+require 'behavior3.core.Action'
 
 local runner = b3.Class("Runner", b3.Action)
 b3.Runner = runner

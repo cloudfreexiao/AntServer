@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.BaseNode'
+require 'behavior3.core.BaseNode'
 
 local action = b3.Class("Action", b3.BaseNode)
 b3.Action = action

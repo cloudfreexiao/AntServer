@@ -39,7 +39,7 @@ skynetdeps:
 clientdeps:
 	cd $(CLIENT_DEPS) && $(MAKE) $(PLAT)
 
-cleanall:
+clean:
 	cd $(SKYNET_ROOT) && $(MAKE) cleanall
 	cd $(CLIENT_DEPS) && $(MAKE) clean 
 	cd $(SKYNET_DEPS) && $(MAKE) clean 

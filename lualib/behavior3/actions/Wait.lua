@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Action'
+require 'behavior3.core.Action'
 
 local wait = b3.Class("Wait", b3.Action)
 b3.Wait = wait

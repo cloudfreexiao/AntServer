@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Action'
+require 'behavior3.core.Action'
 
 local M = b3.Class("SubTree", b3.Action)
 b3.SubTree = M

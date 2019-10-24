@@ -1,5 +1,5 @@
 
-_class = {}
+-- _class = {}
 
 b3 = {
 	VERSION = "0.2.0",

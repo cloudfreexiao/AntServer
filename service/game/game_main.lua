@@ -39,8 +39,8 @@ local function start_gated()
   end
 end
 
--- local navigator = require "navigator"
--- DEBUG("navigator:", DUMP(navigator))
+local navigator = require "navigator"
+DEBUG("navigator:", DUMP(navigator))
 
 -- local rudp = require "rudp"
 -- DEBUG("rudp", DUMP(rudp))
@@ -106,6 +106,22 @@ skynet.start(function()
   --   etcd()
   -- end)
 
+  -- skynet.fork(function ()
+  --   while true do
+  --     cluster.call("node1001", "gated", "hello")
+  --     skynet.sleep(10 * 100)
+  --   end
+  -- end)
+
+  -- skynet.trace_timeout()
+  -- local function test()
+  --   -- body
+  --   skynet.timeout(500, test)
+  --   cluster.call("node1001", "gated", "hello")
+  -- end
+  -- skynet.timeout(500, test)
+
   cluster.open(node_name)
-  skynet.exit()
+  
+  -- skynet.exit()
 end)

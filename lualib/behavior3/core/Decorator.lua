@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.BaseNode'
+require 'behavior3.core.BaseNode'
 
 local decorator = b3.Class("Decorator", b3.BaseNode)
 b3.Decorator = decorator

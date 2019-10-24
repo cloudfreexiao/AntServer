@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Action'
+require 'behavior3.core.Action'
 
 local error = b3.Class("Error", b3.Action)
 b3.Error = error

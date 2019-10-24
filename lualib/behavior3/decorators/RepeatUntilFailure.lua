@@ -1,4 +1,4 @@
-require "GameCore.3Party.behavior3.core.Decorator"
+require "behavior3.core.Decorator"
 
 local repeatUntilFailure = b3.Class("RepeatUntilFailure", b3.Decorator)
 b3.RepeatUntilFailure = repeatUntilFailure

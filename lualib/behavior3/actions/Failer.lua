@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Action'
+require 'behavior3.core.Action'
 
 local failer = b3.Class("Failer", b3.Action)
 b3.Failer = failer

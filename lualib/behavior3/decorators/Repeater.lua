@@ -1,4 +1,4 @@
-require "GameCore.3Party.behavior3.core.Decorator"
+require "behavior3.core.Decorator"
 
 local repeater = b3.Class("Repeater", b3.Decorator)
 b3.Repeater = repeater

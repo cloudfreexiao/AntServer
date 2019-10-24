@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.BaseNode'
+require 'behavior3.core.BaseNode'
 
 local composite = b3.Class("Composite", b3.BaseNode)
 b3.Composite = composite

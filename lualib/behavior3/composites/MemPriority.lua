@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Composite'
+require 'behavior3.core.Composite'
 
 local memPriority = b3.Class("MemPriority", b3.Composite)
 b3.MemPriority = memPriority

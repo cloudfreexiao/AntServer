@@ -1,4 +1,4 @@
-require 'GameCore.3Party.behavior3.core.Tick'
+require 'behavior3.core.Tick'
 
 
 ---@class BehaviorTree
