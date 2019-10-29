@@ -92,9 +92,11 @@ skynet.start(function()
 
   skynet_send(".agent_mgr", "recycle", addr, "tcp")
 
-  local behavior3 = require "behavior3.tests"
-  behavior3.testLoadTree()
-  behavior3.testSubtreeLoadFromProject()
+  -- local behavior3 = require "behavior3.tests"
+  -- behavior3.testLoadTree()
+  -- behavior3.testSubtreeLoadFromProject()
+
+  
   -- skynet.timeout(200, function()
   --   -- local rethinkdb = require "rethinkdb.examples.example"
   --   -- rethinkdb.connect()
