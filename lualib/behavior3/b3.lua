@@ -17,14 +17,14 @@ return {
 	create_uuid = function()
 		local seed = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}
 		local tb = {}
-		for i =1,32 do
+		for idx=1,32 do
 			table.insert(tb, seed[math.random(1,16)])
 		end
 		return  table.concat(tb)
 	end,
 
 	Class = function(classname, super)
-	   	local superType = type(super)
+		local superType = type(super)
 	    local cls
 
 	    --如果父类既不是函数也不是table则说明父类为空

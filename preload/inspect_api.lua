@@ -6,11 +6,11 @@ function inspect(value)
         if type(item) == "function" then
             return nil
         end
-        
+
         if path[#path] == inspect_lib.METATABLE then
             return nil
         end
-        
+
         return item
     end,
     newline = " ",

@@ -32,8 +32,8 @@ local function start_gated()
           nodelay = v.nodelay,
           name = gate_name,
         })
-      else
-        -- cluster proxy ??
+      -- else
+      --   -- cluster proxy ??
       end
     end
   end
@@ -96,7 +96,6 @@ skynet.start(function()
   -- behavior3.testLoadTree()
   -- behavior3.testSubtreeLoadFromProject()
 
-  
   -- skynet.timeout(200, function()
   --   -- local rethinkdb = require "rethinkdb.examples.example"
   --   -- rethinkdb.connect()
@@ -119,14 +118,13 @@ skynet.start(function()
   -- end)
 
   -- skynet.trace_timeout()
-  -- local function test()
-  --   -- body
-  --   skynet.timeout(500, test)
-  --   cluster.call("node1001", "gated", "hello")
-  -- end
-  -- skynet.timeout(500, test)
+  local function test()
+    skynet.timeout(30 *100, test)
+    cluster.call("node1001", "gated", "hello")
+  end
+  skynet.timeout(15 * 100, test)
 
   cluster.open(node_name)
-  
+
   -- skynet.exit()
 end)

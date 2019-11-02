@@ -1,4 +1,3 @@
-local skynet    = require "skynet"
 local hash      = require "hash"
 local timer     = require "timer.timer"
 
@@ -29,13 +28,12 @@ local function do_register_backends(name, pack, data)
 end
 
 function M.reg_profile(handler, session)
-    local name = "profile"
-    profiled = require("mods.profile.profiled"):new(session)
+    profiled = require("mods.profile.profiled").new(session)
     assert(profiled)
-    profile = require("mods.profile.profile"):new({
+    profile = require("mods.profile.profile").new{
         proxy = profiled,
         handler = handler,
-    })
+    }
 end
 
 function M.get_profile()
@@ -47,8 +45,8 @@ function M.get_mod(name)
 end
 
 function M.reg_mods(handler, data)
-    local name = nil
-    local obj = nil
+    local name
+    local obj
     do
         name = "property"
         obj = do_register_backends(name, "mods.property.propertyd", data)
@@ -80,7 +78,7 @@ end
 local function get_backend_func(mod_name, func)
     local mod = _backends[tostring(mod_name)]
     assert(mod)
-    
+
     local f = mod[tostring(func)]
     assert(f)
     return mod, f
@@ -111,7 +109,7 @@ end
 
 
 function M.synch_msg()
-    for k, mod in pairs(_fronts) do
+    for _, mod in pairs(_fronts) do
         local f = mod["synch_msg"]
         if f then
             f(mod)
@@ -120,7 +118,7 @@ function M.synch_msg()
 end
 
 function M.load()
-    for k, mod in pairs(_backends) do
+    for _, mod in pairs(_backends) do
         local f = mod["load"]
         if f then
             f(mod)
@@ -134,7 +132,7 @@ local function on_mod_save()
         local f = mod["save"]
         if f then
             assert(mod._data)
-            
+
             local nhcode = hash.hashcode(mod._data)
             local bhashcode = _hashcodes[tostring(k)]
             if (not bhashcode) or (bhashcode ~= nhcode) then
@@ -153,15 +151,15 @@ function M.save()
     -- 启动定时器 检测是否模块属性有变更
     M.force_save()
 
-    _timers:add_timer(30, function() 
-        on_mod_save() 
-    end, 
+    _timers:add_timer(30, function()
+        on_mod_save()
+    end,
     false,
     0)
 end
 
 local function on_mod_update()
-    for k, mod in pairs(_fronts) do
+    for _, mod in pairs(_fronts) do
         local f = mod["update"]
         if f then
             f(mod)

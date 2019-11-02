@@ -4,5 +4,5 @@ include("config.public")
 harbor    = 0
 logger    = "./log/center.log"
 daemon    = './sh/center.pid'
-start     = "center_main"
+start     = "main_center"
 

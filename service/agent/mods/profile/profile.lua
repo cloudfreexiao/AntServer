@@ -4,7 +4,7 @@ local Profile   = class("Profile")
 local M = {}
 
 local _profiled = nil
-local _handler = nil 
+local _handler = nil
 
 function M.heartbeat(args)
 end
@@ -17,7 +17,7 @@ function M.born(args)
 	local data = _profiled:born(args)
 	assert(data)
 
-	local cmds = require "cmds.init"
+	local cmds = require "cmds.index"
 	local g_cmds = cmds:instance()
 
 	g_cmds:trigger_mods({
@@ -35,7 +35,6 @@ end
 function Profile:initialize(data)
 	_handler = data.handler
 	_profiled = data.proxy
-
 	_handler.handler().heartbeat = M.heartbeat
 	_handler.handler().born = M.born
 end

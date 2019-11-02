@@ -1,12 +1,24 @@
-local singleton = class("singleton")
 
+return function (classname, super)
+	local obj = {}
+	obj.__index = obj
+	setmetatable(obj, super)
 
-local _instance = nil
-function singleton.instance()
-	if not _instance then
-		_instance = singleton.new()
+	function obj.new(...)
+		if obj._instance then
+            return obj._instance
+		end
+
+		local instance = setmetatable({}, obj)
+        if instance.initialize then
+            instance:initialize(...)
+		end
+
+		obj._instance = instance
+        return obj._instance
 	end
-	return _instance
-end
 
-return singleton
+	obj._name = classname
+
+	return obj
+end

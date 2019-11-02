@@ -29,7 +29,7 @@ return function (classname, super)
           -- copy fields from class to native object
           for k,v in pairs(cls) do instance[k] = v end
           instance.class = cls
-          instance:ctor(...)
+          instance:initialize(...)
           return instance
       end
 
@@ -40,7 +40,7 @@ return function (classname, super)
           setmetatable(cls, {__index = super})
           cls.super = super
       else
-          cls = {ctor = function() end}
+          cls = {initialize = function() end}
       end
 
       cls.__cname = classname
@@ -50,7 +50,7 @@ return function (classname, super)
       function cls.new(...)
           local instance = setmetatable({}, cls)
           instance.class = cls
-          instance:ctor(...)
+          instance:initialize(...)
           return instance
       end
   end

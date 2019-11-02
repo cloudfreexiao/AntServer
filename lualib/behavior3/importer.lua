@@ -1,6 +1,6 @@
 --本源码文件主要摘自云风的blog:https://blog.codingnow.com/2015/10/lua_require_env.html
-local loaded = package.loaded
-local searchpath = package.searchpath
+-- local loaded = package.loaded
+-- local searchpath = package.searchpath
 
 local function load_env(filename)
     local f,err = loadfile(filename)

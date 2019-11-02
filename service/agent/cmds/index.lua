@@ -1,12 +1,10 @@
 local skynet = require "skynet"
 require "skynet.manager"
 
-local class = require "class"
-local singleton = require "singleton"
-local Commands = class("Commands"):include(singleton)
+local Commands = singleton("Commands")
 
 local sessions = require "globals.sessions.init"
-local mods = require "mods.init"
+local mods = require "mods.index"
 local _handler = require "service.client"
 
 
@@ -48,7 +46,7 @@ function Commands:trigger_mods(data)
 	end)
 end
 
-function Commands:logout(conn)
+function Commands:logout()
 	mods.force_save()
 	--TODO: 不做其他处理是否出现问题? fd 保存定时器
 	skynet_send(".agent_mgr", "recycle", skynet.self(), self._protocol)

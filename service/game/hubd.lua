@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 require "skynet.manager"
 local cluster = require "skynet.cluster"
-local socket = require "skynet.socket"
 
 local skynet_node_name = ...
 
@@ -65,7 +64,7 @@ local function handshake_timeout()
                 end
             end
         end
-    
+
         do
             for m=1, #tbl do
                 local uid = tbl[m]
@@ -125,7 +124,7 @@ function CMD.handshake(fd, args)
         is_reconnect = is_reconnect,
         skynet_node_name = skynet_node_name,
     })
-    
+
     local res = skynet_call(user.conn.gate, "register", {
         fd = fd,
         uid = user.token.uid,
@@ -139,14 +138,14 @@ end
 
 ------------------------Auth Client Handshake Logic-------------------------------------------
 ------------------------Auth Client Handshake Logic-------------------------------------------
-local hub_mod = require "hub.init"
+local hub_mod = require "hub.index"
 
 skynet.start(function()
     skynet.fork(handshake_timeout)
 
     hub_mod.init(skynet_node_name)
 
-    skynet.dispatch("lua", function(session, source, cmd, ...)
+    skynet.dispatch("lua", function(_, _, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)

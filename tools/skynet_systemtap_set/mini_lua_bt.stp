@@ -14,7 +14,7 @@ probe process(@1).function("luaL_*"),
         stack = ""
 
         idx = 1
-        if (((((p->func))->tt_) == ((6 | (1 << 4))))) {
+        if (((((p->func))->tt_) == ((6 | (1 << 4))))) { // LUA_TLCF, ignore light c function
             next
         }
         else {
@@ -23,7 +23,7 @@ probe process(@1).function("luaL_*"),
             func = &@cast(closure, "Closure", @1)->c //CClosure
             if (idx <= func->nupvalues) {
                 upvalue_type = func->upvalue[idx - 1]->tt_
-                if (upvalue_type != 2) {
+                if (upvalue_type != 2) { // light userdata
                     next
                 } /* only this one can enter counter */
                 skynet_context = &@cast(func->upvalue[idx - 1]->value_->p, "skynet_context", @1)
@@ -38,16 +38,16 @@ probe process(@1).function("luaL_*"),
 
         while (p != 0 && !quit) {
             tt = p->func->tt_ & 0x3f
-            //printf("tt: %x\n", tt)
             if ( tt == 0x06 ) {
                 gc = p->func->value_->gc
                 closure = &@cast(gc, "GCUnion", @1)->cl
                 lua_closure = &closure->l
-                share_proto = lua_closure->p->sp
-                source = @cast(share_proto, "SharedProto", @1)->source
-                lineinfo = share_proto->lineinfo
-                line_index = p->u->l->savedpc - share_proto->code 
-                filename = kernel_string(source + 27)
+                proto = lua_closure->p
+                source = proto->source
+                lineinfo = proto->lineinfo
+                line_index = p->u->l->savedpc - proto->code
+
+                filename = kernel_string(source + 33)
                 lineno = kernel_int(lineinfo+line_index) - 1
                 frame = sprintf("%s:%d", filename, lineno)
             }
@@ -60,7 +60,7 @@ probe process(@1).function("luaL_*"),
                 f = &@cast(gc, "GCUnion", @1)->cl->c->f
                 frame = "c_function:" . usymname(f)
             }
-            else 
+            else
                 frame = "nil"
 
             p = p->previous

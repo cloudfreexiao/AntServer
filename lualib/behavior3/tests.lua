@@ -8,13 +8,13 @@ function log:ctor(params)
 	self.info = params.info
 end
 
-function log:tick(tick)
+function log:tick()
 	print(self.info)
 	return b3.SUCCESS
 end
 
 
-TestLoader = {}
+local TestLoader = {}
 
 --从导出树载入
 function TestLoader:testLoadTree()
@@ -44,7 +44,7 @@ function TestLoader:testSubtreeLoadFromProject()
 
 
 	local projectConf = b3.decode_json(txt)
-	for k, conf in pairs(projectConf.trees) do
+	for _, conf in pairs(projectConf.trees) do
 		if conf.title=="testsub" or conf.title=="testsubtree" then
 			print("load tree:",conf.title)
 			local behaviorTree = b3.BehaviorTree.new()
