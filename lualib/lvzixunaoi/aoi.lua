@@ -533,7 +533,7 @@ end
 
 local function aoi_clear_all_touch_gridobjs(self)
     local touch_grididx_map = self.touch_grididx_map
-     for grid_idx,_ in pairs(touch_grididx_map) do
+    for grid_idx,_ in pairs(touch_grididx_map) do
         touch_grididx_map[grid_idx] = nil
         local grid_obj = get_gridobj_by_idx(self, grid_idx)
         local touchs = grid_obj.touchs
@@ -557,8 +557,8 @@ local function aoi_clear_all_touch_gridobjs(self)
                 end
             end
         end
-     end
-     self.touch_grid_count = 0
+    end
+    self.touch_grid_count = 0
 end
 
 

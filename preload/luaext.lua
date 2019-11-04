@@ -7,7 +7,7 @@ end
 
 table.nums = function(t)
     local count = 0
-    for k, v in pairs(t) do
+    for _, _ in pairs(t) do
         count = count + 1
     end
     return count
@@ -16,7 +16,7 @@ end
 -- 返回table索引列表
 table.indices = function(t)
     local result = {}
-    for k, v in pairs(t) do
+    for k, _ in pairs(t) do
         table.insert(result, k)
     end
 end
@@ -24,7 +24,7 @@ end
 -- 返回table值列表
 table.values = function(t)
     local result = {}
-    for k, v in pairs(t) do
+    for _, v in pairs(t) do
         table.insert(result, v)
     end
 end

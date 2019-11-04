@@ -120,7 +120,7 @@ skynet.start(function()
   -- skynet.trace_timeout()
   local function test()
     skynet.timeout(30 *100, test)
-    cluster.call("node1001", "gated", "hello")
+  --  cluster.call("node1001", "gated", "hello")
   end
   skynet.timeout(15 * 100, test)
 
