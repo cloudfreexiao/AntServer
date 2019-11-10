@@ -10,14 +10,19 @@ end
 local mt = {}
 mt.__index = mt
 
-function mt:add_timer(interval, func, immediate, times)
+function mt:add_timer(data)
+    local interval = data.interval
+    local func = data.func
+    local immediate = data.immediate
+    local times = data.times
+
     assert(interval >= self.check_interval, interval)
     local handle = self.handle
     self.handle = handle + 1
 
     self.pending[handle] = {
         interval = interval,
-        func = func, 
+        func = func,
         wakeup = immediate and 0 or interval,
         times = times or 0,
         timestamp = Date.second(),
@@ -43,7 +48,7 @@ function mt:update()
             v.wakeup = v.wakeup + v.interval
             local ok, err = pcall(v.func)
             if not ok then
-                ERROR("time mgr update err:", err)
+                skynet.error("time mgr update err:", err)
             end
             if v.times > 0 then
                 if v.times == 1 then

@@ -5,6 +5,4 @@
 [redis/pika](https://github.com/cloudfreexiao/AntServer/tree/master/tools/pika-compose)
 
 ##客户端例子 支持 tcp/ws/udp
-## TODO:实现 rudp协议
-
 [unity skynet-client](https://github.com/cloudfreexiao/SkynetClient/blob/master/TestSkynetClient.cs)

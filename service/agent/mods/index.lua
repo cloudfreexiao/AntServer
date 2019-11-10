@@ -1,5 +1,5 @@
 local hash      = require "hash"
-local timer     = require "timer.timer"
+local skynet_timermgr  = require("skynet_api.index").skynet_timermgr.new()
 
 local M = {}
 
@@ -11,7 +11,7 @@ local _hashcodes = {}
 local profile
 local profiled
 
-local _timers = timer.new(1)
+local _timer_id = skynet_timermgr:new_timer(1)
 
 local function do_register_mod(mods, name, pack, data)
     local obj = require(pack):new(data)
@@ -85,8 +85,8 @@ local function get_backend_func(mod_name, func)
 end
 
 function M.call_front_mod(mod_name, func, ...)
-    DEBUG("FRONT", DUMP(_fronts))
-    DEBUG("mod", mod_name, " func", func)
+    -- DEBUG("FRONT", DUMP(_fronts))
+    -- DEBUG("mod", mod_name, " func", func)
     local mod, f = get_front_func(mod_name, func)
     return f(mod)
 end
@@ -151,11 +151,14 @@ function M.save()
     -- 启动定时器 检测是否模块属性有变更
     M.force_save()
 
-    _timers:add_timer(30, function()
-        on_mod_save()
-    end,
-    false,
-    0)
+    skynet_timermgr:add_timer(_timer_id, {interval = 30,
+        func = function()
+            on_mod_save()
+        end,
+        immediate = false,
+        times = 0,
+    })
+
 end
 
 local function on_mod_update()
@@ -168,11 +171,14 @@ local function on_mod_update()
 end
 
 function M.update()
-    _timers:add_timer(1, function()
-        on_mod_update()
-    end,
-    false,
-    0)
+    skynet_timermgr:add_timer(_timer_id, {interval = 1,
+        func = function()
+            on_mod_update()
+        end,
+        immediate = false,
+        times = 0,
+    })
+
 end
 
 

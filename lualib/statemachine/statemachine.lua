@@ -34,32 +34,32 @@ local function create_transition(name)
       if leaveReturn ~= ASYNC then
         transition(self, ...)
       end
-      
+
       return true
     elseif self.asyncState == name .. "WaitingOnLeave" then
-      self.current = to
+        self.current = to
 
-      local enterReturn = call_handler(self["onenter" .. to] or self["on" .. to], params)
+        local enterReturn = call_handler(self["onenter" .. to] or self["on" .. to], params)
 
-      self.asyncState = name .. "WaitingOnEnter"
+        self.asyncState = name .. "WaitingOnEnter"
 
-      if enterReturn ~= ASYNC then
-        transition(self, ...)
-      end
-      
-      return true
+        if enterReturn ~= ASYNC then
+          transition(self, ...)
+        end
+
+        return true
     elseif self.asyncState == name .. "WaitingOnEnter" then
-      call_handler(self["onafter" .. name] or self["on" .. name], params)
-      call_handler(self["onstatechange"], params)
-      self.asyncState = NONE
-      self.currentTransitioningEvent = nil
+        call_handler(self["onafter" .. name] or self["on" .. name], params)
+        call_handler(self["onstatechange"], params)
+        self.asyncState = NONE
+        self.currentTransitioningEvent = nil
       return true
     else
-    	if string.find(self.asyncState, "WaitingOnLeave") or string.find(self.asyncState, "WaitingOnEnter") then
-    		self.asyncState = NONE
-    		transition(self, ...)
-    		return true
-    	end
+      if string.find(self.asyncState, "WaitingOnLeave") or string.find(self.asyncState, "WaitingOnEnter") then
+        self.asyncState = NONE
+        transition(self, ...)
+        return true
+      end
     end
 
     self.currentTransitioningEvent = nil
@@ -96,7 +96,7 @@ function machine.create(options)
     fsm.events[name] = fsm.events[name] or { map = {} }
     add_to_map(fsm.events[name].map, event)
   end
-  
+
   for name, callback in pairs(options.callbacks or {}) do
     fsm[name] = callback
   end

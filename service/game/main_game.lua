@@ -85,12 +85,12 @@ skynet.start(function()
   skynet.uniqueservice("shutdown", "game")
   INFO("-----GameServer-----", node_name, " start OK")
 
-  local addr = skynet_call(".agent_mgr", "get", "tcp")
+  local addr = skynet.call(".agent_mgr", "lua", "get", "tcp")
   skynet_timeout_call(5, addr, "start", {fd = 20, secret = "d7cfe9e8cf78b5f9", subid = "2", uid = "1_2_test_cloudfreexiao_001", skynet_node_name = node_name, })
   -- skynet_call(addr, "call_front_mod", "battle", "test", {ddd = "fffff"})
   -- skynet_call(addr, "call_backend_mod", "battle", "test", {ddd = "fffff"})
 
-  skynet_send(".agent_mgr", "recycle", addr, "tcp")
+  skynet.send(".agent_mgr", "lua", "recycle", addr, "tcp")
 
   -- local behavior3 = require "behavior3.tests"
   -- behavior3.testLoadTree()
@@ -120,7 +120,7 @@ skynet.start(function()
   -- skynet.trace_timeout()
   local function test()
     skynet.timeout(30 *100, test)
-  --  cluster.call("node1001", "gated", "hello")
+    cluster.call("node1001", "gated", "hello")
   end
   skynet.timeout(15 * 100, test)
 

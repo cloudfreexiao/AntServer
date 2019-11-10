@@ -31,8 +31,6 @@ skynet.init(function()
     local schedule_service = function()
 -- schedule service
 
-local skynet = require "skynet"
-
 local task = { session = 0, difftime = 0 }
 
 local function next_time(now, ti)
@@ -87,7 +85,7 @@ local function changetime(ti)
     local nt = next_time(current, ti)
     skynet.error(string.format("Change time to %s", os.date(nil, nt)))
     task.difftime = os.difftime(nt,ct)
-    for k,v in pairs(task) do
+    for _, v in pairs(task) do
         if type(v) == "table" then
             skynet.wakeup(v.co)
         end
@@ -118,7 +116,7 @@ skynet.start(function()
     skynet.dispatch("lua", submit)
     skynet.info_func(function()
         local info = {}
-        for k, v in pairs(task) do
+        for _, v in pairs(task) do
             if type(v) == "table" then
                 table.insert( info, {
                     time = os.date(nil, v.time),

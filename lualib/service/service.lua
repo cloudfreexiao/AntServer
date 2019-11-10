@@ -31,7 +31,6 @@ function service.init(mod)
 				skynet.response()(false)
 			end
 		end)
-		
 	end)
 end
 
