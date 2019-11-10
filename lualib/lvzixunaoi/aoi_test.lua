@@ -1,4 +1,3 @@
-local print_r = require "print_r"
 local aoi = require "aoi"
 local MAKER_MARK = aoi.MAKER_MARK
 local WATCHER_MARK = aoi.WATCHER_MARK
