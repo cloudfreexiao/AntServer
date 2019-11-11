@@ -249,6 +249,10 @@ end
 -- @arg {function} factory - A function that returns an Observable.
 -- @returns {Observable}
 function Observable.defer(fn)
+  if not fn or type(fn) ~= 'function' then
+    error('Expected a function')
+  end
+
   return setmetatable({
     subscribe = function(_, ...)
       local observable = fn()
@@ -396,6 +400,10 @@ end
 -- values.
 -- @arg {number} size - The size of the buffer.
 function Observable:buffer(size)
+  if not size or type(size) ~= 'number' then
+    error('Expected a number')
+  end
+
   return Observable.create(function(observer)
     local buffer = {}
 
@@ -802,6 +810,10 @@ end
 -- @arg {number} index - The index of the item, with an index of 1 representing the first.
 -- @returns {Observable}
 function Observable:elementAt(index)
+  if not index or type(index) ~= 'number' then
+    error('Expected a number')
+  end
+
   return Observable.create(function(observer)
     local subscription
     local i = 1
@@ -1354,6 +1366,10 @@ end
 -- @arg {number} count - The number of items to omit from the end.
 -- @returns {Observable}
 function Observable:skipLast(count)
+  if not count or type(count) ~= 'number' then
+    error('Expected a number')
+  end
+
   local buffer = {}
   return Observable.create(function(observer)
     local function emit()
@@ -1550,6 +1566,10 @@ end
 -- @arg {number} count - The number of elements to produce.
 -- @returns {Observable}
 function Observable:takeLast(count)
+  if not count or type(count) ~= 'number' then
+    error('Expected a number')
+  end
+
   return Observable.create(function(observer)
     local buffer = {}
 
@@ -1708,6 +1728,10 @@ end
 --                      of the most recent values as multiple arguments to onNext.
 -- @returns {Observable}
 function Observable:window(size)
+  if not size or type(size) ~= 'number' then
+    error('Expected a number')
+  end
+
   return Observable.create(function(observer)
     local window = {}
 
@@ -1789,6 +1813,7 @@ function Observable.zip(...)
   return Observable.create(function(observer)
     local values = {}
     local active = {}
+    local subscriptions = {}
     for i = 1, count do
       values[i] = {n = 0}
       active[i] = true
@@ -1834,8 +1859,14 @@ function Observable.zip(...)
     end
 
     for i = 1, count do
-      sources[i]:subscribe(onNext(i), onError, onCompleted(i))
+      subscriptions[i] = sources[i]:subscribe(onNext(i), onError, onCompleted(i))
     end
+
+    return Subscription.create(function()
+      for i = 1, count do
+        if subscriptions[i] then subscriptions[i]:unsubscribe() end
+      end
+    end)
   end)
 end
 

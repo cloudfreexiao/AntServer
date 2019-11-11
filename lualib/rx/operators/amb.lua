@@ -1,4 +1,4 @@
-local Observable = require 'observable'
+local Observable = require 'rx.observable'
 
 --- Given a set of Observables, produces values from only the first one to produce a value.
 -- @arg {Observable...} observables

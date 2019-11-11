@@ -1,3 +1,7 @@
+--[[--
+  https://github.com/kyleconroy/lua-state-machine
+]]
+
 local machine = {}
 machine.__index = machine
 
@@ -22,8 +26,8 @@ local function create_transition(name)
       if not can then return false end
       self.currentTransitioningEvent = name
 
-      local beforeReturn = call_handler(self["onbefore" .. name], params)
-      local leaveReturn = call_handler(self["onleave" .. from], params)
+      local beforeReturn = call_handler(self["on_before_" .. name], params)
+      local leaveReturn = call_handler(self["on_leave_" .. from], params)
 
       if beforeReturn == false or leaveReturn == false then
         return false
@@ -39,7 +43,7 @@ local function create_transition(name)
     elseif self.asyncState == name .. "WaitingOnLeave" then
         self.current = to
 
-        local enterReturn = call_handler(self["onenter" .. to] or self["on" .. to], params)
+        local enterReturn = call_handler(self["on_enter_" .. to] or self["on_" .. to], params)
 
         self.asyncState = name .. "WaitingOnEnter"
 
@@ -49,8 +53,8 @@ local function create_transition(name)
 
         return true
     elseif self.asyncState == name .. "WaitingOnEnter" then
-        call_handler(self["onafter" .. name] or self["on" .. name], params)
-        call_handler(self["onstatechange"], params)
+        call_handler(self["on_after_" .. name] or self["on_" .. name], params)
+        call_handler(self["on_state_change"], params)
         self.asyncState = NONE
         self.currentTransitioningEvent = nil
       return true

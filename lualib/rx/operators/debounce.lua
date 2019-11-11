@@ -1,6 +1,6 @@
-local Observable = require 'observable'
-local Subscription = require 'subscription'
-local util = require 'util'
+local Observable = require 'rx.observable'
+local Subscription = require 'rx.subscription'
+local util = require 'rx.util'
 
 --- Returns a new throttled Observable that waits to produce values until a timeout has expired, at
 -- which point it produces the latest value from the source Observable.  Whenever the source
@@ -16,7 +16,7 @@ function Observable:debounce(time, scheduler)
 
     local function wrap(key)
       return function(...)
-        local value = util.pack(...)
+        -- local value = util.pack(...)
 
         if debounced[key] then
           debounced[key]:unsubscribe()

@@ -1,4 +1,4 @@
-local util = require 'util'
+local util = require 'rx.util'
 
 --- @class Observable
 -- @description Observables push values to Observers.

@@ -1,4 +1,4 @@
-local Subscription = require 'subscription'
+local Subscription = require 'rx.subscription'
 
 --- @class TimeoutScheduler
 -- @description A scheduler that uses luvit's timer library to schedule events on an event loop.
@@ -18,7 +18,7 @@ end
 -- @returns {Subscription}
 function TimeoutScheduler:schedule(action, delay, ...)
   local timer = require 'timer'
-  local subscription
+  -- local subscription
   local handle = timer.setTimeout(delay, action, ...)
   return Subscription.create(function()
     timer.clearTimeout(handle)

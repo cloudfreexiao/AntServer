@@ -1,0 +1,15 @@
+return {
+    abstract_entity_index = require("entitas.entitas.AbstractEntityIndex"),
+    collector = require("entitas.entitas.Collector"),
+    context = require("entitas.entitas.Context"),
+    delegate = require("entitas.entitas.Delegate"),
+    entity = require("entitas.entitas.Entity"),
+    entity_index = require("entitas.entitas.EntityIndex"),
+    group = require("entitas.entitas.Group"),
+    group_event = require("entitas.entitas.GroupEvent"),
+    make_component = require("entitas.entitas.MakeComponent"),
+    matcher = require("entitas.entitas.Matcher"),
+    primary_entity_index = require("entitas.entitas.PrimaryEntityIndex"),
+    systems = require("entitas.entitas.Systems"),
+    reactive_system = require("entitas.entitas.ReactiveSystem"),
+}

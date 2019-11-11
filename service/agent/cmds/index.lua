@@ -1,6 +1,7 @@
 local skynet = require "skynet"
 require "skynet.manager"
 
+local singleton = require("singleton")
 local Commands = singleton("Commands")
 
 local sessions = require "globals.sessions.init"
