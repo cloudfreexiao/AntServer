@@ -23,7 +23,6 @@ CJSON_INC ?= lua-cjson/
 LFS_INC ?= luafilesystem/src
 CAOI_INC ?= skynet_aoi/
 FFI_INC ?= luaffifb/
-R3_INC ?= lua-r3/
 NAVIGATOR_INC ?= lua-recastnavigation/
 
 #####################################################
@@ -45,7 +44,6 @@ CRYPTO_SO_NAME = crypto.so
 TBPACK_SO_NAME = libluabpack.so
 
 FFI_SO_NAME = ffi.so
-R3_SO_NAME = libr3.so
 
 RUDP_SO_NAME = rudp.so
 NAVIGATOR_SO_NAME = navigator.so
@@ -67,9 +65,6 @@ CRYPTO_SO               = $(LUA_CLIB_PATH)/$(CRYPTO_SO_NAME)
 TBPACK_SO               = $(LUA_CLIB_PATH)/$(TBPACK_SO_NAME)
 
 FFI_SO               	= $(LUA_CLIB_PATH)/$(FFI_SO_NAME)
-R3_SO               	= $(LUA_CLIB_PATH)/$(R3_SO_NAME)
-
-RUDP_SO               	= $(LUA_CLIB_PATH)/$(RUDP_SO_NAME)
 NAVIGATOR_SO            = $(LUA_CLIB_PATH)/$(NAVIGATOR_SO_NAME)
 
 
@@ -121,9 +116,6 @@ $(CJSON_SO) : | $(LUA_CLIB_PATH)
 $(FFI_SO) : | $(LUA_CLIB_PATH)
 	cd $(FFI_INC) && $(MAKE) LUA_INCLUDE_DIR=../$(SKYNET_ROOT)/3rd/lua CC=$(CC) && cp -f $(FFI_SO_NAME) ../$(LUA_CLIB_PATH)
 
-$(R3_SO) : | $(LUA_CLIB_PATH)
-	cd $(R3_INC) && $(MAKE)  && cp -f $(R3_SO_NAME) ../$(LUA_CLIB_PATH)
-
 $(NAVIGATOR_SO) : | $(LUA_CLIB_PATH)
 	cd $(NAVIGATOR_INC) && $(MAKE) PLAT=$(PLAT) LUA_INC=../$(SKYNET_ROOT)/3rd/lua  && cp -f $(NAVIGATOR_SO_NAME) ../$(LUA_CLIB_PATH)
 
@@ -136,7 +128,6 @@ $(CAOI_SO):
 
 clean:
 	rm -f $(LUA_CLIB_PATH)/*.so
-	cd $(R3_INC) && $(MAKE) clean
 	cd $(NAVIGATOR_INC) && $(MAKE) clean
 
 
