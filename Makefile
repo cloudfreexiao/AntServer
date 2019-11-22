@@ -1,3 +1,5 @@
+include skynet/platform.mk
+
 THIRD_LIB_ROOT ?= 3rd/
 CLIENT_DEPS ?= lua_httpws/
 

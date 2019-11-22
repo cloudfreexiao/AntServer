@@ -12,5 +12,6 @@
 .DS_Store*
 ._*
 .DS_Store
+*.dSYM
 *.meta
 data/certificate/*

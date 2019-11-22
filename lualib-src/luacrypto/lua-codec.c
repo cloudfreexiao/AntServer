@@ -132,7 +132,14 @@ static int codec_aes_encrypt(lua_State *L)
   const char *src = luaL_checklstring(L, 1, &len);
   char *key = luaL_checkstring(L, 2);
 
-  EVP_CIPHER_CTX ctx;
+  // EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX *ctx;
+  /* Create and initialise the context */
+  if(!(ctx = EVP_CIPHER_CTX_new()))
+  {
+    return luaL_error(L, "EVP encrypt new error");
+  }
+
   EVP_CIPHER_CTX_init(&ctx);
 
   int ret = EVP_EncryptInit_ex(&ctx, EVP_aes_128_ecb(), NULL, (unsigned char *)key, NULL);
@@ -164,6 +171,9 @@ static int codec_aes_encrypt(lua_State *L)
   n += wn;
 
   lua_pushlstring(L, dst, n);
+
+    /* Clean up */
+  EVP_CIPHER_CTX_free(ctx);
   return 1;
 }
 
@@ -183,7 +193,14 @@ static int codec_aes_decrypt(lua_State *L)
   const char *src = luaL_checklstring(L, 1, &len);
   char *key = luaL_checkstring(L, 2);
 
-  EVP_CIPHER_CTX ctx;
+  // EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX *ctx;
+  /* Create and initialise the context */
+  if(!(ctx = EVP_CIPHER_CTX_new()))
+  {
+    return luaL_error(L, "EVP encrypt new error");
+  }
+
   EVP_CIPHER_CTX_init(&ctx);
 
   int ret = EVP_DecryptInit_ex(&ctx, EVP_aes_128_ecb(), NULL, (unsigned char *)key, NULL);
@@ -215,6 +232,9 @@ static int codec_aes_decrypt(lua_State *L)
   n += wn;
 
   lua_pushlstring(L, dst, n);
+
+  /* Clean up */
+  EVP_CIPHER_CTX_free(ctx);
   return 1;
 }
 

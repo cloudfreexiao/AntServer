@@ -70,10 +70,10 @@ NAVIGATOR_SO            = $(LUA_CLIB_PATH)/$(NAVIGATOR_SO_NAME)
 
 #####################################################
 all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
-	$(WEBSOCKETNETPACK_SO) $(CJSON_SO) $(CAOI_SO) \
-	$(AES_SO) $(CODEC_SO) $(CRYPTO_SO)  $(TBPACK_SO) \
-	$(RUDP_SO) $(FFI_SO) \
-	$(NAVIGATOR_SO) \
+	$(WEBSOCKETNETPACK_SO) $(CJSON_SO)  \
+	$(AES_SO) $(CODEC_SO) $(CRYPTO_SO)   \
+	$(CAOI_SO) $(TBPACK_SO) $(RUDP_SO) $(NAVIGATOR_SO) \
+	# $(FFI_SO)  \
 #####################################################
 
 # C Lib

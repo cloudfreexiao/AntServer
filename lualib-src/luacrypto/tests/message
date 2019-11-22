@@ -1,0 +1,5 @@
+/* this is a digest algorithm test file */
+/* don't modify it, otherwise, test.lua will assert failed */
+
+Usage:
+    lua test.lua message
