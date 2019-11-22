@@ -20,7 +20,7 @@ LUA_CLIB_PATH ?= ../luaclib
 
 CRAB_INC ?= crab/
 CJSON_INC ?= lua-cjson/
-LFS_INC ?= luafilesystem/src
+LFS_INC ?= luafilesystem/src/
 CAOI_INC ?= skynet_aoi/
 FFI_INC ?= luaffifb/
 NAVIGATOR_INC ?= lua-recastnavigation/
@@ -80,8 +80,8 @@ all: $(HASH_SO) $(LFS_SO)  $(UTF8_SO) $(CRAB_SO) \
 $(HASH_SO): hash/lua-hash.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $<
 
-$(LFS_SO) :luafilesystem/src/lfs.c $<
-	$(CC) $(LFLAGS) -o $@ -I$(LFS_INC)
+$(LFS_SO): $(LFS_INC)lfs.c $<
+	$(CC) $(CFLAGS) $(SHARED) -I$(SKYNET_ROOT)/3rd/lua -I$(LFS_INC) $^ -o $@ $(LDFLAGS)
 
 $(UTF8_SO): crab/lua-utf8.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -I$(CRAB_INC)

@@ -1,5 +1,4 @@
-local skynet = require "skynet"
-local lfs = require "lfs" 
+local lfs = require "lfs"
 local sharetable = require 'skynet.sharetable'
 
 local function attrdir()

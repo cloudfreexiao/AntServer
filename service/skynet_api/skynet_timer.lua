@@ -82,7 +82,7 @@ end
 
 local M = {}
 
-function M.new(check_interval)
+function M.new_timer(check_interval)
     local obj = {}
     obj.running = false
     obj.timestamp = 0

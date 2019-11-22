@@ -21,20 +21,20 @@ local function get_addr(protocol)
 end
 
 function CMD.get(protocol)
-    return skynet_call(get_addr(protocol), "get")
+    return skynet.call(get_addr(protocol), "lua", "get")
 end
 
 function CMD.recycle(agent, protocol)
-    skynet_send(get_addr(protocol), "recycle", agent)
+    skynet.send(get_addr(protocol), "lua", "recycle", agent)
 end
 
 skynet.start(function()
     init()
 
-    skynet.dispatch("lua", function(session, source, cmd, ...)
+    skynet.dispatch("lua", function(_, _, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)
-    
+
     skynet.register('.' .. SERVICE_NAME)
 end)

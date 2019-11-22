@@ -35,6 +35,9 @@ lua_path = concat {
   "common/?.lua",
   "lualib/?.lua",
 
+  "service/?.lua",
+  "service/?/?.lua",
+  
   "service/login/?.lua",
   "service/center/?.lua",
   "service/game/?.lua",

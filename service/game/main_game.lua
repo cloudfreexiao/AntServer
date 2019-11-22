@@ -39,8 +39,8 @@ local function start_gated()
   end
 end
 
-local navigator = require "navigator"
-DEBUG("navigator:", DUMP(navigator))
+-- local navigator = require "navigator"
+-- DEBUG("navigator:", DUMP(navigator))
 
 -- local rudp = require "rudp"
 -- DEBUG("rudp", DUMP(rudp))
@@ -86,7 +86,7 @@ skynet.start(function()
   INFO("-----GameServer-----", node_name, " start OK")
 
   local addr = skynet.call(".agent_mgr", "lua", "get", "tcp")
-  skynet_timeout_call(5, addr, "start", {fd = 20, secret = "d7cfe9e8cf78b5f9", subid = "2", uid = "1_2_test_cloudfreexiao_001", skynet_node_name = node_name, })
+  -- skynet_timeout_call(5, addr, "start", {fd = 20, secret = "d7cfe9e8cf78b5f9", subid = "2", uid = "1_2_test_cloudfreexiao_001", skynet_node_name = node_name, })
   -- skynet_call(addr, "call_front_mod", "battle", "test", {ddd = "fffff"})
   -- skynet_call(addr, "call_backend_mod", "battle", "test", {ddd = "fffff"})
 

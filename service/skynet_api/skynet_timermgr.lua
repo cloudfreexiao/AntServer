@@ -11,7 +11,7 @@ end
 
 function SkynetTimerMgr:new_timer(check_interval)
     self._timer_id = self._timer_id + 1
-    local timer = skynet_timer.add_timer(check_interval or 1)
+    local timer = skynet_timer.new_timer(check_interval or 1)
     self._timer_map[self._timer_id] = {timer = timer, }
     timer:start()
     return timer
