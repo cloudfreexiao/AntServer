@@ -4,6 +4,9 @@ cpath     = "skynet/cservice/?.so;luaclib/?.so;"
 lualoader  = "skynet/lualib/loader.lua"
 preload    = "preload/preload.lua"
 
+-- logservice = "snlua"
+-- logger = "syslog"
+
 
 local function concat(args)
   local r = ''

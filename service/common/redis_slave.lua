@@ -62,14 +62,11 @@ function CMD.zadd(key, score, member)
 end
 
 function CMD.keys(key)
-    local result = db:keys(key)
-    return result
-    
+    return db:keys(key)
 end
 
 function CMD.zrange(key, from, to)
-    local result = db:zrange(key, from, to)
-    return result
+    return db:zrange(key, from, to)
 end
 
 function CMD.zrevrange(key, from, to ,scores)
@@ -79,7 +76,6 @@ function CMD.zrevrange(key, from, to ,scores)
     else
         result = db:zrevrange(key,from,to,scores)
     end
-    
     return result
 end
 
@@ -118,7 +114,7 @@ function CMD.del(key)
     return result
 end
 
-function CMD.hexists(table, key )
+function CMD.hexists(key )
     local r = db:hexists(key)
     return r == 1 and true or false
 end
@@ -149,12 +145,12 @@ function CMD.hsetnx(key, field, value)
 end
 
 function CMD.hkeys(key)
-    return db:hkeys(key) 
+    return db:hkeys(key)
 end
 
 
 skynet.start(function()
-    skynet.dispatch("lua", function(session, source, cmd, ...)
+    skynet.dispatch("lua", function(_, _, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)

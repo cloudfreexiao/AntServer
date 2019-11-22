@@ -12,13 +12,13 @@ local db = {
 local function init_db(cnf)
     local dbc = require "mongodb.mongodb"
     return dbc:start(cnf)
-end 
+end
 
 function CMD.start(cnf)
-    for k, v in pairs(mongodb_tb) do
+    for _, v in pairs(mongodb_tb) do
         db[v] = init_db({host = cnf.host, db_name = v})
         assert(db[v])
-    end 
+    end
 end
 
 --cname -> collection name
@@ -44,7 +44,7 @@ end
 
 
 skynet.start(function()
-    skynet.dispatch("lua", function(session, source, cmd, ...)
+    skynet.dispatch("lua", function(_, _, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)

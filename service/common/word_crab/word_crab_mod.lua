@@ -12,19 +12,19 @@ function M.init(word_crab_file)
         table.insert(words, t)
     end
     crab.open(words)
-end 
+end
 
 function M.filter(input)
     local texts = {}
     assert(utf8.toutf32(input, texts), "non utf8 words detected:", texts)
     crab.filter(texts)
     return utf8.toutf8(texts)
-end 
+end
 
 function M.is_valid(input)
     input = input:gsub(" ", "") --过滤空格
     return input == M.filter(input)
-end 
+end
 
 
 return M

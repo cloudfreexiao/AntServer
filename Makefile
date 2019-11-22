@@ -1,5 +1,3 @@
-include skynet/platform.mk
-
 THIRD_LIB_ROOT ?= 3rd/
 CLIENT_DEPS ?= lua_httpws/
 
@@ -8,9 +6,10 @@ SKYNET_LUA_BIN ?= $(SKYNET_ROOT)/3rd/lua/lua
 
 SKYNET_DEPS ?= lualib-src/
 
-PLAT ?= linux
-
 #make PLAT=macosx TLS_LIB=/usr/local/Cellar/openssl@1.1/1.1.1d/lib TLS_INC=/usr/local/Cellar/openssl@1.1/1.1.1d/include
+PLAT ?= linux
+PLATS = linux freebsd macosx
+
 TLS_MODULE ?= ltls 
 TLS_LIB ?= /usr/local/ssl/lib
 TLS_INC ?= /usr/local/include

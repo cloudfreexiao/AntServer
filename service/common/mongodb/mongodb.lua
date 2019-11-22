@@ -1,6 +1,6 @@
-local skynet = require "skynet"
+-- local skynet = require "skynet"
 local mongo = require "skynet.db.mongo"
-local bson = require "bson" 
+local bson = require "bson"
 
 
 local mongodb = {}
@@ -11,7 +11,7 @@ function mongodb:start(conf)
     local db_name = conf.db_name
     local db_client = mongo.client({host = host})
     local db = db_client[db_name]
-	
+
 	local o = {db = db}
 	setmetatable(o, mongodb)
 	return o
@@ -31,15 +31,15 @@ local function db_help(db, cmd, cname, ...)
     local r = db:runCommand('getLastError')
     local ok = r and r.ok == 1 and r.err == bson.null
     if not ok then
-        ERROR(v.." failed: ", r.err, tname, ...)
+        ERROR("db_help failed: ", r.err, cname, ...)
     end
-    return ok, r.err   
+    return ok, r.err
 end
 
 function mongodb:update(cname, selector, update, upsert)
 	local db = self.db
 	local collection = db[cname]
-	
+
 	collection:update(selector, update, upsert)
 	local r = db:runCommand("getLastError")
     if r.err ~= bson.null then

@@ -21,11 +21,11 @@ end
 
 local function call_redis_slave(addr, cmd, ...)
     return skynet.call(addr, "lua", cmd, ...)
-end 
+end
 
 local function send_redis_slave(addr, cmd, ...)
     skynet.send(addr, "lua", cmd, ...)
-end 
+end
 
 local function start()
     local settings = setting_template.db_cnf[skynet_node_name]
@@ -80,7 +80,6 @@ end
 function CMD.hgetall(uid, key)
     local db = getconn(uid)
     local result = call_redis_slave(db, "hgetall", key) --db:hgetall(key)
-    
     return result
 end
 
@@ -166,7 +165,7 @@ end
 function CMD.incrby(uid, key, increment)
     local db = getconn(uid)
     return call_redis_slave(db, "incrby", key, increment)
-end 
+end
 
 function CMD.setnx(uid, key, value)
     local db = getconn(uid)
@@ -187,7 +186,7 @@ end
 skynet.start(function()
     start()
 
-    skynet.dispatch("lua", function(session, source, cmd, ...)
+    skynet.dispatch("lua", function(_, _, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)

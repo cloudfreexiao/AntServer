@@ -16,7 +16,7 @@ local function next_conn()
     next_id = next_id + 1
     if next_id > maxconn then
         next_id = 0
-    end 
+    end
 
     return pool[next_id]
 end
@@ -28,15 +28,15 @@ local function getconn(key)
     else
         return next_conn()
     end
-end 
+end
 
 local function call_mongodb_slave(addr, cmd, ...)
     return skynet.call(addr, "lua", cmd, ...)
-end 
+end
 
-local function send_mongodb_slave(addr, cmd, ...)
-    skynet.send(addr, "lua", cmd, ...)
-end 
+-- local function send_mongodb_slave(addr, cmd, ...)
+--     skynet.send(addr, "lua", cmd, ...)
+-- end
 
 local function start()
     local settings = setting_template.db_cnf[skynet_node_name]
@@ -79,7 +79,7 @@ end
 skynet.start(function()
     start()
 
-    skynet.dispatch("lua", function(session, source, cmd, ...)
+    skynet.dispatch("lua", function(_, _, cmd, ...)
         local f = assert(CMD[cmd], cmd .. "not found")
         skynet.retpack(f(...))
     end)

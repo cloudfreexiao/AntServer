@@ -1,5 +1,5 @@
-local hash      = require "hash"
-local skynet_timermgr  = require("skynet_api.index").skynet_timermgr.new()
+local hash              = require "hash"
+local skynet_timermgr   = require("skynet_api.index").skynet_timermgr.new()
 
 local M = {}
 
@@ -88,22 +88,22 @@ function M.call_front_mod(mod_name, func, ...)
     -- DEBUG("FRONT", DUMP(_fronts))
     -- DEBUG("mod", mod_name, " func", func)
     local mod, f = get_front_func(mod_name, func)
-    return f(mod)
+    return f(mod, ...)
 end
 
 function M.send_front_mod(mod_name, func, ...)
     local mod, f = get_front_func(mod_name, func)
-    f(mod)
+    f(mod, ...)
 end
 
 function M.call_backend_mod(mod_name, func, ...)
     local mod, f = get_backend_func(mod_name, func)
-    return f(mod)
+    return f(mod, ...)
 end
 
 function M.send_front_mod(mod_name, func, ...)
     local mod, f = get_backend_func(mod_name, func)
-    f(mod)
+    f(mod, ...)
 end
 
 

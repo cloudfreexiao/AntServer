@@ -6,7 +6,7 @@ PLAT ?= linux
 
 #####################################################
 
-SKYNET_LUA_INC ?= $(SKYNET_ROOT)/3rd/lua
+SKYNET_LUA_INC ?= $(SKYNET_ROOT)/3rd/lua/
 SKYNET_LUA_LIB ?= $(SKYNET_ROOT)/3rd/lua/
 SKYNET_SRC ?= $(SKYNET_ROOT)/skynet-src
 
@@ -81,7 +81,7 @@ $(HASH_SO): hash/lua-hash.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $<
 
 $(LFS_SO): $(LFS_INC)lfs.c $<
-	$(CC) $(CFLAGS) $(SHARED) -I$(SKYNET_ROOT)/3rd/lua -I$(LFS_INC) $^ -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SHARED) -I$(SKYNET_LUA_INC) -I$(LFS_INC) $^ -o $@ $(LDFLAGS)
 
 $(UTF8_SO): crab/lua-utf8.c $<
 	$(CC) $(LFLAGS) -o $@ $(CFLAGS) $< -I$(CRAB_INC)
@@ -107,6 +107,8 @@ $(TBPACK_SO): thrift/lua-bpack.c $<
 $(RUDP_SO): rudp/rudp.c rudp/lua-rudp.c  $<
 	$(CC) $(LFLAGS) $(CFLAGS) $^ -o $@
 
+$syslog.so:lua-syslog/lua-syslog.c $<
+	${CC} ${LFLAGS} ${SHARED} $< -o $@
 
 #####################################################
 

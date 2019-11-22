@@ -11,7 +11,7 @@ local agent_map = {} -- all of agent, include dispatched
 local maxnum = 1024
 
 local function expand_pool()
-	for i=1, 10 do 
+	for i=1, 10 do
 		local agent = skynet.newservice("agent", protocol)
 		table.insert(pool, agent)
 		agent_map[agent] = agent
@@ -20,7 +20,7 @@ end
 
 function CMD.get()
 	local agent = table.remove(pool)
-	if not agent then 
+	if not agent then
         agent = assert(skynet.newservice("agent", protocol))
         agent_map[agent] = agent
 

@@ -1,5 +1,5 @@
-local class		 =  require "class"
-local Propertyd   = class("propertyd")
+local class		    =  require "class"
+local Propertyd     = class("propertyd")
 
 local dbproxyx = require 'dbproxyx'
 local property_db_key = require "dbset".property_db_key
