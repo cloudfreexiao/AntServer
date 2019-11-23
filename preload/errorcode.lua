@@ -1,15 +1,8 @@
 
 local errorcode = {}
 
-function errmsg(ec)
-    if not ec then
-        return "nil"
-    end
-    return errorcode[ec].desc
-end
-
 local function add(err)
-    assert(errorcode[err.code] == nil, string.format("have the same error code[%x], msg[%s]", err.code, err.message))
+    assert(errorcode[err.code] == nil, string.format("have the same error code[%x], msg[%s]", err.code, err.desc))
     errorcode[err.code] = {desc = err.desc }
 
     return err.code

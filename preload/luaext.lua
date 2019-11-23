@@ -32,37 +32,36 @@ end
 -- 浅拷贝
 table.clone = function(object)
     local lookup_table = {}
-    local function _copy(object)
-        if type(object) ~= "table" then
-            return object
-        elseif lookup_table[object] then
-            return lookup_table[object]
+    local function _copy(obj)
+        if type(obj) ~= "table" then
+            return obj
+        elseif lookup_table[obj] then
+            return lookup_table[obj]
         end
         local new_table = {}
-        lookup_table[object] = new_table
-        for key, value in pairs(object) do
+        lookup_table[obj] = new_table
+        for key, value in pairs(obj) do
             new_table[_copy(key)] = _copy(value)
         end
-        return setmetatable(new_table, getmetatable(object))
+        return setmetatable(new_table, getmetatable(obj))
     end
     return _copy(object)
 end
 
 -- 深拷贝
-table.deepcopy  = function(object)
-    if not object then return object end
-    local new = {}
-    for k, v in pairs(object) do
-        local t = type(v)
-        if t == "table" then
-            new[k] = deepcopy(v)
-        elseif t == "userdata" then
-            new[k] = deepcopy(v)
-        else
-            new[k] = v
+function table.deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[table.deepcopy(orig_key)] = table.deepcopy(orig_value)
         end
+        setmetatable(copy, table.deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
     end
-    return new
+    return copy
 end
 
 table.merge = function(dest, src)
@@ -73,18 +72,18 @@ end
 
 table.lower_bound = function(elements, x, field)
     local first = 0
-    local mid, half 
-    local len = #elements 
+    local mid, half
+    local len = #elements
     while len >0 do
         half = math.floor(len/2)
-        mid = first + half 
+        mid = first + half
         local element = elements[mid + 1]
-        local value = field and element[field] or element 
+        local value = field and element[field] or element
         if value <x then
             first = mid + 1
             len = len - half - 1
         else
-            len = half 
+            len = half
         end
     end
     return first + 1
@@ -113,18 +112,6 @@ string.trim = function(s, c)
 end
 
 -- math扩展
-do
-    local _floor = math.floor
-    math.floor = function(n, p)
-        if p and p ~= 0 then
-            local e = 10 ^ p
-            return _floor(n * e) / e
-        else
-            return _floor(n)
-        end
-    end
-end
-
 math.round = function(n, p)
         local e = 10 ^ (p or 0)
         return math.floor(n * e + 0.5) / e
@@ -134,19 +121,13 @@ math.atan2 = function(dy, dx)
     local angle = math.atan(dy, dx)
     if angle <0 then
         angle = angle + 2 * math.pi
-    end 
-    return angle
-end 
-
-function handler(target, method)
-    return function(...)
-        method(target, ...)
     end
+    return angle
 end
 
 function array_new(len, val)
     local r = {}
-    for i = 1, len do 
+    for i = 1, len do
         table.insert(r, val)
     end
     return r
@@ -169,6 +150,3 @@ function array_remove(t, val)
     return false
 end
 
-function array_size(t)
-    return #t
-end

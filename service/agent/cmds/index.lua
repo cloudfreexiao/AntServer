@@ -9,7 +9,6 @@ local mods = require "mods.index"
 local _handler = require "service.client"
 
 
-
 function Commands:initialize(protocol)
 	self._protocol = protocol
 end
@@ -50,7 +49,7 @@ end
 function Commands:logout()
 	mods.force_save()
 	--TODO: 不做其他处理是否出现问题? fd 保存定时器
-	skynet_send(".agent_mgr", "recycle", skynet.self(), self._protocol)
+	skynet.send(".agent_mgr", "lua", "recycle", skynet.self(), self._protocol)
 end
 
 function Commands:call_front_mod(...)
@@ -62,7 +61,7 @@ function Commands:send_front_mod(...)
 end
 
 function Commands:call_backend_mod(...)
-	return mods.call_front_mod(...)
+	return mods.call_backend_mod(...)
 end
 
 function Commands:send_front_mod(...)

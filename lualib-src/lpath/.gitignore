@@ -1,0 +1,12 @@
+test
+tags*
+*.exe
+*.dll
+*.obj
+*.so
+*.o
+
+*.gcno
+*.gcda
+*.gcov
+

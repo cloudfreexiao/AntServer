@@ -86,9 +86,10 @@ skynet.start(function()
   INFO("-----GameServer-----", node_name, " start OK")
 
   local addr = skynet.call(".agent_mgr", "lua", "get", "tcp")
-  -- skynet_timeout_call(5, addr, "start", {fd = 20, secret = "d7cfe9e8cf78b5f9", subid = "2", uid = "1_2_test_cloudfreexiao_001", skynet_node_name = node_name, })
-  -- skynet_call(addr, "call_front_mod", "battle", "test", {ddd = "fffff"})
-  -- skynet_call(addr, "call_backend_mod", "battle", "test", {ddd = "fffff"})
+  -- skynet_timeout_call(5, addr, "start", {fd = 20, secret = "d7cfe9e8cf78b5f9",
+    -- subid = "2", uid"1_2_test_cloudfreexiao_001", skynet_node_name = node_name, })
+  -- skynet.call(addr, "lua", "call_front_mod", "battle", "ftest", {ddd = "fffff"})
+  -- skynet.call(addr, "lua", "call_backend_mod", "battle", "ftest", {ddd = "========"})
 
   skynet.send(".agent_mgr", "lua", "recycle", addr, "tcp")
 
