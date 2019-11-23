@@ -1,5 +1,0 @@
-modules =
-{
-   ["rx"] = "rx.lua",
-   ["rx.*"] = "src"
-}
