@@ -68,7 +68,7 @@ local function slice(tbl, i, j)
     end
 
     if i < 1 then
-       i = 1
+        i = 1
     end
 
     if j == nil then
